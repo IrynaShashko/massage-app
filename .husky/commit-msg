@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/common.sh"
+
+echo "Running checkCommitMessage with commit file: $1"
+
+yarn checkCommitMessage "$1"
