@@ -12,7 +12,9 @@
     "@types/react-dom": "^18.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.4.0",
     "react-scripts": "5.0.1",
+    "styled-components": "^6.1.15",
     "typescript": "^4.4.2",
     "web-vitals": "^2.1.0"
   },
@@ -22,7 +24,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "prepare": "husky",
-    "checkCommitMessage": "node --experimental-modules ./scripts/checkCommitMessage.mjs"
+    "checkCommitMessage": "node --experimental-modules ./scripts/checkCommitMessage.mjs",
+    "lint": "eslint . --fix",
+    "prettier": "prettier --write ."
   },
   "eslintConfig": {
     "extends": [
@@ -31,9 +35,9 @@
     ]
   },
   "lint-staged": {
-    "**/*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
+    "*.{js,jsx,ts,tsx,json}": [
+      "yarn prettier",
+      "yarn lint"
     ]
   },
   "browserslist": {
@@ -49,7 +53,10 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/styled-components": "^5.1.34",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.3"
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.4.2"
   }
 }

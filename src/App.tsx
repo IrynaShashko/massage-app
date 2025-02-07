@@ -1,26 +1,47 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+// src/App.tsx
+import React, { useEffect, useState } from "react";
 
-function App() {
+import styled, { ThemeProvider } from "styled-components";
+
+import GlobalStyle from "./theme/GlobalStyle";
+
+import { darkTheme, lightTheme } from "./theme/theme";
+
+import { ThemeButton } from "./components/ThemeButton";
+
+const App: React.FC = () => {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+
+  const ThemeToggle = () => {
+    setIsDarkMode((prev) => {
+      const newTheme = !prev;
+      localStorage.setItem("theme", newTheme ? "dark" : "light");
+      return newTheme;
+    });
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-theme",
+      isDarkMode ? "dark" : "light",
+    );
+  }, [isDarkMode]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+      <GlobalStyle />
+      <Container>
+        <ThemeButton darkMode={isDarkMode} themeToggle={ThemeToggle} />
+      </Container>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;
+
+const Container = styled.div`
+  padding: 50px;
+  text-align: center;
+`;
