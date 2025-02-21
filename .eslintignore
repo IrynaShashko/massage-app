@@ -2,3 +2,6 @@ package.json
 tsconfig.json
 en.json
 ua.json
+price.json
+experience.json
+reviews.json
