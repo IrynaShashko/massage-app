@@ -1,26 +1,42 @@
-import React, { useEffect, useState } from "react";
-
+import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
+import { FC, useEffect, useState } from "react";
+import {
+  Navigate,
+  Route,
+  BrowserRouter as Router,
+  Routes,
+} from "react-router-dom";
 import styled, { ThemeProvider } from "styled-components";
-
-import { useTranslation } from "react-i18next";
-import "./i18n";
+import i18n from "./i18n";
 
 import GlobalStyle from "./theme/GlobalStyle";
 import { darkTheme, lightTheme } from "./theme/theme";
 
-import { LanguageButton } from "./components/LanguageButton";
-import { ThemeButton } from "./components/ThemeButton";
+import { AboutPage } from "./pages/AboutPage";
+import { HomePage } from "./pages/HomePage";
+import { PricePage } from "./pages/PricePage";
 
-const App: React.FC = () => {
+import { Expectation } from "./components/Expectation";
+import { Header } from "./components/Header";
+import { Health } from "./components/Health";
+import { Questions } from "./components/Questions";
+import { ArticlePage } from "./pages/ArticlePage";
+import { ReviewsPage } from "./pages/ReviewsPage";
+
+export const App: FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem("theme") === "dark";
   });
 
-  const [language, setLanguage] = useState(() => {
-    return localStorage.getItem("language") || "ua";
-  });
+  const [language, setLanguage] = useState(
+    localStorage.getItem("language") || "ua",
+  );
 
-  const [t, i18n] = useTranslation();
+  useEffect(() => {
+    if (language) {
+      i18n.changeLanguage(language);
+    }
+  }, [language]);
 
   const ThemeToggle = () => {
     setIsDarkMode((prev) => {
@@ -31,11 +47,16 @@ const App: React.FC = () => {
   };
 
   const LanguageToggle = () => {
-    const newLanguage = language === "ua" ? "en" : "ua";
-    setLanguage(newLanguage);
-    i18n.changeLanguage(newLanguage);
-    localStorage.setItem("language", newLanguage);
+    if (i18n) {
+      const newLanguage = language === "ua" ? "en" : "ua";
+      setLanguage(newLanguage);
+      i18n.changeLanguage(newLanguage);
+      localStorage.setItem("language", newLanguage);
+    } else {
+      console.error("i18n is not initialized yet");
+    }
   };
+  const theme = isDarkMode ? darkTheme : lightTheme;
 
   useEffect(() => {
     document.documentElement.setAttribute(
@@ -45,20 +66,48 @@ const App: React.FC = () => {
   }, [isDarkMode]);
 
   return (
-    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-      <GlobalStyle />
-      <Container>
-        <ThemeButton darkMode={isDarkMode} themeToggle={ThemeToggle} />
-        <LanguageButton languageToggle={LanguageToggle} language={language} />
-        <h1>{t("hello")}</h1>
-      </Container>
+    <ThemeProvider theme={theme}>
+      <EmotionThemeProvider theme={theme}>
+        <GlobalStyle />
+        <ContentContainer>
+          <Router>
+            <Header
+              themeToggle={ThemeToggle}
+              languageToggle={LanguageToggle}
+              language={language}
+              darkMode={isDarkMode}
+            />
+            <Routes>
+              <Route path="/" element={<HomePage language={language} />} />
+              <Route
+                path="/about"
+                element={<AboutPage language={language} />}
+              />
+              <Route
+                path="/price"
+                element={<PricePage language={language} />}
+              />
+              <Route path="/reviews" element={<ReviewsPage />} />
+              <Route path="/article/*" element={<ArticlePage />}>
+                <Route index element={<Navigate to="questions" replace />} />
+                <Route path="questions" element={<Questions />} />
+                <Route path="health" element={<Health />} />
+                <Route path="expectation" element={<Expectation />} />
+              </Route>
+            </Routes>
+          </Router>
+        </ContentContainer>
+      </EmotionThemeProvider>
     </ThemeProvider>
   );
 };
 
-export default App;
+export const Container = styled.div`
+  max-width: 1680px;
+  margin: 0 auto;
+  z-index: 3;
+`;
 
-const Container = styled.div`
-  padding: 50px;
-  text-align: center;
+const ContentContainer = styled.div`
+  padding-top: 80px;
 `;
