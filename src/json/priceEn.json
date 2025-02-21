@@ -1,0 +1,134 @@
+{
+  "women": [
+    {
+      "price": "800 UAH",
+      "service": "Therapeutic Massage of the Back",
+      "time": "60 min."
+    },
+    {
+      "price": "600 UAH",
+      "service": "Therapeutic Massage of the Spine",
+      "time": "45 min."
+    },
+    {
+      "price": "800 UAH",
+      "service": "Therapeutic Massage: Back, Neck, Arms",
+      "time": "60 min."
+    },
+    {
+      "price": "1200 UAH 1600 UAH",
+      "service": "Author’s Full Body Massage",
+      "time": "90 min. 120 min."
+    },
+    {
+      "price": "800 UAH",
+      "service": "Yumeigo Therapy (Japanese Massage)",
+      "time": "60 min."
+    },
+    {
+      "price": "350 UAH",
+      "service": "Visceral Massage (Abdominal Massage)",
+      "time": "20 min."
+    },
+    {
+      "price": "350 UAH",
+      "service": "Head Massage",
+      "time": "20 min."
+    },
+    {
+      "price": "900 UAH",
+      "service": "Foot Massage",
+      "time": "60 min."
+    },
+    {
+      "price": "700 UAH + 400 UAH",
+      "service": "Facial Massage (Cleansing, Massage, Moisturizing) + Alginate Mask",
+      "time": "60 min. + 20 min."
+    },
+    {
+      "price": "900 UAH",
+      "service": "Body Sculpting Massage (Abdomen, Buttocks, Thighs)",
+      "time": "60 min."
+    }
+  ],
+  "men": [
+    {
+      "price": "900 UAH",
+      "service": "Therapeutic Massage of the Back",
+      "time": "60 min."
+    },
+    {
+      "price": "700 UAH",
+      "service": "Therapeutic Massage of the Spine",
+      "time": "45 min."
+    },
+    {
+      "price": "900 UAH",
+      "service": "Therapeutic Massage: Back, Neck, Arms",
+      "time": "60 min."
+    },
+    {
+      "price": "1300 UAH 1800 UAH",
+      "service": "Author’s Full Body Massage",
+      "time": "90 min. 120 min."
+    },
+    {
+      "price": "900 UAH",
+      "service": "Yumeigo Therapy (Japanese Massage)",
+      "time": "60 min."
+    },
+    {
+      "price": "350 UAH",
+      "service": "Head Massage",
+      "time": "20 min."
+    },
+    {
+      "price": "900 UAH",
+      "service": "Foot Massage",
+      "time": "60 min."
+    }
+  ],
+  "children": [
+    {
+      "price": "400 UAH",
+      "service": "Back Massage",
+      "time": "30 min."
+    },
+    {
+      "price": "700 UAH",
+      "service": "Full Body Massage",
+      "time": "60 min."
+    },
+    {
+      "price": "600 UAH",
+      "service": "Yumeigo Therapy (Japanese Massage)",
+      "time": "45 min."
+    }
+  ],
+  "body": [
+    {
+      "price": "1500 UAH",
+      "service": "Full Body Wrapping",
+      "time": "90 min."
+    },
+    {
+      "price": "1100 UAH",
+      "service": "Zonal Wrapping (Legs, Buttocks, Abdomen)",
+      "time": "75 min."
+    }
+  ],
+  "else": [
+    {
+      "price": "from 250 UAH",
+      "service": "Kinesiotaping"
+    },
+    {
+      "price": "from 50 UAH",
+      "service": "Dry Needling"
+    },
+    {
+      "price": "350 UAH",
+      "service": "Cupping Therapy"
+    }
+  ]
+}
