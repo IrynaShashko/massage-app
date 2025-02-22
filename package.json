@@ -12,8 +12,8 @@
     "@types/i18next": "^13.0.0",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.7.13",
-    "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
+    "@types/react": "^18.0.32",
+    "@types/react-dom": "^18.0.11",
     "@types/react-i18next": "8.1.0",
     "firebase": "^11.3.1",
     "formik": "^2.4.6",
@@ -22,18 +22,15 @@
     "lucide-react": "^0.475.0",
     "mobx-state-tree": "^7.0.1",
     "nanoid": "^5.1.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-i18next": "10.0.0",
-    "react-icons": "^5.4.0",
     "react-intersection-observer": "^9.15.1",
     "react-loader-spinner": "^6.1.6",
     "react-router-dom": "^7.1.5",
     "react-scripts": "5.0.1",
-    "react-slick": "^0.30.3",
-    "slick-carousel": "^1.8.1",
     "styled-components": "^6.1.15",
-    "typescript": "^4.4.2",
+    "typescript": "^4.9.3",
     "web-vitals": "^2.1.0"
   },
   "scripts": {
@@ -54,8 +51,8 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json}": [
-      "yarn prettier",
-      "yarn lint"
+      "prettier --write",
+      "eslint --fix"
     ]
   },
   "browserslist": {
