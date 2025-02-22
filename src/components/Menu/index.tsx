@@ -7,15 +7,15 @@ import styled from "@emotion/styled";
 
 import { useTranslation } from "react-i18next";
 
-import { IconContext } from "react-icons";
-import { FiMenu, FiX } from "react-icons/fi";
-
 import logo from "../../images/logo.png";
 import logoMobile from "../../images/logo_mg.png";
 
-import { ConnectionButtons } from "../ConnectionButton";
+import { ConnectionButtons, IconStyled } from "../ConnectionButton";
 import { LanguageButton } from "../LanguageButton";
 import { ThemeButton } from "../ThemeButton";
+
+import { ReactComponent as CloseIcon } from "../../icons/close.svg";
+import { ReactComponent as MenuIcon } from "../../icons/menu.svg";
 
 import { ThemeType } from "../../theme/theme";
 
@@ -93,14 +93,7 @@ export const Menu: FC<MenuPropsType> = ({
             <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
           </ButtonContainer>
           <ModalButton onClick={toggleMenu}>
-            <IconContext.Provider
-              value={{
-                size: "30px",
-                color: "#007586",
-              }}
-            >
-              <FiMenu />
-            </IconContext.Provider>
+            <IconStyled as={MenuIcon} color={"#007586"} />
           </ModalButton>
         </ModalButtonContainer>
       </MobileHeaderContainer>
@@ -121,14 +114,11 @@ export const Menu: FC<MenuPropsType> = ({
                   <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
                 </ButtonContainer>
                 <ModalButton onClick={toggleMenu}>
-                  <IconContext.Provider
-                    value={{
-                      size: "30px",
-                      color: "#007586",
-                    }}
-                  >
-                    {isMenuOpen ? <FiX /> : <FiMenu />}
-                  </IconContext.Provider>
+                  {isMenuOpen ? (
+                    <IconStyled as={CloseIcon} color={"#007586"} />
+                  ) : (
+                    <IconStyled as={MenuIcon} color={"#007586"} />
+                  )}
                 </ModalButton>
               </ModalButtonContainer>
             </ModalContainer>
@@ -153,7 +143,7 @@ export const Menu: FC<MenuPropsType> = ({
               <ConnectionButtonContainer>
                 <ConnectionButtons
                   background={theme.colors.text}
-                  color={theme.colors.background}
+                  color={theme.colors.modalIconColor}
                 />
               </ConnectionButtonContainer>
             </LinkContainer>
@@ -168,6 +158,7 @@ const MobileHeaderContainer = styled.div<{ theme?: ThemeType }>`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
 `;
 
 const ModalContainer = styled.div<{ theme?: ThemeType }>`

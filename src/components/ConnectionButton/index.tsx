@@ -6,13 +6,16 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
 
-import { IconContext } from "react-icons";
-import { FaInstagram, FaViber, FaWhatsapp } from "react-icons/fa";
-import { LiaTelegram } from "react-icons/lia";
-import { LuPhone } from "react-icons/lu";
-import { SlLocationPin } from "react-icons/sl";
+import { ReactComponent as Instagram } from "../../icons/instagram.svg";
+import { ReactComponent as Location } from "../../icons/location.svg";
+import { ReactComponent as Phone } from "../../icons/phone.svg";
+import { ReactComponent as Telegram } from "../../icons/telegram.svg";
+import { ReactComponent as Viber } from "../../icons/viber.svg";
+import { ReactComponent as Whatsapp } from "../../icons/whatsapp.svg";
 
 import { ConnectionButtonContainer } from "../Menu";
+
+import { ThemeType } from "../../theme/theme";
 
 import { ConnectionButtonsPropsType } from "./types";
 
@@ -79,14 +82,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             href="https://instagram.com/maria.glushenko?igshid=MzRlODBiNWFlZA=="
             onClick={openInstagram}
           >
-            <IconContext.Provider
-              value={{
-                size: "28px",
-                color: `${background}`,
-              }}
-            >
-              <FaInstagram />
-            </IconContext.Provider>
+            <IconStyled as={Instagram} color={color} />
           </Buttons>
         </ButtonsItem>
         <ButtonsItem
@@ -100,14 +96,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             href="https://goo.gl/maps/o3qvsXRkfv8h3hdw5"
             target="_blank"
           >
-            <IconContext.Provider
-              value={{
-                size: "30px",
-                color: `${background}`,
-              }}
-            >
-              <SlLocationPin />
-            </IconContext.Provider>
+            <IconStyled as={Location} color={color} />
           </Buttons>
         </ButtonsItem>
         <ButtonsItem
@@ -121,14 +110,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             href="https://t.me/MashaHlushenko"
             onClick={openTelegram}
           >
-            <IconContext.Provider
-              value={{
-                size: "32px",
-                color: `${background}`,
-              }}
-            >
-              <LiaTelegram />
-            </IconContext.Provider>
+            <IconStyled as={Telegram} color={color} />
           </Buttons>
         </ButtonsItem>
         <ButtonsItem
@@ -142,14 +124,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             href="https://api.whatsapp.com/send?phone=380936193616"
             onClick={openWhatsApp}
           >
-            <IconContext.Provider
-              value={{
-                size: "32px",
-                color: `${background}`,
-              }}
-            >
-              <FaWhatsapp />
-            </IconContext.Provider>
+            <IconStyled as={Whatsapp} color={color} />
           </Buttons>
         </ButtonsItem>
         <ButtonsItem
@@ -163,14 +138,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             href="viber://chat?number=+380936193616"
             onClick={openViber}
           >
-            <IconContext.Provider
-              value={{
-                size: "28px",
-                color: `${background}`,
-              }}
-            >
-              <FaViber />
-            </IconContext.Provider>
+            <IconStyled as={Viber} color={color} />
           </Buttons>
         </ButtonsItem>
         <ButtonsItem
@@ -180,30 +148,14 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
           color={color}
         >
           <Buttons aria-label="Phone number" onClick={makeCall}>
-            <IconContext.Provider
-              value={{
-                size: "25px",
-                color: `${background}`,
-              }}
-            >
-              <LuPhone />
-            </IconContext.Provider>
+            <IconStyled as={Phone} color={color} />
           </Buttons>
         </ButtonsItem>
       </ButtonContainer>
       <ContactsLinkContainer>
         <ContactsLink style={{ color: `${background}` }}>
-          <IconContext.Provider
-            value={{
-              size: "15px",
-              color: `${background}`,
-            }}
-          >
-            <SlLocationPin />
-          </IconContext.Provider>
-          <AddressText style={{ color: background }}>
-            {t("address")}
-          </AddressText>
+          <IconLocation as={Location} color={color} />
+          <AddressText color={color}>{t("address")}</AddressText>
         </ContactsLink>
       </ContactsLinkContainer>
     </ConnectionButtonContainer>
@@ -214,17 +166,18 @@ const ContactsLinkContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   margin-top: 30px;
 `;
 
-const ContactsLink = styled.p`
+const ContactsLink = styled.div`
   text-decoration: none;
   color: #f7f7f7;
   font-size: 18px;
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: center;
+  align-items: baseline;
+  justify-content: baseline;
   transition: color 0.3s ease;
 
   &:hover {
@@ -241,7 +194,11 @@ const ButtonContainer = styled(motion.ul)`
   gap: 10px;
 `;
 
-const ButtonsItem = styled(motion.li)<{ iconColor: string }>`
+const ButtonsItem = styled(motion.li)<{
+  iconColor: string;
+  color: string;
+  theme?: ThemeType;
+}>`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -250,7 +207,8 @@ const ButtonsItem = styled(motion.li)<{ iconColor: string }>`
   width: 60px;
   padding: 12px;
   border-radius: 50%;
-  border: 2px solid #f7f7f7;
+  border: 2px solid
+    ${(props) => (props.color ? props.color : props.theme.colors.iconColor)};
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
@@ -271,6 +229,23 @@ const Buttons = styled.a`
   cursor: pointer;
 `;
 
-const AddressText = styled.p`
-  color: #f7f7f7;
+const AddressText = styled.p<{ theme?: ThemeType; color: string }>`
+  color: ${(props) =>
+    props.color ? props.color : props.theme.colors.iconColor};
+`;
+
+export const IconStyled = styled.svg<{ theme?: ThemeType; color?: string }>`
+  width: 35px;
+  height: 35px;
+  transition: fill 0.3s ease-in-out;
+  fill: ${(props) =>
+    props.color ? props.color : props.theme.colors.iconColor};
+  &:hover & {
+    fill: ${(props) => props.theme.colors.primary};
+  }
+`;
+
+export const IconLocation = styled(IconStyled)`
+  width: 20px;
+  height: 20px;
 `;

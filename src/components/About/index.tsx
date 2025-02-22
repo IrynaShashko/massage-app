@@ -2,10 +2,9 @@ import styled from "@emotion/styled";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
-
-import { FaSpa } from "react-icons/fa";
-import { FaGraduationCap } from "react-icons/fa6";
-import { TbMassage } from "react-icons/tb";
+import education from "../../images/education.png";
+import lotos from "../../images/lotos.png";
+import massage from "../../images/massage.png";
 
 import { ThemeType } from "../../theme/theme";
 
@@ -40,7 +39,7 @@ export const About = () => {
       >
         <InfoItem variants={animationElement} custom={2}>
           <IconContainer>
-            <FaSpa size={50} />
+            <img src={lotos} alt="lotos" />
             <BlurEffect />
           </IconContainer>
           <InfoCard>
@@ -50,7 +49,7 @@ export const About = () => {
         </InfoItem>
         <InfoItem variants={animationElement} custom={4}>
           <IconContainer>
-            <FaGraduationCap size={50} />
+            <img src={education} alt="education" />
             <BlurEffect />
           </IconContainer>
           <InfoCard>
@@ -60,7 +59,7 @@ export const About = () => {
         </InfoItem>
         <InfoItem variants={animationElement} custom={6}>
           <IconContainer>
-            <TbMassage size={50} />
+            <img src={massage} alt="massage" />
             <BlurEffect />
           </IconContainer>
           <InfoCard>
@@ -119,7 +118,7 @@ const IconContainer = styled.div<{ theme?: ThemeType }>`
   width: 100px;
   height: 100px;
   padding: 20px;
-  background-color: ${(props) => props.theme.colors.primary};
+  background-color: ${(props) => props.theme.colors.aboutBg};
   border-radius: 50%;
   display: flex;
   justify-content: center;

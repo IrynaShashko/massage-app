@@ -6,8 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
 
-import { IconContext } from "react-icons";
-import { FiX } from "react-icons/fi";
+import { ReactComponent as CloseIcon } from "../../icons/close.svg";
 
 import logo from "../../images/logo.png";
 
@@ -24,6 +23,7 @@ import {
 } from "../Modal";
 
 import { ConnectionFormPropsType } from "./types";
+import { IconStyled } from "../ConnectionButton";
 
 export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   isOpen,
@@ -146,14 +146,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             <ModalHeader>
               <img src={logo} width={120} alt="logo" />
               <ModalButton onClick={onClose}>
-                <IconContext.Provider
-                  value={{
-                    size: "30px",
-                    color: "#007586",
-                  }}
-                >
-                  <FiX />
-                </IconContext.Provider>
+                <IconStyled as={CloseIcon} color={"#007586"} />
               </ModalButton>
             </ModalHeader>
             <Formik initialValues={initialValues} onSubmit={handleSubmit}>

@@ -9,11 +9,13 @@ import { database, writeReview, writeReviewToFirestore } from "../../firebase";
 
 import { nanoid } from "nanoid";
 
-import { AiFillStar } from "react-icons/ai";
+import { ReactComponent as StarSvg } from "../../icons/star.svg";
+import { ReactComponent as StarActiveSvg } from "../../icons/starActive.svg";
 
-import { Container } from "../../App";
-import { Label } from "../../components/ConnectionForm";
 import { Contacts } from "../../components/Contacts";
+import { Container } from "../../App";
+import { IconStyled } from "../../components/ConnectionButton";
+import { Label } from "../../components/ConnectionForm";
 
 import { Review } from "./types";
 
@@ -120,14 +122,13 @@ export const ReviewsPage = () => {
                       <UserName>{review.name}</UserName>
                       <Stars>
                         {Array.from({ length: 5 }, (_, i) => (
-                          <AiFillStar
+                          <StarIconStyled
                             key={i}
-                            style={{
-                              color:
-                                i < review.totalPositiveStars
-                                  ? "orange"
-                                  : "#ccc",
-                            }}
+                            as={
+                              i < review.totalPositiveStars
+                                ? StarActiveSvg
+                                : StarSvg
+                            }
                           />
                         ))}
                       </Stars>
@@ -177,14 +178,14 @@ export const ReviewsPage = () => {
                 <span>{t("rating_label")}</span>
                 <StarsRating>
                   {Array.from({ length: 5 }, (_, i) => (
-                    <AiFillStar
+                    <StarIconStyled
                       key={i}
+                      as={
+                        i < newReview.totalPositiveStars
+                          ? StarActiveSvg
+                          : StarSvg
+                      }
                       onClick={() => handleStarClick(i + 1)}
-                      style={{
-                        cursor: "pointer",
-                        color:
-                          i < newReview.totalPositiveStars ? "orange" : "#ccc",
-                      }}
                     />
                   ))}
                 </StarsRating>
@@ -362,4 +363,9 @@ const Comment = styled.textarea`
   resize: vertical;
   width: 100%;
   box-sizing: border-box;
+`;
+
+const StarIconStyled = styled(IconStyled)`
+  width: 20px;
+  height: 20px;
 `;

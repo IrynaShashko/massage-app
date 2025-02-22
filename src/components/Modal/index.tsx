@@ -5,12 +5,11 @@ import styled from "@emotion/styled";
 import { createPortal } from "react-dom";
 import { Link, NavLink } from "react-router-dom";
 
-import { IconContext } from "react-icons";
-import { FiX } from "react-icons/fi";
+import { ReactComponent as CloseIcon } from "../../icons/close.svg";
 
 import logo from "../../images/logo.png";
 
-import { ConnectionButtons } from "../ConnectionButton";
+import { ConnectionButtons, IconStyled } from "../ConnectionButton";
 
 import { ThemeType } from "../../theme/theme";
 
@@ -65,14 +64,7 @@ export const Modal: FC<ModalPropsType> = ({ onClose, children }) => {
                 <img src={logo} width={120} alt="logo" />
               </Link>
               <ModalButton type="button" onClick={onClose}>
-                <IconContext.Provider
-                  value={{
-                    size: "30px",
-                    color: "#007586",
-                  }}
-                >
-                  <FiX />
-                </IconContext.Provider>
+                <IconStyled as={CloseIcon} color={"#007586"} />
               </ModalButton>
             </ModalHeader>
             <ConnectionButtons background={"#007586"} color={"#f1f1f1"} />

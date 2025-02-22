@@ -7,8 +7,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
 
-import { IconContext } from "react-icons";
-import { GiCheckMark } from "react-icons/gi";
+import { ReactComponent as Check } from "../../icons/check.svg";
 
 import bg from "../../images/10.jpg";
 import noise from "../../images/noise.png";
@@ -17,6 +16,7 @@ import { ConnectionForm } from "../ConnectionForm";
 
 import { ThemeType } from "../../theme/theme";
 
+import { IconStyled } from "../ConnectionButton";
 import { HeroPropsType } from "./types";
 
 export const Hero: FC<HeroPropsType> = ({ language }) => {
@@ -44,16 +44,7 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
     triggerOnce: true,
   });
 
-  const mark = (
-    <IconContext.Provider
-      value={{
-        size: "20px",
-        color: "#007586",
-      }}
-    >
-      <GiCheckMark />
-    </IconContext.Provider>
-  );
+  const mark = <CheckIcon as={Check} />;
 
   return (
     <>
@@ -201,7 +192,10 @@ export const TextContainer = styled(motion.div)`
 export const Text = styled(motion.p)<{ theme?: ThemeType }>`
   font-size: 18px;
   color: ${(props) => props.theme.colors.heroText};
+  display: flex;
   text-align: center;
+  align-items: center;
+  justify-content: center;
   font-weight: lighter;
   line-height: 35px;
   max-width: 360px;
@@ -252,4 +246,10 @@ export const ModalSubmitBtn = styled(motion.button)`
   @media screen and (min-width: 768px) {
     width: 280px;
   }
+`;
+
+const CheckIcon = styled(IconStyled)`
+  width: 40px;
+  height: 40px;
+  align-self: center;
 `;
