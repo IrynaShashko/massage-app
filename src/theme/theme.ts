@@ -11,6 +11,8 @@ export const lightTheme = {
     cardBg: "var(--color-header-bg)",
     aboutBg: "var(--color-primary-light)",
     aboutText: "var(--color-primary-dark)",
+    iconColor: "var(--color-bg-white)",
+    modalIconColor: "var(--color-card-bg)",
   },
 };
 
@@ -27,6 +29,8 @@ export const darkTheme = {
     heroText: "var(--color-bg)",
     aboutBg: "var(--color-primary-dark)",
     aboutText: "var(--color-primary-light)",
+    iconColor: "var(--color-bg)",
+    modalIconColor: "var(--color-text-dark)",
   },
 };
 
