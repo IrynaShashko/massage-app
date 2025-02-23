@@ -4,15 +4,15 @@ const GlobalStyle = createGlobalStyle`
   :root {
     --color-bg: #F7F7F7;
     --color-bg-white:#ffffff;
-    --color-text: #000000;
+    --color-text:rgb(23, 22, 22);
     --color-primary:#007586;
     --color-primary-light:rgb(156, 202, 209);
     --color-header-bg: rgba(255, 255, 255, 0.7);
 
-    --color-bg-dark: #222831;
-    --color-card-bg:rgba(0, 0, 0, 0.6);
+    --color-bg-dark:rgb(55, 61, 70);
+    --color-card-bg:rgba(0, 0, 0, 0.5);
     --color-text-dark:rgb(195, 193, 193);
-    --color-primary-dark: rgb(73, 126, 134);
+    --color-primary-dark: rgb(89, 131, 137);
     --color-header-bg-dark: rgba(0, 0, 0, 0.7);
     --color-box-shadow-light: rgba(0, 0, 0, 0.1);
     --color-box-shadow-dark: rgba(0, 0, 0, 0.3);
@@ -20,6 +20,7 @@ const GlobalStyle = createGlobalStyle`
   }
 
   html, body {
+    font-family: 'Comfortaa', sans-serif;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -30,6 +31,11 @@ const GlobalStyle = createGlobalStyle`
     transition: all 0.3s ease-in-out;
     transition: all var(--transition-duration) ease-in-out;
   }
+
+  h1, h2, h3, h4, p, a, button, ::placeholder {
+    font-family: 'Comfortaa', sans-serif;
+  }
+
   *{
     box-sizing: border-box;
   }

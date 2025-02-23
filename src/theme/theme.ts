@@ -20,8 +20,8 @@ export const darkTheme = {
   colors: {
     background: "var(--color-bg-dark)",
     buttonBg: "var(--color-text-dark)",
-    buttonText: "var(--color-bg-dark)",
-    primary: "var(--color-primary-dark)",
+    buttonText: "var(--color-bg)",
+    primary: "var(--color-primary)",
     headerBg: "var(--color-header-bg-dark)",
     text: "var(--color-text-dark)",
     boxShadow: "var(--color-box-shadow-dark)",
