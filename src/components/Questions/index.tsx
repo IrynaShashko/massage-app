@@ -4,7 +4,7 @@ import {
   ArticleTitle,
 } from "../../pages/ArticlePage";
 
-export const Questions = () => {
+const Questions = () => {
   return (
     <div>
       <ArticleTitle>Питання, які часто задають про масаж.</ArticleTitle>
@@ -101,3 +101,5 @@ export const Questions = () => {
     </div>
   );
 };
+
+export default Questions;

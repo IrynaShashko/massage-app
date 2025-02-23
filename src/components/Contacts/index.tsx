@@ -42,11 +42,6 @@ export const Contacts = () => {
           </GridContainer>
         </Container>
       </ContactsContainer>
-      <CopyrightContainer>
-        <CopyrightText>
-          {"Copyright 2025 © Maria Glushenko. All rights reserved"}
-        </CopyrightText>
-      </CopyrightContainer>
     </>
   );
 };
@@ -96,14 +91,4 @@ const Location = styled.iframe`
   height: 400px;
   border-radius: 12px;
   align-self: center;
-`;
-
-const CopyrightContainer = styled.div`
-  padding-top: 20px;
-  padding-bottom: 20px;
-  text-align: center;
-`;
-
-const CopyrightText = styled.p<{ theme?: ThemeType }>`
-  color: ${(props) => props.theme.colors.text};
 `;

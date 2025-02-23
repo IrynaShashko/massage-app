@@ -1,5 +1,5 @@
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
-import { FC, useEffect, useState } from "react";
+import { FC, lazy, Suspense, useEffect, useState } from "react";
 import {
   Navigate,
   Route,
@@ -12,18 +12,20 @@ import i18n from "./i18n";
 import GlobalStyle from "./theme/GlobalStyle";
 import { darkTheme, lightTheme } from "./theme/theme";
 
-import { AboutPage } from "./pages/AboutPage";
-import { HomePage } from "./pages/HomePage";
-import { PricePage } from "./pages/PricePage";
-
-import { Expectation } from "./components/Expectation";
+import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
-import { Health } from "./components/Health";
-import { Questions } from "./components/Questions";
-import { ArticlePage } from "./pages/ArticlePage";
-import { ReviewsPage } from "./pages/ReviewsPage";
+import Loader from "./components/Loader";
 
 export const App: FC = () => {
+  const AboutPage = lazy(() => import("./pages/AboutPage"));
+  const HomePage = lazy(() => import("./pages/HomePage"));
+  const PricePage = lazy(() => import("./pages/PricePage"));
+  const ReviewsPage = lazy(() => import("./pages/ReviewsPage"));
+  const ArticlePage = lazy(() => import("./pages/ArticlePage"));
+  const Questions = lazy(() => import("./components/Questions"));
+  const Health = lazy(() => import("./components/Health"));
+  const Expectation = lazy(() => import("./components/Expectation"));
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem("theme") === "dark";
   });
@@ -77,24 +79,32 @@ export const App: FC = () => {
               language={language}
               darkMode={isDarkMode}
             />
-            <Routes>
-              <Route path="/" element={<HomePage language={language} />} />
-              <Route
-                path="/about"
-                element={<AboutPage language={language} />}
-              />
-              <Route
-                path="/price"
-                element={<PricePage language={language} />}
-              />
-              <Route path="/reviews" element={<ReviewsPage />} />
-              <Route path="/article/*" element={<ArticlePage />}>
-                <Route index element={<Navigate to="questions" replace />} />
-                <Route path="questions" element={<Questions />} />
-                <Route path="health" element={<Health />} />
-                <Route path="expectation" element={<Expectation />} />
-              </Route>
-            </Routes>
+            <main>
+              <Suspense fallback={<Loader />}>
+                <Routes>
+                  <Route path="/" element={<HomePage language={language} />} />
+                  <Route
+                    path="/about"
+                    element={<AboutPage language={language} />}
+                  />
+                  <Route
+                    path="/price"
+                    element={<PricePage language={language} />}
+                  />
+                  <Route path="/reviews" element={<ReviewsPage />} />
+                  <Route path="/article/*" element={<ArticlePage />}>
+                    <Route
+                      index
+                      element={<Navigate to="questions" replace />}
+                    />
+                    <Route path="questions" element={<Questions />} />
+                    <Route path="health" element={<Health />} />
+                    <Route path="expectation" element={<Expectation />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+            </main>
+            <Footer />
           </Router>
         </ContentContainer>
       </EmotionThemeProvider>

@@ -51,16 +51,28 @@ export const Header: React.FC<HeaderPropsType> = ({
             <img src={logo} alt="Logo" />
           </Logo>
           <NavLinks>
-            <StyledNavLink to="/" end>
-              {t("home_button")}
-            </StyledNavLink>
-            <StyledNavLink to="/about">{t("about_button")}</StyledNavLink>
-            <StyledNavLink to="/price">{t("price_button")}</StyledNavLink>
-            <StyledNavLink to="/reviews">{t("reviews_button")}</StyledNavLink>
-            <StyledNavLink to="/article">{t("article_button")}</StyledNavLink>
-            <StyledLink href="/#contacts" onClick={handleScrollToContacts}>
-              {t("contacts_button")}
-            </StyledLink>
+            <li>
+              <StyledNavLink to="/" end>
+                {t("home_button")}
+              </StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/about">{t("about_button")}</StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/price">{t("price_button")}</StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/reviews">{t("reviews_button")}</StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/article">{t("article_button")}</StyledNavLink>
+            </li>
+            <li>
+              <StyledLink href="/#contacts" onClick={handleScrollToContacts}>
+                {t("contacts_button")}
+              </StyledLink>
+            </li>
           </NavLinks>
           <ButtonContainer>
             <LanguageButton
@@ -93,6 +105,7 @@ const HeaderContainer = styled.header<{ $darkMode: boolean }>`
   height: 80px;
   background: ${(props) =>
     props.$darkMode ? "rgba(34, 40, 49, 0.8)" : "rgba(255, 255, 255, 0.8)"};
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 1000;
   box-shadow: 0 4px 8px ${(props) => props.theme.colors.boxShadow};
@@ -102,7 +115,7 @@ const HeaderContainer = styled.header<{ $darkMode: boolean }>`
     box-shadow 0.6s ease;
 `;
 
-const Wrapper = styled.div`
+const Wrapper = styled.nav`
   display: none;
   @media screen and (min-width: 975px) {
     display: flex;
@@ -125,14 +138,13 @@ const Logo = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
-
   img {
     width: 150px;
     height: auto;
   }
 `;
 
-const NavLinks = styled.nav`
+const NavLinks = styled.ul`
   display: flex;
   gap: 20px;
   justify-content: center;
@@ -146,7 +158,6 @@ const StyledNavLink = styled(NavLink)`
   font-weight: bold;
   position: relative;
   transition: color 0.3s;
-
   &::after {
     content: "";
     position: absolute;
@@ -157,16 +168,13 @@ const StyledNavLink = styled(NavLink)`
     background-color: ${(props) => props.theme.colors.primary};
     transition: width 0.3s ease-in-out;
   }
-
   &:hover::after,
   &.active::after {
     width: 100%;
   }
-
   &:hover {
     color: ${(props) => props.theme.colors.primary};
   }
-
   &.active {
     color: ${(props) => props.theme.colors.primary};
   }
@@ -178,11 +186,9 @@ const StyledLink = styled.a`
   font-size: 18px;
   font-weight: bold;
   transition: color 0.3s;
-
   &:hover {
     color: ${(props) => props.theme.colors.primary};
   }
-
   &.active {
     color: ${(props) => props.theme.colors.primary};
   }

@@ -4,7 +4,7 @@ import {
   ArticleTitle,
 } from "../../pages/ArticlePage";
 
-export const Health = () => {
+const Health = () => {
   return (
     <div>
       <ArticleTitle>Здорове тіло</ArticleTitle>
@@ -67,3 +67,5 @@ export const Health = () => {
     </div>
   );
 };
+
+export default Health;

@@ -341,7 +341,7 @@ const OptionLable = styled(Field)`
 const ModalSubmitBtn = styled.button<{ theme?: ThemeType }>`
   padding: 12px 20px;
   font-size: 16px;
-  color: ${(props) => props.theme.colors.text};
+  color: ${(props) => props.theme.colors.buttonText};
   background-color: ${(props) => props.theme.colors.primary};
   border: none;
   border-radius: 16px;

@@ -45,12 +45,13 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
   });
 
   const mark = <CheckIcon as={Check} />;
+  const markLast = <CheckIconLast as={Check} />;
 
   return (
     <>
       <PageContainer>
         <Gradient />
-        <Noise />
+        {/* <Noise /> */}
         <TextContainer
           initial="hidden"
           animate={inView ? "visible" : "hidden"}
@@ -58,34 +59,32 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
           ref={ref}
           custom={1}
         >
-          <div>
-            <TitleText variants={animationElement} custom={2}>
-              {t("welcome")}
-            </TitleText>
-            <Text variants={animationElement} custom={3}>
-              {t("hereYouCan")}
-            </Text>
-            <Text variants={animationElement} custom={4}>
-              {mark}
-              {t("harmony")}
-            </Text>
-            <Text variants={animationElement} custom={5}>
-              {mark}
-              {t("balance")}
-            </Text>
-            <Text variants={animationElement} custom={6}>
-              {mark}
-              {t("stressRelief")}
-            </Text>
-            <Text variants={animationElement} custom={7}>
-              {mark}
-              {t("painRelief")}
-            </Text>
-            <Text variants={animationElement} custom={8}>
-              {mark}
-              {t("restoreFunction")}
-            </Text>
-          </div>
+          <TitleText variants={animationElement} custom={2}>
+            {t("welcome")}
+          </TitleText>
+          <Text variants={animationElement} custom={3}>
+            {t("hereYouCan")}
+          </Text>
+          <Text variants={animationElement} custom={4}>
+            {mark}
+            {t("harmony")}
+          </Text>
+          <Text variants={animationElement} custom={5}>
+            {mark}
+            {t("balance")}
+          </Text>
+          <Text variants={animationElement} custom={6}>
+            {mark}
+            {t("stressRelief")}
+          </Text>
+          <Text variants={animationElement} custom={7}>
+            {mark}
+            {t("painRelief")}
+          </Text>
+          <Text variants={animationElement} custom={8}>
+            {markLast}
+            {t("restoreFunction")}
+          </Text>
           <ButtonContainer>
             <motion.div
               variants={animationElement}
@@ -126,8 +125,8 @@ const PageContainer = styled.div`
 export const Gradient = styled.div`
   background-image: linear-gradient(
     180deg,
-    rgba(41, 37, 37, 0.55) 0%,
-    rgba(3, 0, 0, 0.55) 100%
+    rgba(41, 37, 37, 0.15) 0%,
+    rgba(3, 0, 0, 0.15) 100%
   );
   position: absolute;
   top: 0;
@@ -195,10 +194,9 @@ export const Text = styled(motion.p)<{ theme?: ThemeType }>`
   display: flex;
   text-align: center;
   align-items: center;
-  justify-content: center;
-  font-weight: lighter;
-  line-height: 35px;
-  max-width: 360px;
+  max-width: 300px;
+  flex-direction: row;
+
   @media screen and (min-width: 425px) {
     max-width: 500px;
   }
@@ -222,13 +220,13 @@ const TitleText = styled(Text)`
   }
 `;
 
-export const ModalSubmitBtn = styled(motion.button)`
+export const ModalSubmitBtn = styled(motion.button)<{ theme?: ThemeType }>`
   border: none;
   background-color: transparent;
   border-radius: 8px;
   align-self: center;
   padding: 10px;
-  color: #ffffff;
+  color: ${(props) => props.theme.colors.buttonText};
   width: 220px;
   font-size: 20px;
   font-family: 400;
@@ -239,6 +237,7 @@ export const ModalSubmitBtn = styled(motion.button)`
   margin-top: 20px;
   &:hover {
     background: rgba(0, 0, 0, 0.5);
+    transform: scale(1.1);
   }
   @media screen and (min-width: 425px) {
     width: 250px;
@@ -251,5 +250,18 @@ export const ModalSubmitBtn = styled(motion.button)`
 const CheckIcon = styled(IconStyled)`
   width: 40px;
   height: 40px;
-  align-self: center;
+  align-self: baseline;
+`;
+
+const CheckIconLast = styled(CheckIcon)`
+  width: 70px;
+  height: 70px;
+  @media screen and (min-width: 425px) {
+    width: 50px;
+    height: 50px;
+  }
+  @media screen and (min-width: 1024px) {
+    width: 45px;
+    height: 45px;
+  }
 `;

@@ -8,7 +8,6 @@ import styled from "@emotion/styled";
 import { useTranslation } from "react-i18next";
 
 import logo from "../../images/logo.png";
-import logoMobile from "../../images/logo_mg.png";
 
 import { ConnectionButtons, IconStyled } from "../ConnectionButton";
 import { LanguageButton } from "../LanguageButton";
@@ -103,7 +102,7 @@ export const Menu: FC<MenuPropsType> = ({
           <NavLinkContainer isOpen={isMenuOpen}>
             <ModalContainer>
               <Link to={"/"}>
-                <LogoMobile src={logoMobile} alt="logo" />
+                <Logo src={logo} alt="logo" />
               </Link>
               <ModalButtonContainer>
                 <ButtonContainer>
@@ -139,7 +138,7 @@ export const Menu: FC<MenuPropsType> = ({
               <NavLinks to={"/price"} onClick={closeMenu}>
                 {t("price_button")}
               </NavLinks>
-              <ContactTitle>{t("contacts_button")}</ContactTitle>
+              <ContactTitle>{`${t("contacts_button")} :`}</ContactTitle>
               <ConnectionButtonContainer>
                 <ConnectionButtons
                   background={theme.colors.text}
@@ -221,12 +220,6 @@ const Logo = styled.img`
   cursor: pointer;
 `;
 
-const LogoMobile = styled.img`
-  width: 30px;
-  height: 100%;
-  cursor: pointer;
-`;
-
 const ModalButtonContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -266,8 +259,8 @@ const ButtonContainer = styled.div`
 
 const ContactTitle = styled.p<{ theme?: ThemeType }>`
   color: ${(props) => props.theme.colors.text};
-  font-size: 22px;
-  font-weight: 500;
+  font-size: 24px;
+  font-weight: 850;
   padding: 10px 12px;
 
   @media (max-width: 768px) {

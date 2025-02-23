@@ -14,7 +14,7 @@ import { Contacts } from "../../components/Contacts";
 
 import { Categories, PricePagePropsType } from "./types";
 
-export const PricePage: FC<PricePagePropsType> = ({ language }) => {
+const PricePage: FC<PricePagePropsType> = ({ language }) => {
   const [t] = useTranslation();
   const categoriesData: Categories =
     language === "ua" ? categories : categoriesEn;
@@ -40,20 +40,22 @@ export const PricePage: FC<PricePagePropsType> = ({ language }) => {
               </TabButton>
             ))}
           </CategoryTabs>
-          <ServiceGrid>
-            {currentCategory?.map((service, index) => (
-              <ServiceCard key={index}>
-                <ServiceHeader>
-                  <ServiceName>{service.service}</ServiceName>
-                  {service.time && (
-                    <ServiceDuration>{service.time}</ServiceDuration>
-                  )}
-                  {service.description && <p>{service.description}</p>}
-                </ServiceHeader>
-                <ServicePrice>{service.price}</ServicePrice>
-              </ServiceCard>
-            ))}
-          </ServiceGrid>
+          <ServiceGridContainer>
+            <ServiceGrid>
+              {currentCategory?.map((service, index) => (
+                <ServiceCard key={index}>
+                  <ServiceHeader>
+                    <ServiceName>{service.service}</ServiceName>
+                    {service.time && (
+                      <ServiceDuration>{service.time}</ServiceDuration>
+                    )}
+                    {service.description && <p>{service.description}</p>}
+                  </ServiceHeader>
+                  <ServicePrice>{service.price}</ServicePrice>
+                </ServiceCard>
+              ))}
+            </ServiceGrid>
+          </ServiceGridContainer>
         </Container>
       </BackgroundImageStyle>
       <Contacts />
@@ -61,18 +63,21 @@ export const PricePage: FC<PricePagePropsType> = ({ language }) => {
   );
 };
 
+export default PricePage;
+
 const BackgroundImageStyle = styled.div`
   position: relative;
   box-sizing: border-box;
   background-image: url(${backgroundImage});
   background-size: cover;
   background-position: center;
-  min-height: 90vh;
+  height: 100vh;
   width: 100%;
   padding: 20px;
   padding-top: 20px;
   color: white;
   z-index: 1;
+  overflow-y: auto;
   @media screen and (min-width: 768px) {
     padding-top: 50px;
     padding-bottom: 50px;
@@ -112,21 +117,37 @@ const TabButton = styled.button<{ active: boolean }>`
   }
 `;
 
+const ServiceGridContainer = styled.div`
+  max-height: calc(90vh - 100px);
+  overflow-y: auto;
+  padding-bottom: 10px;
+`;
+
 const ServiceGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, 300px);
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, 260px);
+  gap: 20px;
   z-index: 5;
   justify-content: center;
+  @media screen and (min-width: 768px) {
+    grid-template-columns: repeat(auto-fit, 260px);
+  }
+  @media screen and (min-width: 1024px) {
+    grid-template-columns: repeat(auto-fit, 280px);
+  }
+  @media screen and (min-width: 1440px) {
+    grid-template-columns: repeat(auto-fit, 260px);
+  }
 `;
 
 const ServiceCard = styled.div`
   background-color: ${(props) => props.theme.colors.cardBg};
   box-shadow: 0 4px 12px ${(props) => props.theme.colors.boxShadow};
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
+  height: 180px;
 `;
 
 const ServiceHeader = styled.div`

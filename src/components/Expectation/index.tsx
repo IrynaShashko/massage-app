@@ -4,7 +4,7 @@ import {
   ArticleTitle,
 } from "../../pages/ArticlePage";
 
-export const Expectation = () => {
+const Expectation = () => {
   return (
     <div>
       <ArticleTitle>Масаж: чого очікувати від сеансу?</ArticleTitle>
@@ -133,3 +133,5 @@ export const Expectation = () => {
     </div>
   );
 };
+
+export default Expectation;

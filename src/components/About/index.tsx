@@ -1,7 +1,9 @@
 import styled from "@emotion/styled";
 import { motion } from "framer-motion";
+
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
+
 import education from "../../images/education.png";
 import lotos from "../../images/lotos.png";
 import massage from "../../images/massage.png";
@@ -28,7 +30,7 @@ export const About = () => {
   });
 
   return (
-    <>
+    <Container>
       <Title>{t("whyChooseMe")}</Title>
       <InfoContainer
         initial="hidden"
@@ -68,12 +70,18 @@ export const About = () => {
           </InfoCard>
         </InfoItem>
       </InfoContainer>
-    </>
+    </Container>
   );
 };
 
-const InfoContainer = styled(motion.ul)`
+const Container = styled.section`
   padding: 20px;
+  @media screen and (min-width: 900px) {
+    padding: 50px;
+  }
+`;
+
+const InfoContainer = styled(motion.ul)`
   display: grid;
   grid-template-columns: repeat(1, 1fr);
   gap: 70px;
@@ -146,7 +154,10 @@ const Title = styled.h3<{ theme?: ThemeType }>`
   font-weight: lighter;
   text-transform: uppercase;
   text-align: center;
-  margin-bottom: 100px;
+  margin-bottom: 70px;
+  @media screen and (min-width: 1024px) {
+    margin-bottom: 100px;
+  }
 `;
 
 const MainText = styled.p<{ theme?: ThemeType }>`

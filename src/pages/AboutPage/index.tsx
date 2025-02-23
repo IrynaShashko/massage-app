@@ -17,7 +17,7 @@ import { ThemeType } from "../../theme/theme";
 
 import { AboutPagePropsType } from "./types";
 
-export const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
+const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
   const [t] = useTranslation();
 
   const data = language === "ua" ? experience : experienceEn;
@@ -88,6 +88,8 @@ export const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
   );
 };
 
+export default AboutPage;
+
 export const AboutContainer = styled.div<{ theme?: ThemeType }>`
   background-color: ${(props) => props.theme.colors.background};
   @media screen and (min-width: 768px) {
@@ -110,14 +112,14 @@ export const ImageContainer = styled.div<{ theme?: ThemeType }>`
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  gap: 50px;
+  gap: 20px;
   @media screen and (min-width: 768px) {
     padding: 50px;
+    gap: 50px;
   }
   @media screen and (min-width: 970px) {
     display: flex;
     padding: 50px;
-
     flex-direction: row;
     justify-content: center;
   }
@@ -129,6 +131,9 @@ const ImageWrapper = styled.div`
   align-items: center;
   flex: 0 0 auto;
   max-width: 400px;
+  @media screen and (min-width: 768px) {
+    max-width: 450px;
+  }
 `;
 
 const ImageBorder = styled.div`
@@ -190,10 +195,9 @@ const TitleContainer = styled.div`
 const Title = styled.h2`
   font-size: 30px;
   margin-top: 20px;
-  color: #fff;
+  color: #f7f7f7;
   margin-bottom: 20px;
-  font-weight: lighter;
-  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.8);
+  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.9);
   letter-spacing: 5px;
   text-align: center;
   @media screen and (min-width: 768px) {
@@ -203,7 +207,6 @@ const Title = styled.h2`
 
 const AfterTitle = styled.p<{ theme?: ThemeType }>`
   font-size: 18px;
-  margin-bottom: 20px;
   letter-spacing: 5px;
   color: ${(props) => props.theme.colors.text};
   text-align: center;
@@ -251,9 +254,9 @@ const ItemText = styled.p<{ theme?: ThemeType }>`
   }
 `;
 
-const ItemTitle = styled.h4`
+const ItemTitle = styled.h4<{ theme?: ThemeType }>`
   font-size: 20px;
-  color: #007586;
+  color: ${(props) => props.theme.colors.primary};
   margin-bottom: 10px;
   text-transform: uppercase;
   line-height: 50px;
