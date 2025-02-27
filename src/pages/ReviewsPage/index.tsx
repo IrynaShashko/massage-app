@@ -1,12 +1,14 @@
-import { onAuthStateChanged } from "firebase/auth"; // Import Firebase auth
+import {
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithPopup,
+} from "firebase/auth"; // Import Firebase auth
 import { onValue, ref } from "firebase/database";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import { Container } from "../../App";
-import { signInWithGoogle } from "../../auth";
-import { IconStyled } from "../../components/ConnectionButton";
 import { Label } from "../../components/ConnectionForm";
 import { Contacts } from "../../components/Contacts";
 import { Loader } from "../../components/Loader";
@@ -23,6 +25,7 @@ import dotArrowRight from "../../images/dotArrowRight.png";
 import reviewImage from "../../images/flowers.png";
 import leftCircle from "../../images/leftCircle.png";
 import { Review } from "./types";
+import { IconStyled } from "../../components/ConnectionButton";
 
 const ReviewsPage = () => {
   const [t] = useTranslation();
@@ -54,6 +57,15 @@ const ReviewsPage = () => {
         setIsAuthenticated(false);
       }
     });
+  };
+
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
   };
 
   useEffect(() => {
