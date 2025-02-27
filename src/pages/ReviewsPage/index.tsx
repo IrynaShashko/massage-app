@@ -11,13 +11,16 @@ import { nanoid } from "nanoid";
 
 import { ReactComponent as StarSvg } from "../../icons/star.svg";
 import { ReactComponent as StarActiveSvg } from "../../icons/starActive.svg";
+import circleRight from "../../images/circleRight.png";
+import dotArrowRight from "../../images/dotArrowRight.png";
 import reviewImage from "../../images/flowers.png";
+import leftCircle from "../../images/leftCircle.png";
 
 import { Container } from "../../App";
 import { IconStyled } from "../../components/ConnectionButton";
 import { Label } from "../../components/ConnectionForm";
 import { Contacts } from "../../components/Contacts";
-import Loader from "../../components/Loader";
+import { Loader } from "../../components/Loader";
 
 import { Review } from "./types";
 
@@ -123,90 +126,95 @@ const ReviewsPage = () => {
         {!reviews.length ? (
           <Loader />
         ) : (
-          <ReviewsContainer>
-            <Container>
-              <ReviewsWrapper>
-                <ReviewList>
-                  {reviews.map((review, index) => (
-                    <ReviewItem key={index}>
-                      <UserName>{review.name}</UserName>
-                      <UserIconDiv>
-                        <StarsContainer>
-                          <Stars>
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <StarIconStyled
-                                key={i}
-                                as={
-                                  i < review.totalPositiveStars
-                                    ? StarActiveSvg
-                                    : StarSvg
-                                }
-                              />
-                            ))}
-                          </Stars>
-                          <ImageStyled src={reviewImage} alt="Review Image" />
-                        </StarsContainer>
-                      </UserIconDiv>
-                      <Text>{review.comment}</Text>
-                    </ReviewItem>
-                  ))}
-                </ReviewList>
-                <FeedbackForm>
-                  <FormTitle>{t("leave_review")}</FormTitle>
-                  <Label htmlFor="name">
-                    {t("your_name_label")}
-                    <Input
-                      type="text"
-                      id="name"
-                      value={newReview.name}
-                      onChange={(e) =>
-                        setNewReview({ ...newReview, name: e.target.value })
-                      }
-                      placeholder={t("your_name_placeholder")}
-                      required
-                      style={{
-                        borderColor: errors.name ? "red" : "#ccc",
-                      }}
-                    />
-                  </Label>
-                  <Label htmlFor="comment">
-                    {t("your_review_label")}
-                    <Comment
-                      id="comment"
-                      value={newReview.comment}
-                      placeholder={t("your_review_placeholder")}
-                      required
-                      onChange={handleInput}
-                      rows={1}
-                      style={{
-                        borderColor: errors.comment ? "red" : "#ccc",
-                      }}
-                    />
-                  </Label>
-                  <StarsWrapper>
-                    <span>{t("rating_label")}</span>
-                    <StarsRating>
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <StarIconStyled
-                          key={i}
-                          as={
-                            i < newReview.totalPositiveStars
-                              ? StarActiveSvg
-                              : StarSvg
-                          }
-                          onClick={() => handleStarClick(i + 1)}
-                        />
-                      ))}
-                    </StarsRating>
-                    {errors.stars && (
-                      <ErrorText>{t("rating_required")}</ErrorText>
-                    )}
-                  </StarsWrapper>
-                  <button onClick={handleAddReview}>{t("add_review")}</button>
-                </FeedbackForm>
-              </ReviewsWrapper>
-            </Container>
-          </ReviewsContainer>
+          <ReviewDecContainer>
+            <DecorativeElementLeft />
+            <DecorativeElementBottomRight />
+            <ReviewsContainer>
+              <Container>
+                <ReviewsWrapper>
+                  <ReviewList>
+                    {reviews.map((review, index) => (
+                      <ReviewItem key={index}>
+                        <UserName>{review.name}</UserName>
+                        <UserIconDiv>
+                          <StarsContainer>
+                            <Stars>
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <StarIconStyled
+                                  key={i}
+                                  as={
+                                    i < review.totalPositiveStars
+                                      ? StarActiveSvg
+                                      : StarSvg
+                                  }
+                                />
+                              ))}
+                            </Stars>
+                            <ImageStyled src={reviewImage} alt="Review Image" />
+                          </StarsContainer>
+                        </UserIconDiv>
+                        <Text>{review.comment}</Text>
+                      </ReviewItem>
+                    ))}
+                  </ReviewList>
+                  <FeedbackForm>
+                    <DecorativeElementTopRight />
+                    <FormTitle>{t("leave_review")}</FormTitle>
+                    <Label htmlFor="name">
+                      {t("your_name_label")}
+                      <Input
+                        type="text"
+                        id="name"
+                        value={newReview.name}
+                        onChange={(e) =>
+                          setNewReview({ ...newReview, name: e.target.value })
+                        }
+                        placeholder={t("your_name_placeholder")}
+                        required
+                        style={{
+                          borderColor: errors.name ? "red" : "#ccc",
+                        }}
+                      />
+                    </Label>
+                    <Label htmlFor="comment">
+                      {t("your_review_label")}
+                      <Comment
+                        id="comment"
+                        value={newReview.comment}
+                        placeholder={t("your_review_placeholder")}
+                        required
+                        onChange={handleInput}
+                        rows={1}
+                        style={{
+                          borderColor: errors.comment ? "red" : "#ccc",
+                        }}
+                      />
+                    </Label>
+                    <StarsWrapper>
+                      <span>{t("rating_label")}</span>
+                      <StarsRating>
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <StarIconStyled
+                            key={i}
+                            as={
+                              i < newReview.totalPositiveStars
+                                ? StarActiveSvg
+                                : StarSvg
+                            }
+                            onClick={() => handleStarClick(i + 1)}
+                          />
+                        ))}
+                      </StarsRating>
+                      {errors.stars && (
+                        <ErrorText>{t("rating_required")}</ErrorText>
+                      )}
+                    </StarsWrapper>
+                    <button onClick={handleAddReview}>{t("add_review")}</button>
+                  </FeedbackForm>
+                </ReviewsWrapper>
+              </Container>
+            </ReviewsContainer>
+          </ReviewDecContainer>
         )}
       </>
       <Contacts />
@@ -216,6 +224,10 @@ const ReviewsPage = () => {
 
 export default ReviewsPage;
 
+const ReviewDecContainer = styled.div`
+  position: relative;
+`;
+
 const ReviewsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -223,6 +235,54 @@ const ReviewsContainer = styled.div`
   background-color: ${(props) => props.theme.colors.aboutBg};
   padding: 30px;
   justify-content: center;
+`;
+
+const DecorativeElementLeft = styled.div`
+  position: absolute;
+  left: 0;
+  top: 40%;
+  width: 300px;
+  height: 700px;
+  background-image: url(${leftCircle});
+  background-size: contain;
+  background-repeat: no-repeat;
+  transform: translateY(-70%);
+  @media screen and (min-width: 768px) {
+    width: 500px;
+    height: 1000px;
+  }
+`;
+
+const DecorativeElementTopRight = styled.div`
+  position: absolute;
+  right: -15%;
+  bottom: -12%;
+  width: 150px;
+  height: 150px;
+  background-image: url(${dotArrowRight});
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: -1;
+  @media screen and (min-width: 1024px) {
+    right: -10%;
+    bottom: -12%;
+  }
+`;
+
+const DecorativeElementBottomRight = styled.div`
+  position: absolute;
+  right: 5%;
+  bottom: 10%;
+  width: 400px;
+  height: 400px;
+  background-image: url(${circleRight});
+  background-size: contain;
+  background-repeat: no-repeat;
+  @media screen and (min-width: 768px) {
+    bottom: 15%;
+    width: 700px;
+    height: 700px;
+  }
 `;
 
 const ReviewList = styled.ul`
@@ -306,6 +366,7 @@ const ReviewsWrapper = styled.div`
 `;
 
 const FeedbackForm = styled.div`
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;

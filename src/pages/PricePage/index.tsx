@@ -102,7 +102,9 @@ const CategoryTabs = styled.div`
   }
 `;
 
-const TabButton = styled.button<{ active: boolean }>`
+const TabButton = styled.button.withConfig({
+  shouldForwardProp: (prop) => prop !== "active",
+})<{ active: boolean }>`
   padding: 10px 15px;
   border: none;
   border-radius: 4px;

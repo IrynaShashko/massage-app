@@ -5,13 +5,19 @@ import styled from "@emotion/styled";
 import { Container } from "../../App";
 import { Contacts } from "../../components/Contacts";
 
+import circleRight from "../../images/circleRight.png";
+import dotLine from "../../images/dotLine.png";
 import lady from "../../images/lady.png";
+import leftCircle from "../../images/leftCircle.png";
 
 import { ThemeType } from "../../theme/theme";
 
 const ArticlePage = () => {
   return (
-    <>
+    <DecorativeWrapper>
+      <DecorativeElementLeft />
+      <DecorativeElementTopRight />
+      <DecorativeElementBottomRight />
       <PageContainer>
         <Container>
           <PageWrapper>
@@ -42,13 +48,17 @@ const ArticlePage = () => {
         </Container>
       </PageContainer>
       <Contacts />
-    </>
+    </DecorativeWrapper>
   );
 };
 
 export default ArticlePage;
 
-export const PageContainer = styled.div<{ theme?: ThemeType }>`
+const DecorativeWrapper = styled.div`
+  position: relative;
+`;
+
+const PageContainer = styled.div<{ theme?: ThemeType }>`
   display: flex;
   min-height: 700px;
   gap: 20px;
@@ -58,6 +68,60 @@ export const PageContainer = styled.div<{ theme?: ThemeType }>`
   }
   @media screen and (min-width: 1024px) {
     padding: 50px;
+  }
+`;
+
+const DecorativeElementLeft = styled.div`
+  position: absolute;
+  left: 0;
+  top: 15%;
+  width: 300px;
+  height: 600px;
+  background-image: url(${leftCircle});
+  background-size: contain;
+  background-repeat: no-repeat;
+  transform: translateY(-70%);
+  @media screen and (min-width: 768px) {
+    top: 25%;
+    width: 400px;
+    height: 800px;
+  }
+  @media screen and (min-width: 1024px) {
+    top: 45%;
+    width: 500px;
+    height: 1000px;
+  }
+`;
+
+const DecorativeElementTopRight = styled.div`
+  position: absolute;
+  top: 1%;
+  right: 1%;
+  width: 300px;
+  height: 300px;
+  background-image: url(${dotLine});
+  background-size: contain;
+  background-repeat: no-repeat;
+`;
+
+const DecorativeElementBottomRight = styled.div`
+  position: absolute;
+  right: 1%;
+  bottom: 20%;
+  width: 350px;
+  height: 350px;
+  background-image: url(${circleRight});
+  background-size: contain;
+  background-repeat: no-repeat;
+  @media screen and (min-width: 768px) {
+    bottom: 25%;
+    width: 500px;
+    height: 500px;
+  }
+  @media screen and (min-width: 1024px) {
+    bottom: 20%;
+    width: 700px;
+    height: 700px;
   }
 `;
 

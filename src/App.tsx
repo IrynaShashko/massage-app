@@ -14,7 +14,7 @@ import { darkTheme, lightTheme } from "./theme/theme";
 
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
-import Loader from "./components/Loader";
+import { Loader } from "./components/Loader";
 
 export const App: FC = () => {
   const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -113,6 +113,7 @@ export const App: FC = () => {
 };
 
 export const Container = styled.div`
+  position: relative;
   max-width: 1680px;
   margin: 0 auto;
   z-index: 3;

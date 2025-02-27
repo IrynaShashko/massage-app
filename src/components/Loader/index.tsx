@@ -1,6 +1,6 @@
 import { ThreeDots } from "react-loader-spinner";
 
-const Loader = () => {
+export const Loader = () => {
   return (
     <ThreeDots
       wrapperStyle={{ justifyContent: "center" }}
@@ -10,5 +10,3 @@ const Loader = () => {
     />
   );
 };
-
-export default Loader;
