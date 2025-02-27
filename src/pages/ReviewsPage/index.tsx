@@ -1,27 +1,27 @@
-import { useEffect, useState } from "react";
-
-import styled from "styled-components";
-
-import { useTranslation } from "react-i18next";
-
+import { onAuthStateChanged } from "firebase/auth"; // Import Firebase auth
 import { onValue, ref } from "firebase/database";
-import { database, writeReview, writeReviewToFirestore } from "../../firebase";
-
 import { nanoid } from "nanoid";
-
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import styled from "styled-components";
+import { Container } from "../../App";
+import { signInWithGoogle } from "../../auth";
+import { IconStyled } from "../../components/ConnectionButton";
+import { Label } from "../../components/ConnectionForm";
+import { Contacts } from "../../components/Contacts";
+import { Loader } from "../../components/Loader";
+import {
+  auth,
+  database,
+  writeReview,
+  writeReviewToFirestore,
+} from "../../firebase";
 import { ReactComponent as StarSvg } from "../../icons/star.svg";
 import { ReactComponent as StarActiveSvg } from "../../icons/starActive.svg";
 import circleRight from "../../images/circleRight.png";
 import dotArrowRight from "../../images/dotArrowRight.png";
 import reviewImage from "../../images/flowers.png";
 import leftCircle from "../../images/leftCircle.png";
-
-import { Container } from "../../App";
-import { IconStyled } from "../../components/ConnectionButton";
-import { Label } from "../../components/ConnectionForm";
-import { Contacts } from "../../components/Contacts";
-import { Loader } from "../../components/Loader";
-
 import { Review } from "./types";
 
 const ReviewsPage = () => {
@@ -42,6 +42,23 @@ const ReviewsPage = () => {
     comment: false,
     stars: false,
   });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const checkAuthState = () => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("User logged in:", user);
+        setIsAuthenticated(true);
+      } else {
+        console.log("No user logged in");
+        setIsAuthenticated(false);
+      }
+    });
+  };
+
+  useEffect(() => {
+    checkAuthState();
+  }, []);
 
   const fetchReviews = () => {
     const reviewsRef = ref(database, "reviews");
@@ -62,11 +79,17 @@ const ReviewsPage = () => {
       setReviews(reviewsList);
     });
   };
+
   useEffect(() => {
     fetchReviews();
   }, []);
 
   const handleAddReview = async () => {
+    if (!isAuthenticated) {
+      alert("Please sign in to add a review");
+      return;
+    }
+
     const { name, comment, totalPositiveStars } = newReview;
 
     setErrors({
@@ -116,107 +139,108 @@ const ReviewsPage = () => {
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewReview({ ...newReview, comment: event.target.value });
-    event.target.style.height = "auto";
-    event.target.style.height = `${event.target.scrollHeight}px`;
+    event.target.style.height = "auto"; // Reset height
+    event.target.style.height = `${event.target.scrollHeight}px`; // Set to scrollHeight
   };
 
   return (
     <>
-      <>
-        {!reviews.length ? (
-          <Loader />
-        ) : (
-          <ReviewDecContainer>
-            <DecorativeElementLeft />
-            <DecorativeElementBottomRight />
-            <ReviewsContainer>
-              <Container>
-                <ReviewsWrapper>
-                  <ReviewList>
-                    {reviews.map((review, index) => (
-                      <ReviewItem key={index}>
-                        <UserName>{review.name}</UserName>
-                        <UserIconDiv>
-                          <StarsContainer>
-                            <Stars>
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <StarIconStyled
-                                  key={i}
-                                  as={
-                                    i < review.totalPositiveStars
-                                      ? StarActiveSvg
-                                      : StarSvg
-                                  }
-                                />
-                              ))}
-                            </Stars>
-                            <ImageStyled src={reviewImage} alt="Review Image" />
-                          </StarsContainer>
-                        </UserIconDiv>
-                        <Text>{review.comment}</Text>
-                      </ReviewItem>
-                    ))}
-                  </ReviewList>
-                  <FeedbackForm>
-                    <DecorativeElementTopRight />
-                    <FormTitle>{t("leave_review")}</FormTitle>
-                    <Label htmlFor="name">
-                      {t("your_name_label")}
-                      <Input
-                        type="text"
-                        id="name"
-                        value={newReview.name}
-                        onChange={(e) =>
-                          setNewReview({ ...newReview, name: e.target.value })
-                        }
-                        placeholder={t("your_name_placeholder")}
-                        required
-                        style={{
-                          borderColor: errors.name ? "red" : "#ccc",
-                        }}
-                      />
-                    </Label>
-                    <Label htmlFor="comment">
-                      {t("your_review_label")}
-                      <Comment
-                        id="comment"
-                        value={newReview.comment}
-                        placeholder={t("your_review_placeholder")}
-                        required
-                        onChange={handleInput}
-                        rows={1}
-                        style={{
-                          borderColor: errors.comment ? "red" : "#ccc",
-                        }}
-                      />
-                    </Label>
-                    <StarsWrapper>
-                      <span>{t("rating_label")}</span>
-                      <StarsRating>
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <StarIconStyled
-                            key={i}
-                            as={
-                              i < newReview.totalPositiveStars
-                                ? StarActiveSvg
-                                : StarSvg
-                            }
-                            onClick={() => handleStarClick(i + 1)}
-                          />
-                        ))}
-                      </StarsRating>
-                      {errors.stars && (
-                        <ErrorText>{t("rating_required")}</ErrorText>
-                      )}
-                    </StarsWrapper>
-                    <button onClick={handleAddReview}>{t("add_review")}</button>
-                  </FeedbackForm>
-                </ReviewsWrapper>
-              </Container>
-            </ReviewsContainer>
-          </ReviewDecContainer>
-        )}
-      </>
+      {!reviews.length ? (
+        <Loader />
+      ) : (
+        <ReviewDecContainer>
+          <DecorativeElementLeft />
+          <DecorativeElementBottomRight />
+          <ReviewsContainer>
+            <Container>
+              <ReviewsWrapper>
+                <ReviewList>
+                  {reviews.map((review, index) => (
+                    <ReviewItem key={index}>
+                      <UserName>{review.name}</UserName>
+                      <UserIconDiv>
+                        <StarsContainer>
+                          <Stars>
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <StarIconStyled
+                                key={i}
+                                as={
+                                  i < review.totalPositiveStars
+                                    ? StarActiveSvg
+                                    : StarSvg
+                                }
+                              />
+                            ))}
+                          </Stars>
+                          <ImageStyled src={reviewImage} alt="Review Image" />
+                        </StarsContainer>
+                      </UserIconDiv>
+                      <Text>{review.comment}</Text>
+                    </ReviewItem>
+                  ))}
+                </ReviewList>
+                <FeedbackForm>
+                  <DecorativeElementTopRight />
+                  <FormTitle>{t("leave_review")}</FormTitle>
+                  <Label htmlFor="name">
+                    {t("your_name_label")}
+                    <Input
+                      type="text"
+                      id="name"
+                      value={newReview.name}
+                      onChange={(e) =>
+                        setNewReview({ ...newReview, name: e.target.value })
+                      }
+                      placeholder={t("your_name_placeholder")}
+                      required
+                      style={{
+                        borderColor: errors.name ? "red" : "#ccc",
+                      }}
+                    />
+                  </Label>
+                  <Label htmlFor="comment">
+                    {t("your_review_label")}
+                    <Comment
+                      id="comment"
+                      value={newReview.comment}
+                      placeholder={t("your_review_placeholder")}
+                      required
+                      onChange={handleInput}
+                      rows={1}
+                      style={{
+                        borderColor: errors.comment ? "red" : "#ccc",
+                      }}
+                    />
+                  </Label>
+                  <StarsWrapper>
+                    <span>{t("rating_label")}</span>
+                    <StarsRating>
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <StarIconStyled
+                          key={i}
+                          as={
+                            i < newReview.totalPositiveStars
+                              ? StarActiveSvg
+                              : StarSvg
+                          }
+                          onClick={() => handleStarClick(i + 1)}
+                        />
+                      ))}
+                    </StarsRating>
+                    {errors.stars && (
+                      <ErrorText>{t("rating_required")}</ErrorText>
+                    )}
+                  </StarsWrapper>
+                  <button onClick={handleAddReview}>{t("add_review")}</button>
+                  <button onClick={signInWithGoogle}>
+                    Sign in with Google
+                  </button>
+                </FeedbackForm>
+              </ReviewsWrapper>
+            </Container>
+          </ReviewsContainer>
+        </ReviewDecContainer>
+      )}
       <Contacts />
     </>
   );
@@ -224,6 +248,7 @@ const ReviewsPage = () => {
 
 export default ReviewsPage;
 
+// Styled components (unchanged)
 const ReviewDecContainer = styled.div`
   position: relative;
 `;
@@ -252,6 +277,8 @@ const DecorativeElementLeft = styled.div`
     height: 1000px;
   }
 `;
+
+// Other styled components remain unchanged
 
 const DecorativeElementTopRight = styled.div`
   position: absolute;

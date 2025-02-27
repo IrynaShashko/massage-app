@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, push, ref, set } from "firebase/database";
 import { addDoc, collection, getDocs, getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -16,6 +17,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const firestore = getFirestore(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 async function writeReview(
   comment: string,
@@ -45,6 +48,8 @@ async function writeReviewToFirestore(
 }
 
 export {
+  auth,
+  googleProvider,
   addDoc,
   collection,
   database,
