@@ -73,7 +73,7 @@ const BackgroundImageStyle = styled.div`
   background-position: center;
   height: 100vh;
   width: 100%;
-  padding: 20px;
+  padding: 12vw;
   padding-top: 20px;
   color: white;
   z-index: 1;
