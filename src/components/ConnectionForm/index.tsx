@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from "react";
+import { FC, useCallback, useEffect } from "react";
 
 import styled from "@emotion/styled";
 
@@ -7,14 +7,13 @@ import { useTranslation } from "react-i18next";
 import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
 
 import { ReactComponent as CloseIcon } from "../../icons/close.svg";
-
 import logo from "../../images/logo.png";
-
 import priceData from "../../json/price.json";
 import priceDataEn from "../../json/priceEn.json";
 
 import { ThemeType } from "../../theme/theme";
 
+import { IconStyled } from "../ConnectionButton";
 import {
   ModalBackdrop,
   ModalButton,
@@ -23,7 +22,6 @@ import {
 } from "../Modal";
 
 import { ConnectionFormPropsType } from "./types";
-import { IconStyled } from "../ConnectionButton";
 
 export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   isOpen,
@@ -31,10 +29,6 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   language,
 }) => {
   const [t] = useTranslation();
-  const [selectedService, setSelectedService] = useState("");
-  const [selectedSubService, setSelectedSubService] = useState("");
-  const [subServiceOptions, setSubServiceOptions] = useState<string[]>([]);
-
   const data = language === "ua" ? priceData : priceDataEn;
 
   const womenServises: string[] = data.women.map((item) => item.service);
@@ -52,38 +46,12 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   };
 
   const services = [
-    {
-      name: "women",
-      subServices: womenServises,
-    },
-    {
-      name: "men",
-      subServices: menServises,
-    },
-    {
-      name: "children",
-      subServices: childrenServises,
-    },
-    {
-      name: "body",
-      subServices: bodyServises,
-    },
-    {
-      name: "else",
-      subServices: elseServises,
-    },
+    { name: "women", subServices: womenServises },
+    { name: "men", subServices: menServises },
+    { name: "children", subServices: childrenServises },
+    { name: "body", subServices: bodyServises },
+    { name: "else", subServices: elseServises },
   ];
-
-  const selectedServiceData = services.find(
-    (service) => service.name === selectedService,
-  );
-  useEffect(() => {
-    if (selectedServiceData) {
-      setSubServiceOptions(selectedServiceData.subServices);
-    } else {
-      setSubServiceOptions([]);
-    }
-  }, [selectedService, selectedServiceData]);
 
   useEffect(() => {
     if (isOpen) {
@@ -120,134 +88,103 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
     [onClose],
   );
 
-  const handleServiceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedService(event.target.value);
-  };
-
-  const handleSubServiceChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    setSelectedSubService(event.target.value);
-  };
-
   const handleSubmit = (
     values: typeof initialValues,
     { resetForm }: FormikHelpers<typeof initialValues>,
   ) => {
+    console.log(values);
     resetForm();
     onClose();
   };
 
   return (
-    <>
-      <ModalBackdrop onClick={handleBackdropClick}>
-        <ModalContent>
-          <Container>
-            <ModalHeader>
-              <img src={logo} width={120} alt="logo" />
-              <ModalButton onClick={onClose}>
-                <IconStyled as={CloseIcon} color={"#007586"} />
-              </ModalButton>
-            </ModalHeader>
-            <Formik initialValues={initialValues} onSubmit={handleSubmit}>
-              {({ handleSubmit }) => (
-                <FormStyled
-                  name="book-form"
-                  data-netlify="true"
-                  method="post"
-                  onSubmit={handleSubmit}
-                  action="/success"
-                >
-                  <input type="hidden" name="form-name" value="book-form" />
-                  <div>
-                    <Label htmlFor="service">
-                      {t("for_whom")}
-                      <OptionLable
-                        as="select"
-                        id="service"
-                        name="service"
-                        value={selectedService}
-                        onChange={handleServiceChange}
-                      >
-                        <Option value="">{t("select")}</Option>
-                        {services.map((service) => (
-                          <Option key={service.name} value={service.name}>
-                            {t(service.name)}
-                          </Option>
-                        ))}
-                      </OptionLable>
-                      <ErrorMessage name="service" component="div" />
-                    </Label>
-                  </div>
-                  {subServiceOptions.length > 0 && (
-                    <div>
-                      <Label htmlFor="subService">
-                        {t("select_service")}
-                        <OptionLable
-                          as="select"
-                          id="subService"
-                          name="subService"
-                          value={selectedSubService}
-                          onChange={handleSubServiceChange}
-                        >
-                          <Option value="">{t("select")}</Option>
-                          {subServiceOptions.map((subService) => (
-                            <Option key={subService} value={subService}>
-                              {subService}
-                            </Option>
-                          ))}
-                        </OptionLable>
-                        <ErrorMessage name="subService" component="div" />
-                      </Label>
-                    </div>
-                  )}
-                  <div>
-                    <Label htmlFor="name">
-                      {t("name")}
-                      <Input
-                        type="text"
-                        id="name"
-                        name="name"
-                        placeholder={t("enter_your_name")}
-                        required
-                      />
-                      <ErrorMessage name="name" component="div" />
-                    </Label>
-                  </div>
-                  <div>
-                    <Label htmlFor="tel">
-                      {t("phone")}
-                      <Input
-                        type="tel"
-                        id="tel"
-                        name="tel"
-                        placeholder={t("enter_your_phone_number")}
-                        required
-                      />
-                      <ErrorMessage name="tel" component="div" />
-                    </Label>
-                  </div>
-                  <div>
-                    <Label htmlFor="text">
-                      {t("comment")}
-                      <Comment
-                        as="textarea"
-                        type="text"
-                        id="text"
-                        name="text"
-                        placeholder={t("write_a_comment")}
-                      />
-                      <ErrorMessage name="text" component="div" />
-                    </Label>
-                  </div>
-                  <ModalSubmitBtn type="submit">{t("send")}</ModalSubmitBtn>
-                </FormStyled>
-              )}
-            </Formik>
-          </Container>
-        </ModalContent>
-      </ModalBackdrop>
-    </>
+    <ModalBackdrop onClick={handleBackdropClick}>
+      <ModalContent>
+        <Container>
+          <ModalHeader>
+            <img src={logo} width={120} alt="logo" />
+            <ModalButton onClick={onClose}>
+              <IconStyled as={CloseIcon} color={"#007586"} />
+            </ModalButton>
+          </ModalHeader>
+          <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+            {({ handleChange }) => (
+              <FormStyled
+                name="book-form"
+                data-netlify="true"
+                method="post"
+                action="/success"
+              >
+                <input type="hidden" name="form-name" value="book-form" />
+                <Label htmlFor="service">
+                  {t("for_whom")}
+                  <OptionLable
+                    as="select"
+                    id="service"
+                    name="service"
+                    onChange={handleChange}
+                  >
+                    <Option value="">{t("select")}</Option>
+                    {services.map((service) => (
+                      <Option key={service.name} value={service.name}>
+                        {t(service.name)}
+                      </Option>
+                    ))}
+                  </OptionLable>
+                  <ErrorMessage name="service" component="div" />
+                </Label>
+                <Label htmlFor="subService">
+                  {t("select_service")}
+                  <OptionLable
+                    as="select"
+                    id="subService"
+                    name="subService"
+                    onChange={handleChange}
+                  >
+                    <Option value="">{t("select")}</Option>
+                  </OptionLable>
+                  <ErrorMessage name="subService" component="div" />
+                </Label>
+                <Label htmlFor="name">
+                  {t("name")}
+                  <Input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder={t("enter_your_name")}
+                    required
+                  />
+                  <ErrorMessage name="name" component="div" />
+                </Label>
+                <Label htmlFor="tel">
+                  {t("phone")}
+                  <Input
+                    type="tel"
+                    id="tel"
+                    name="tel"
+                    placeholder={t("enter_your_phone_number")}
+                    required
+                  />
+                  <ErrorMessage name="tel" component="div" />
+                </Label>
+                <Label htmlFor="text">
+                  {t("comment")}
+                  <Comment
+                    as="textarea"
+                    type="text"
+                    id="text"
+                    name="text"
+                    placeholder={t("write_a_comment")}
+                  />
+                  <ErrorMessage name="text" component="div" />
+                </Label>
+                <ModalSubmitBtn type="submit">{t("send")}</ModalSubmitBtn>
+              </FormStyled>
+            )}
+          </Formik>
+        </Container>
+      </ModalContent>
+    </ModalBackdrop>
   );
 };
 
