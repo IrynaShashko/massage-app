@@ -170,9 +170,9 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                 <FormStyled
                   name="book-form"
                   data-netlify="true"
-                  method="post"
+                  method="POST"
                   onSubmit={handleSubmit}
-                  action="/success"
+                  action="/success.html"
                 >
                   <input type="hidden" name="form-name" value="book-form" />
                   <div>
