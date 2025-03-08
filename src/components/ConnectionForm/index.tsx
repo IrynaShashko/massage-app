@@ -152,17 +152,13 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             <Formik initialValues={initialValues} onSubmit={handleSubmit}>
               {({ handleSubmit }) => (
                 <FormStyled
-                  name="connection-form"
+                  name="book-form"
                   data-netlify="true"
                   method="post"
                   onSubmit={handleSubmit}
                   action="/success"
                 >
-                  <input
-                    type="hidden"
-                    name="form-name"
-                    value="connection-form"
-                  />
+                  <input type="hidden" name="form-name" value="book-form" />
                   <div>
                     <Label htmlFor="service">
                       {t("for_whom")}
