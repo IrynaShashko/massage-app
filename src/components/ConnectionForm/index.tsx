@@ -1,4 +1,11 @@
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import {
+  FC,
+  FormEventHandler,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import styled from "@emotion/styled";
 
@@ -149,7 +156,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   const handleSubmit = (
     values: typeof initialValues,
     { resetForm }: FormikHelpers<typeof initialValues>,
-  ) => {
+  ): void => {
     resetForm();
     onClose();
   };
@@ -166,15 +173,19 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               </ModalButton>
             </ModalHeader>
             <Formik initialValues={initialValues} onSubmit={handleSubmit}>
-              {({ setFieldValue }) => (
+              {({ handleSubmit }) => (
                 <FormStyled
-                  name="book-form"
+                  name="connection-form"
                   data-netlify="true"
                   method="post"
-                  // onSubmit={handleSubmit}
+                  onSubmit={handleSubmit as FormEventHandler<HTMLFormElement>}
                   action="/success"
                 >
-                  <input type="hidden" name="form-name" value="book-form" />
+                  <input
+                    type="hidden"
+                    name="form-name"
+                    value="connection-form"
+                  />
                   <div>
                     <Label htmlFor="service">
                       {t("for_whom")}
@@ -183,11 +194,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                         id="service"
                         name="service"
                         value={selectedService}
-                        onChange={(
-                          event: React.ChangeEvent<HTMLSelectElement>,
-                        ) => {
-                          handleServiceChange(event, setFieldValue);
-                        }}
+                        onChange={handleServiceChange}
                       >
                         <Option value="">{t("select")}</Option>
                         {services.map((service) => (
@@ -208,11 +215,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                           id="subService"
                           name="subService"
                           value={selectedSubService}
-                          onChange={(
-                            event: React.ChangeEvent<HTMLSelectElement>,
-                          ) => {
-                            handleSubServiceChange(event, setFieldValue);
-                          }}
+                          onChange={handleSubServiceChange}
                         >
                           <Option value="">{t("select")}</Option>
                           {subServiceOptions.map((subService) => (
