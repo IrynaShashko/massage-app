@@ -24,6 +24,7 @@
   "experience": "Досвід:",
   "for_whom": "Для кого*:",
   "goal": "Моя мета - не просто зняти фізичний дискомфорт, а й створити глибокий зв'язок між вашим тілом та розумом.",
+  "googleSignIn": "Ми цінуємо вашу думку! Будь ласка, увійдіть через Google, щоб залишити відгук.",
   "harmony": "відчути гармонію",
   "hello": "Привіт",
   "hereYouCan": "Тут ви зможете:",
@@ -57,8 +58,8 @@
   "whyChooseMe": "Чому обирають мене?",
   "women": "Для жінок",
   "write_a_comment": "Напишіть коментар",
-  "your_name_placeholder": "Напишіть своє ім'я",
   "your_name_label": "Iм'я*",
-  "your_review_placeholder": "Напишіть відгук",
-  "your_review_label": "Відгук*"
+  "your_name_placeholder": "Напишіть своє ім'я",
+  "your_review_label": "Відгук*",
+  "your_review_placeholder": "Напишіть відгук"
 }

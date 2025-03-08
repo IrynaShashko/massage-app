@@ -4,7 +4,8 @@ import styled from "styled-components";
 
 import { useTranslation } from "react-i18next";
 
-import backgroundImage from "../../images/11.jpg";
+import circleRight from "../../images/circleRight.png";
+import leftCircle from "../../images/leftCircle.png";
 
 import categories from "../../json/price.json";
 import categoriesEn from "../../json/priceEn.json";
@@ -27,37 +28,41 @@ const PricePage: FC<PricePagePropsType> = ({ language }) => {
 
   return (
     <>
-      <BackgroundImageStyle>
-        <Container>
-          <CategoryTabs>
-            {Object.keys(categoriesData).map((categoryKey, index) => (
-              <TabButton
-                key={categoryKey}
-                active={index + 1 === activeCategory}
-                onClick={() => setActiveCategory(index + 1)}
-              >
-                {t(categoryKey)}
-              </TabButton>
-            ))}
-          </CategoryTabs>
-          <ServiceGridContainer>
-            <ServiceGrid>
-              {currentCategory?.map((service, index) => (
-                <ServiceCard key={index}>
-                  <ServiceHeader>
-                    <ServiceName>{service.service}</ServiceName>
-                    {service.time && (
-                      <ServiceDuration>{service.time}</ServiceDuration>
-                    )}
-                    {service.description && <p>{service.description}</p>}
-                  </ServiceHeader>
-                  <ServicePrice>{service.price}</ServicePrice>
-                </ServiceCard>
+      <Wrapper>
+        <DecorativeElementLeft />
+        <DecorativeElementBottomRight />
+        <BackgroundImageStyle>
+          <Container>
+            <CategoryTabs>
+              {Object.keys(categoriesData).map((categoryKey, index) => (
+                <TabButton
+                  key={categoryKey}
+                  active={index + 1 === activeCategory}
+                  onClick={() => setActiveCategory(index + 1)}
+                >
+                  {t(categoryKey)}
+                </TabButton>
               ))}
-            </ServiceGrid>
-          </ServiceGridContainer>
-        </Container>
-      </BackgroundImageStyle>
+            </CategoryTabs>
+            <ServiceGridContainer>
+              <ServiceGrid>
+                {currentCategory?.map((service, index) => (
+                  <ServiceCard key={index}>
+                    <ServiceHeader>
+                      <ServiceName>{service.service}</ServiceName>
+                      {service.time && (
+                        <ServiceDuration>{service.time}</ServiceDuration>
+                      )}
+                      {service.description && <p>{service.description}</p>}
+                    </ServiceHeader>
+                    <ServicePrice>{service.price}</ServicePrice>
+                  </ServiceCard>
+                ))}
+              </ServiceGrid>
+            </ServiceGridContainer>
+          </Container>
+        </BackgroundImageStyle>
+      </Wrapper>
       <Contacts />
     </>
   );
@@ -65,19 +70,59 @@ const PricePage: FC<PricePagePropsType> = ({ language }) => {
 
 export default PricePage;
 
-const BackgroundImageStyle = styled.div`
+const Wrapper = styled.div`
   position: relative;
+`;
+
+const DecorativeElementLeft = styled.div`
+  position: absolute;
+  left: 0;
+  top: 40%;
+  width: 300px;
+  height: 700px;
+  background-image: url(${leftCircle});
+  background-size: contain;
+  background-repeat: no-repeat;
+  transform: translateY(-70%);
+  @media screen and (min-width: 768px) {
+    top: 60%;
+  }
+  @media screen and (min-width: 1024px) {
+    top: 50%;
+  }
+  @media screen and (min-width: 1440px) {
+    top: 70%;
+  }
+`;
+
+const DecorativeElementBottomRight = styled.div`
+  position: absolute;
+  right: 1%;
+  bottom: 5%;
+  width: 400px;
+  height: 400px;
+  background-image: url(${circleRight});
+  background-size: contain;
+  background-repeat: no-repeat;
+  @media screen and (min-width: 768px) {
+  }
+  @media screen and (min-width: 1024px) {
+    bottom: 1%;
+    right: 1%;
+    width: 500px;
+    height: 500px;
+  }
+`;
+
+const BackgroundImageStyle = styled.div`
   box-sizing: border-box;
-  background-image: url(${backgroundImage});
-  background-size: cover;
-  background-position: center;
-  height: 100vh;
+  background-color: ${(props) => props.theme.colors.aboutBg};
   width: 100%;
   padding: 12vw;
   padding-top: 20px;
   color: white;
-  z-index: 1;
-  overflow-y: auto;
+  z-index: 3;
+
   @media screen and (min-width: 768px) {
     padding-top: 50px;
     padding-bottom: 50px;
@@ -120,7 +165,6 @@ const TabButton = styled.button.withConfig({
 `;
 
 const ServiceGridContainer = styled.div`
-  max-height: calc(90vh - 100px);
   overflow-y: auto;
   padding-bottom: 10px;
 `;

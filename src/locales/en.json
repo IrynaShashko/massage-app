@@ -61,5 +61,6 @@
   "your_name_label": "Name*",
   "your_name_placeholder": "Enter your name",
   "your_review_label": "Review*",
-  "your_review_placeholder": "Write your review"
+  "your_review_placeholder": "Write your review",
+  "googleSignIn": "We’d love to hear your feedback! Please sign in with Google to share your review."
 }

@@ -24,7 +24,6 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     padding: 0;
     width: 100%;
-    overflow-x: hidden;
     font-family: Arial, sans-serif;
     background-color: ${(props) => props.theme.colors.background};
     color: ${(props) => props.theme.colors.text};

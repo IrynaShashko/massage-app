@@ -2,13 +2,14 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithPopup,
-} from "firebase/auth"; // Import Firebase auth
+} from "firebase/auth";
 import { onValue, ref } from "firebase/database";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import { Container } from "../../App";
+import { IconStyled } from "../../components/ConnectionButton";
 import { Label } from "../../components/ConnectionForm";
 import { Contacts } from "../../components/Contacts";
 import { Loader } from "../../components/Loader";
@@ -24,8 +25,8 @@ import circleRight from "../../images/circleRight.png";
 import dotArrowRight from "../../images/dotArrowRight.png";
 import reviewImage from "../../images/flowers.png";
 import leftCircle from "../../images/leftCircle.png";
+
 import { Review } from "./types";
-import { IconStyled } from "../../components/ConnectionButton";
 
 const ReviewsPage = () => {
   const [t] = useTranslation();
@@ -151,8 +152,8 @@ const ReviewsPage = () => {
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewReview({ ...newReview, comment: event.target.value });
-    event.target.style.height = "auto"; // Reset height
-    event.target.style.height = `${event.target.scrollHeight}px`; // Set to scrollHeight
+    event.target.style.height = "auto";
+    event.target.style.height = `${event.target.scrollHeight}px`;
   };
 
   return (
@@ -243,10 +244,14 @@ const ReviewsPage = () => {
                       <ErrorText>{t("rating_required")}</ErrorText>
                     )}
                   </StarsWrapper>
-                  <button onClick={handleAddReview}>{t("add_review")}</button>
-                  <button onClick={signInWithGoogle}>
-                    Sign in with Google
-                  </button>
+                  {isAuthenticated && (
+                    <button onClick={handleAddReview}>{t("add_review")}</button>
+                  )}
+                  {!isAuthenticated && (
+                    <button onClick={signInWithGoogle}>
+                      {t("add_review")}
+                    </button>
+                  )}
                 </FeedbackForm>
               </ReviewsWrapper>
             </Container>
@@ -260,7 +265,6 @@ const ReviewsPage = () => {
 
 export default ReviewsPage;
 
-// Styled components (unchanged)
 const ReviewDecContainer = styled.div`
   position: relative;
 `;
@@ -289,8 +293,6 @@ const DecorativeElementLeft = styled.div`
     height: 1000px;
   }
 `;
-
-// Other styled components remain unchanged
 
 const DecorativeElementTopRight = styled.div`
   position: absolute;
