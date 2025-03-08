@@ -166,13 +166,13 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               </ModalButton>
             </ModalHeader>
             <Formik initialValues={initialValues} onSubmit={handleSubmit}>
-              {({ handleSubmit, setFieldValue }) => (
+              {({ setFieldValue }) => (
                 <FormStyled
                   name="book-form"
                   data-netlify="true"
-                  method="POST"
-                  onSubmit={handleSubmit}
-                  action="/success.html"
+                  method="post"
+                  // onSubmit={handleSubmit}
+                  action="/success"
                 >
                   <input type="hidden" name="form-name" value="book-form" />
                   <div>
