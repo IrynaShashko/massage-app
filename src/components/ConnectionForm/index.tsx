@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
 
@@ -22,8 +22,8 @@ import {
   ModalHeader,
 } from "../Modal";
 
-import { ConnectionFormPropsType } from "./types";
 import { IconStyled } from "../ConnectionButton";
+import { ConnectionFormPropsType } from "./types";
 
 export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   isOpen,
@@ -34,6 +34,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   const [selectedService, setSelectedService] = useState("");
   const [selectedSubService, setSelectedSubService] = useState("");
   const [subServiceOptions, setSubServiceOptions] = useState<string[]>([]);
+  const previousSubServiceOptionsRef = useRef<string[]>([]);
 
   const data = language === "ua" ? priceData : priceDataEn;
 
@@ -77,9 +78,16 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   const selectedServiceData = services.find(
     (service) => service.name === selectedService,
   );
+
   useEffect(() => {
     if (selectedServiceData) {
-      setSubServiceOptions(selectedServiceData.subServices);
+      if (
+        JSON.stringify(previousSubServiceOptionsRef.current) !==
+        JSON.stringify(selectedServiceData.subServices)
+      ) {
+        setSubServiceOptions(selectedServiceData.subServices);
+        previousSubServiceOptionsRef.current = selectedServiceData.subServices;
+      }
     } else {
       setSubServiceOptions([]);
     }
@@ -120,14 +128,22 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
     [onClose],
   );
 
-  const handleServiceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedService(event.target.value);
+  const handleServiceChange = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+    setFieldValue: any,
+  ) => {
+    const service = event.target.value;
+    setSelectedService(service);
+    setFieldValue("service", service);
   };
 
   const handleSubServiceChange = (
     event: React.ChangeEvent<HTMLSelectElement>,
+    setFieldValue: any,
   ) => {
-    setSelectedSubService(event.target.value);
+    const subService = event.target.value;
+    setSelectedSubService(subService);
+    setFieldValue("subService", subService);
   };
 
   const handleSubmit = (
@@ -150,19 +166,15 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               </ModalButton>
             </ModalHeader>
             <Formik initialValues={initialValues} onSubmit={handleSubmit}>
-              {({ handleSubmit }) => (
+              {({ handleSubmit, setFieldValue }) => (
                 <FormStyled
-                  name="connection-form"
+                  name="book-form"
                   data-netlify="true"
                   method="post"
                   onSubmit={handleSubmit}
                   action="/success"
                 >
-                  <input
-                    type="hidden"
-                    name="form-name"
-                    value="connection-form"
-                  />
+                  <input type="hidden" name="form-name" value="book-form" />
                   <div>
                     <Label htmlFor="service">
                       {t("for_whom")}
@@ -171,7 +183,11 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                         id="service"
                         name="service"
                         value={selectedService}
-                        onChange={handleServiceChange}
+                        onChange={(
+                          event: React.ChangeEvent<HTMLSelectElement>,
+                        ) => {
+                          handleServiceChange(event, setFieldValue);
+                        }}
                       >
                         <Option value="">{t("select")}</Option>
                         {services.map((service) => (
@@ -192,7 +208,11 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                           id="subService"
                           name="subService"
                           value={selectedSubService}
-                          onChange={handleSubServiceChange}
+                          onChange={(
+                            event: React.ChangeEvent<HTMLSelectElement>,
+                          ) => {
+                            handleSubServiceChange(event, setFieldValue);
+                          }}
                         >
                           <Option value="">{t("select")}</Option>
                           {subServiceOptions.map((subService) => (
