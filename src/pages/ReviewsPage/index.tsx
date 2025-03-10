@@ -296,7 +296,7 @@ const DecorativeElementLeft = styled.div`
 
 const DecorativeElementTopRight = styled.div`
   position: absolute;
-  right: -15%;
+  right: -4%;
   bottom: -12%;
   width: 150px;
   height: 150px;
@@ -305,7 +305,7 @@ const DecorativeElementTopRight = styled.div`
   background-repeat: no-repeat;
   z-index: -1;
   @media screen and (min-width: 1024px) {
-    right: -10%;
+    right: -8%;
     bottom: -12%;
   }
 `;
