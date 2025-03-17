@@ -1,103 +1,42 @@
+import { FC } from "react";
+
+import question from "../../json/question.json";
+import questionEn from "../../json/questionEn.json";
+
 import {
   ArticleAfterTitle,
   ArticleText,
   ArticleTitle,
 } from "../../pages/ArticlePage";
 
-const Questions = () => {
+import { ArticlePagePropsType } from "../../pages/ArticlePage/types";
+
+const Questions: FC<ArticlePagePropsType> = ({ language }) => {
+  const { title, introduction, sections, points, conclusion } =
+    language === "ua" ? question : questionEn;
+
+  const sectionItem = sections.map((item) => (
+    <div>
+      <ArticleAfterTitle>{item.subtitle}</ArticleAfterTitle>
+      <ArticleText>{item.content}</ArticleText>
+    </div>
+  ));
+
+  const pointItem = points.map((item) => (
+    <li>
+      <ArticleText>
+        <strong>{item.title}: </strong> {item.description}
+      </ArticleText>
+    </li>
+  ));
+
   return (
     <div>
-      <ArticleTitle>Питання, які часто задають про масаж.</ArticleTitle>
-      <ArticleText>
-        Масаж є однією з найстаріших і найефективніших технік фізіотерапії, що
-        сприяє поліпшенню здоров'я та добробуту. Проте, відомості про масаж
-        часто є поверхневими та суперечливими. У цій статті ми розглянемо деякі
-        з найпоширеніших питань про масаж та надамо вичерпні відповіді.
-      </ArticleText>
-
-      <div>
-        <ArticleAfterTitle>Як часто потрібно робити масаж?</ArticleAfterTitle>
-        <ArticleText>
-          Частота проведення масажу залежить від кількох факторів, таких як мета
-          масажу, стан вашого здоров'я та особисті вподобання. Для людей, які
-          шукають загальний релакс та стрес-розслаблення, один раз на тиждень
-          або раз на два тижні може бути досить. У разі, якщо масаж
-          використовується як частина фізіотерапії або для поліпшення конкретних
-          медичних станів, лікар чи терапевт може рекомендувати більш часті
-          сеанси.
-        </ArticleText>
-      </div>
-
-      <div>
-        <ArticleAfterTitle>
-          А що з собою потрібно брати на масаж?
-        </ArticleAfterTitle>
-        <ArticleText>
-          Перед відвідуванням сеансу масажу, важливо уточнити вимоги конкретного
-          салону або масажиста. Зазвичай вам можуть знадобитися комфортна одяг
-          та взуття для пересування до місця проведення масажу, а також можливо,
-          зняття вищого одягу, щоб масажист мав доступ до областей тіла, які
-          підлягають обробці. Більшість салонів забезпечують все необхідне для
-          комфортного проведення масажу, але ви можете взяти з собою власний
-          рушник або халат, якщо вам так зручніше.
-        </ArticleText>
-      </div>
-
-      <div>
-        <ArticleAfterTitle>
-          Для чого потрібно ходити на масаж?
-        </ArticleAfterTitle>
-        <ArticleText>
-          Масаж має безліч корисних властивостей, і мета його проведення може
-          бути різноманітною:
-        </ArticleText>
-        <ul>
-          <li>
-            <ArticleText>
-              <strong>Релаксація та зняття стресу:</strong> Масаж допомагає
-              знизити напругу в м'язах, покращити кровообіг та вивільнити
-              ендорфіни - гормони щастя, що сприяють загальному підвищенню
-              настрою.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Поліпшення кровообігу та лімфодренаж:</strong> Масаж
-              стимулює кровообіг та лімфатичну систему, що допомагає вивести
-              токсини з організму та покращує постачання поживних речовин до
-              клітин.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Зняття болю та напруги в м'язах:</strong> Масаж може
-              допомогти розслабити м'язи, покращити їхню гнучкість та зменшити
-              біль, особливо в областях, де накопичується напруга.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Підтримка загального здоров'я:</strong> Масаж може сприяти
-              поліпшенню стану шкіри, покращенню травлення та підтримці імунної
-              системи.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Відновлення після травм чи операцій:</strong> В медичних
-              цілях масаж може використовуватися для поліпшення реабілітації
-              після травм, операцій чи спортивних навантажень.
-            </ArticleText>
-          </li>
-        </ul>
-        <ArticleText>
-          Загалом, масаж - це багатогранний інструмент, який може
-          використовуватися як для загальної підтримки здоров'я, так і для
-          розв'язання конкретних проблем. Перед початком курсу масажу
-          рекомендується звернутися до фахівця для консультації та визначення
-          оптимального плану дій.
-        </ArticleText>
-      </div>
+      <ArticleTitle>{title}</ArticleTitle>
+      <ArticleText>{introduction}</ArticleText>
+      {sectionItem}
+      <ul>{pointItem}</ul>
+      <ArticleText>{conclusion}</ArticleText>
     </div>
   );
 };

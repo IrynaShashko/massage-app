@@ -1,135 +1,39 @@
+import { FC } from "react";
+
+import expectation from "../../json/expectation.json";
+import expectationEn from "../../json/expectationEn.json";
+
 import {
   ArticleAfterTitle,
   ArticleText,
   ArticleTitle,
 } from "../../pages/ArticlePage";
 
-const Expectation = () => {
+import { ArticlePagePropsType } from "../../pages/ArticlePage/types";
+
+const Expectation: FC<ArticlePagePropsType> = ({ language }) => {
+  const { title, sections } = language === "ua" ? expectation : expectationEn;
+
+  const contentList = sections.map((item) => (
+    <div>
+      <ArticleAfterTitle>{item.subtitle}</ArticleAfterTitle>
+      <ArticleText>{item.content}</ArticleText>
+      {item.points.map(({ title, description }) => (
+        <ul>
+          <li>
+            <ArticleText>
+              <strong>{title}: </strong> {description}
+            </ArticleText>
+          </li>
+        </ul>
+      ))}
+    </div>
+  ));
+
   return (
     <div>
-      <ArticleTitle>Масаж: чого очікувати від сеансу?</ArticleTitle>
-      <div>
-        <ArticleAfterTitle>Коли потрібен масаж?</ArticleAfterTitle>
-        <ArticleText>
-          Масаж - це не лише приємний ритуал розслаблення, а й корисний
-          інструмент для здоров'я. Потреба в масажі може виникнути з різних
-          причин:
-        </ArticleText>
-        <ul>
-          <li>
-            <ArticleText>
-              <strong>Фізична напруга та біль:</strong> Якщо ви відчуваєте біль
-              чи напругу в м'язах, масаж допоможе розслабити та зняти
-              дискомфорт.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Спортивна активність:</strong> Після тренувань або змагань
-              масаж може поліпшити відновлення м'язів та зменшити ризик травм.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Стрес та напруженість:</strong> Масаж допомагає розслабити
-              нервову систему та покращити психоемоційний стан.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Проблеми зі сном:</strong> Релаксуючий масаж може
-              покращити якість сну та допомогти впоратися з безсонням.
-            </ArticleText>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <ArticleAfterTitle>
-          Які види масажу існують та як обрати свій?
-        </ArticleAfterTitle>
-        <ArticleText>
-          Існує безліч видів масажу, кожен з яких має свої особливості та
-          призначення:
-        </ArticleText>
-        <ul>
-          <li>
-            <ArticleText>
-              <strong>Класичний масаж:</strong> Загальний масаж для поліпшення
-              кровообігу, розслаблення м'язів та підвищення гнучкості.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Спортивний масаж:</strong> Фокусується на підготовці
-              м'язів до фізичних навантажень та прискоренні відновлення після
-              них.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Точковий масаж:</strong> Обробка конкретних точок для
-              зняття болю, покращення функціонування органів та лікування
-              хвороб.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Лімфодренажний масаж:</strong> Сприяє виведенню токсинів,
-              покращенню лімфатичної системи та зменшенню набряків.
-            </ArticleText>
-          </li>
-        </ul>
-        <ArticleText>
-          Обираючи масаж, зверніть увагу на ваші потреби та мету процедури.
-          Краще поговорити з масажистом про ваши очікування та проблеми, щоб
-          вибрати найкращий вид масажу.
-        </ArticleText>
-      </div>
-      <div>
-        <ArticleAfterTitle>Критерії хорошого масажиста</ArticleAfterTitle>
-        <ArticleText>
-          Обираючи масажного терапевта, важливо врахувати кілька важливих
-          аспектів:
-        </ArticleText>
-        <ul>
-          <li>
-            <ArticleText>
-              <strong>Професійна освіта та досвід:</strong> Впевніться, що
-              масажист має відповідну освіту та досвід роботи.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Рекомендації та відгуки:</strong> Дізнайтеся думку інших
-              клієнтів про роботу даного масажиста.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Підхід до клієнта:</strong> Хороший масажист слухатиме
-              ваши потреби та налаштування.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Спілкування та комунікація:</strong> Здатність масажиста
-              встановлювати з вами контакт та розповідати про процедуру є
-              важливою.
-            </ArticleText>
-          </li>
-          <li>
-            <ArticleText>
-              <strong>Середовище та атмосфера:</strong> Оцініть, наскільки
-              комфортно та спокійно вам в салоні, де проводитиметься масаж.
-            </ArticleText>
-          </li>
-        </ul>
-        <ArticleText>
-          Вибір хорошого масажиста вплине на якість процедури та ваши враження
-          від неї. Перед відвідуванням салону, зробіть додатковий дослідження та
-          вивчіть відгуки.
-        </ArticleText>
-      </div>
+      <ArticleTitle>{title}</ArticleTitle>
+      {contentList}
     </div>
   );
 };

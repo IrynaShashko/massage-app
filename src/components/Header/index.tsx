@@ -164,7 +164,7 @@ const StyledNavLink = styled(NavLink)`
     left: 0;
     bottom: -2px;
     width: 0;
-    height: 1px;
+    height: 2px;
     background-color: ${(props) => props.theme.colors.primary};
     transition: width 0.3s ease-in-out;
   }

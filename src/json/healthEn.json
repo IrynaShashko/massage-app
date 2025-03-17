@@ -1,0 +1,36 @@
+{
+  "title": "Healthy Body",
+  "content": [
+    {
+      "type": "text",
+      "text": "The modern pace of life often leaves our body in a state of tension and stress. Sedentary work, poor mattress selection, or prolonged workouts can lead to sore muscles and discomfort. Massage is not just a luxury but a necessity for maintaining a healthy body. This procedure helps relieve stress, improve blood circulation, relax muscles, and restore harmony in the body."
+    },
+    {
+      "type": "text",
+      "text": "The choice of massage type depends on your needs and goals: sports massage helps prepare muscles for exertion, therapeutic massage improves rehabilitation after an injury, and relaxation massage provides you with time to rest and restore energy."
+    }
+  ],
+  "after_title": "After a massage session, our clients share their impressions:",
+  "feedback": [
+    {
+      "title": "Pain Relief",
+      "text": "Many of them feel noticeable relief from muscle and joint pain. Massage helps relieve tension and improve flexibility, especially for those dealing with chronic painful sensations."
+    },
+    {
+      "title": "Feeling of Relaxation",
+      "text": "Massage helps to relax and take a break from daily worries. Even a short rest under the sensitive hands of a masseur can provide a feeling of deep relaxation and calm."
+    },
+    {
+      "title": "Boost in Energy",
+      "text": "Many clients note an increase in energy levels and improved mood after a massage session. This is due to improved circulation and stimulation of the nervous system."
+    },
+    {
+      "title": "Improved Sleep",
+      "text": "Some experience better sleep quality after a massage, as it promotes relaxation and stress relief. Deep and healthy sleep is an important component of overall well-being."
+    },
+    {
+      "title": "Overall Well-being Improvement",
+      "text": "After a massage, there is usually an improvement in physical and mental condition, as well as increased self-awareness. This can become an essential part of your healthy lifestyle."
+    }
+  ]
+}
