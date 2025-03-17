@@ -97,9 +97,18 @@ export const App: FC = () => {
                       index
                       element={<Navigate to="questions" replace />}
                     />
-                    <Route path="questions" element={<Questions />} />
-                    <Route path="health" element={<Health />} />
-                    <Route path="expectation" element={<Expectation />} />
+                    <Route
+                      path="questions"
+                      element={<Questions language={language} />}
+                    />
+                    <Route
+                      path="health"
+                      element={<Health language={language} />}
+                    />
+                    <Route
+                      path="expectation"
+                      element={<Expectation language={language} />}
+                    />
                   </Route>
                 </Routes>
               </Suspense>

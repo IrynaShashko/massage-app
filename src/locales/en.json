@@ -22,10 +22,13 @@
   "enter_your_name": "Enter your name",
   "enter_your_phone_number": "Enter your phone number",
   "escape": "Allow yourself a moment to escape from daily worries and give your body the well-deserved rest.",
+  "expectation": "Massage: What to Expect from a Session?",
   "experience": "Experience:",
   "for_whom": "For whom*:",
   "goal": "My goal is not just to relieve physical discomfort but also to create a deep connection between your body and mind.",
+  "googleSignIn": "We’d love to hear your feedback! Please sign in with Google to share your review.",
   "harmony": "feel harmony",
+  "health": "Healthy Body.",
   "hello": "Hello",
   "hereYouCan": "Here you can:",
   "home_button": "Home",
@@ -45,6 +48,7 @@
   "phone": "Phone*:",
   "price_button": "Price",
   "profession": "Massage Therapist / Rehabilitation Specialist",
+  "questions": "Frequently Asked Questions.",
   "rating_label": "Rating*",
   "rating_required": "Rating is required",
   "restoreFunction": "restore or improve musculoskeletal function",
@@ -61,6 +65,5 @@
   "your_name_label": "Name*",
   "your_name_placeholder": "Enter your name",
   "your_review_label": "Review*",
-  "your_review_placeholder": "Write your review",
-  "googleSignIn": "We’d love to hear your feedback! Please sign in with Google to share your review."
+  "your_review_placeholder": "Write your review"
 }

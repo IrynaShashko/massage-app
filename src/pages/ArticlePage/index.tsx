@@ -10,9 +10,11 @@ import dotLine from "../../images/dotLine.png";
 import lady from "../../images/lady.png";
 import leftCircle from "../../images/leftCircle.png";
 
+import { useTranslation } from "react-i18next";
 import { ThemeType } from "../../theme/theme";
 
 const ArticlePage = () => {
+  const [t] = useTranslation();
   return (
     <DecorativeWrapper>
       <DecorativeElementLeft />
@@ -26,17 +28,17 @@ const ArticlePage = () => {
               <ListContainer>
                 <li>
                   <ArticleLink to="/article/questions">
-                    <ArticleItem>Питання, які часто задають.</ArticleItem>
+                    <ArticleItem>{t("questions")}</ArticleItem>
                   </ArticleLink>
                 </li>
                 <li>
                   <ArticleLink to="/article/health">
-                    <ArticleItem>Здорове тіло.</ArticleItem>
+                    <ArticleItem>{t("health")}</ArticleItem>
                   </ArticleLink>
                 </li>
                 <li>
                   <ArticleLink to="/article/expectation">
-                    <ArticleItem>Масаж: чого очікувати від сеансу?</ArticleItem>
+                    <ArticleItem>{t("expectation")}</ArticleItem>
                   </ArticleLink>
                 </li>
               </ListContainer>

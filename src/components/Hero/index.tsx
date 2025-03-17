@@ -7,8 +7,6 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
 
-import { ReactComponent as Check } from "../../icons/check.svg";
-
 import bg from "../../images/10.jpg";
 import noise from "../../images/noise.png";
 
@@ -16,7 +14,6 @@ import { ConnectionForm } from "../ConnectionForm";
 
 import { ThemeType } from "../../theme/theme";
 
-import { IconStyled } from "../ConnectionButton";
 import { HeroPropsType } from "./types";
 
 export const Hero: FC<HeroPropsType> = ({ language }) => {
@@ -44,9 +41,6 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
     triggerOnce: true,
   });
 
-  const mark = <CheckIcon as={Check} />;
-  const markLast = <CheckIconLast as={Check} />;
-
   return (
     <>
       <PageContainer>
@@ -66,23 +60,23 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
             {t("hereYouCan")}
           </Text>
           <Text variants={animationElement} custom={4}>
-            {mark}
+            {"✔ "}
             {t("harmony")}
           </Text>
           <Text variants={animationElement} custom={5}>
-            {mark}
+            {"✔ "}
             {t("balance")}
           </Text>
           <Text variants={animationElement} custom={6}>
-            {mark}
+            {"✔ "}
             {t("stressRelief")}
           </Text>
           <Text variants={animationElement} custom={7}>
-            {mark}
+            {"✔ "}
             {t("painRelief")}
           </Text>
           <Text variants={animationElement} custom={8}>
-            {markLast}
+            {"✔ "}
             {t("restoreFunction")}
           </Text>
           <ButtonContainer>
@@ -196,6 +190,8 @@ export const Text = styled(motion.p)<{ theme?: ThemeType }>`
   align-items: center;
   max-width: 300px;
   flex-direction: row;
+  display: inline-flex;
+  align-items: flex-start;
 
   @media screen and (min-width: 425px) {
     max-width: 500px;
@@ -244,24 +240,5 @@ export const ModalSubmitBtn = styled(motion.button)<{ theme?: ThemeType }>`
   }
   @media screen and (min-width: 768px) {
     width: 280px;
-  }
-`;
-
-const CheckIcon = styled(IconStyled)`
-  width: 40px;
-  height: 40px;
-  align-self: baseline;
-`;
-
-const CheckIconLast = styled(CheckIcon)`
-  width: 70px;
-  height: 70px;
-  @media screen and (min-width: 425px) {
-    width: 50px;
-    height: 50px;
-  }
-  @media screen and (min-width: 1024px) {
-    width: 45px;
-    height: 45px;
   }
 `;

@@ -1,68 +1,42 @@
+import { FC } from "react";
+
+import health from "../../json/health.json";
+import healthEn from "../../json/healthEn.json";
+
 import {
   ArticleAfterTitle,
   ArticleText,
   ArticleTitle,
 } from "../../pages/ArticlePage";
 
-const Health = () => {
+import { ArticlePagePropsType } from "../../pages/ArticlePage/types";
+
+const Health: FC<ArticlePagePropsType> = ({ language }) => {
+  const { content, feedback, title, after_title } =
+    language === "ua" ? health : healthEn;
+
+  const contentItem = content.map((item) => (
+    <div>
+      <ArticleText>{item.text}</ArticleText>
+    </div>
+  ));
+
+  const listItem = feedback.map((item) => (
+    <li>
+      <ArticleText>
+        <strong>{item.title}: </strong>
+        {item.text}
+      </ArticleText>
+    </li>
+  ));
+
   return (
     <div>
-      <ArticleTitle>Здорове тіло</ArticleTitle>
+      <ArticleTitle>{title}</ArticleTitle>
+      {contentItem}
       <div>
-        <ArticleText>
-          Сучасний ритм життя часто залишає наше тіло в стані напруги та стресу.
-          Сидяча робота, поганий підбір матрацу або ж тривалі тренування можуть
-          призвести до болючих м'язів та дискомфорту. Масаж - це не просто
-          розкіш, але й необхідність для підтримки здорового тіла. Ця процедура
-          допомагає зняти стрес, покращити кровообіг, розслабити м'язи та
-          відновити гармонію в організмі.
-        </ArticleText>
-        <ArticleText>
-          Вибір типу масажу залежить від ваших потреб та мети: спортивний масаж
-          допоможе підготувати м'язи до навантажень, лікувальний масаж поліпшить
-          реабілітацію після травми, а релаксуючий масаж забезпечить вам час для
-          відпочинку та відновлення енергії.
-        </ArticleText>
-      </div>
-      <div>
-        <ArticleAfterTitle>
-          Після проходження сеансу масажу, наші клієнти діляться своїми
-          враженнями:
-        </ArticleAfterTitle>
-        <ul>
-          <li>
-            <ArticleText>
-              <strong>Полегшення від болю:</strong> Багато з них відчувають
-              помітне полегшення від болю в м'язах та суглобах. Масаж допомагає
-              зняти напругу та покращити гнучкість рухів, особливо для тих, хто
-              стикається з хронічними болісними відчуттями.
-            </ArticleText>
-            <ArticleText>
-              <strong>Відчуття релаксу:</strong> Масаж допомагає розслабитися та
-              відволіктися від повсякденних турбот. Навіть короткий відпочинок
-              під чутливими руками масажиста може надати відчуття глибокого
-              релаксу та спокою.
-            </ArticleText>
-            <ArticleText>
-              <strong>Підвищення енергії:</strong> Багато клієнтів відзначають
-              підвищення енергетики та підняте настрій після масажного сеансу.
-              Це пов'язано з покращенням кровообігу та стимуляцією нервової
-              системи.
-            </ArticleText>
-            <ArticleText>
-              <strong>Покращення сну:</strong> Деякі відчувають покращення
-              якості сну після масажу, оскільки він сприяє розслабленню та
-              зняттю стресу. Глибокий і здоровий сон є важливою складовою
-              загального самопочуття.
-            </ArticleText>
-            <ArticleText>
-              <strong>Загальне покращення самопочуття:</strong> Після масажу
-              зазвичай відчувається покращення фізичного та психічного стану, а
-              також підвищення самовідчуття. Це може стати вагомою частиною
-              вашого здорового способу життя.
-            </ArticleText>
-          </li>
-        </ul>
+        <ArticleAfterTitle>{after_title}</ArticleAfterTitle>
+        <ul>{listItem}</ul>
       </div>
     </div>
   );
