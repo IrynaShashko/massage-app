@@ -49,7 +49,7 @@ export const Contacts = () => {
   );
 };
 
-const Wrapper = styled.div`
+const Wrapper = styled.section`
   position: relative;
 `;
 

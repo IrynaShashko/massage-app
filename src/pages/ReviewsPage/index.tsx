@@ -51,7 +51,6 @@ const ReviewsPage = () => {
   const checkAuthState = () => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("User logged in:", user);
         setIsAuthenticated(true);
       } else {
         console.log("No user logged in");

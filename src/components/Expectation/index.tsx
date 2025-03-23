@@ -14,13 +14,13 @@ import { ArticlePagePropsType } from "../../pages/ArticlePage/types";
 const Expectation: FC<ArticlePagePropsType> = ({ language }) => {
   const { title, sections } = language === "ua" ? expectation : expectationEn;
 
-  const contentList = sections.map((item) => (
-    <div>
+  const contentList = sections.map((item, index) => (
+    <div key={index}>
       <ArticleAfterTitle>{item.subtitle}</ArticleAfterTitle>
       <ArticleText>{item.content}</ArticleText>
-      {item.points.map(({ title, description }) => (
+      {item.points.map(({ title, description }, index) => (
         <ul>
-          <li>
+          <li key={index}>
             <ArticleText>
               <strong>{title}: </strong> {description}
             </ArticleText>

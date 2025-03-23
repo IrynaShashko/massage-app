@@ -15,15 +15,15 @@ const Questions: FC<ArticlePagePropsType> = ({ language }) => {
   const { title, introduction, sections, points, conclusion } =
     language === "ua" ? question : questionEn;
 
-  const sectionItem = sections.map((item) => (
-    <div>
+  const sectionItem = sections.map((item, index) => (
+    <div key={index}>
       <ArticleAfterTitle>{item.subtitle}</ArticleAfterTitle>
       <ArticleText>{item.content}</ArticleText>
     </div>
   ));
 
-  const pointItem = points.map((item) => (
-    <li>
+  const pointItem = points.map((item, index) => (
+    <li key={index}>
       <ArticleText>
         <strong>{item.title}: </strong> {item.description}
       </ArticleText>

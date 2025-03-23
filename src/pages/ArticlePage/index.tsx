@@ -26,17 +26,17 @@ const ArticlePage = () => {
             <Sidebar>
               <ImageStyled src={lady} alt="lady" />
               <ListContainer>
-                <li>
+                <li key={1}>
                   <ArticleLink to="/article/questions">
                     <ArticleItem>{t("questions")}</ArticleItem>
                   </ArticleLink>
                 </li>
-                <li>
+                <li key={2}>
                   <ArticleLink to="/article/health">
                     <ArticleItem>{t("health")}</ArticleItem>
                   </ArticleLink>
                 </li>
-                <li>
+                <li key={3}>
                   <ArticleLink to="/article/expectation">
                     <ArticleItem>{t("expectation")}</ArticleItem>
                   </ArticleLink>
@@ -56,11 +56,11 @@ const ArticlePage = () => {
 
 export default ArticlePage;
 
-const DecorativeWrapper = styled.div`
+const DecorativeWrapper = styled.article`
   position: relative;
 `;
 
-const PageContainer = styled.div<{ theme?: ThemeType }>`
+const PageContainer = styled.section<{ theme?: ThemeType }>`
   display: flex;
   min-height: 700px;
   gap: 20px;

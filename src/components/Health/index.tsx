@@ -15,14 +15,14 @@ const Health: FC<ArticlePagePropsType> = ({ language }) => {
   const { content, feedback, title, after_title } =
     language === "ua" ? health : healthEn;
 
-  const contentItem = content.map((item) => (
-    <div>
+  const contentItem = content.map((item, index) => (
+    <div key={index}>
       <ArticleText>{item.text}</ArticleText>
     </div>
   ));
 
-  const listItem = feedback.map((item) => (
-    <li>
+  const listItem = feedback.map((item, index) => (
+    <li key={index}>
       <ArticleText>
         <strong>{item.title}: </strong>
         {item.text}
