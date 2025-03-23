@@ -165,12 +165,20 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                 <IconStyled as={CloseIcon} color={"#007586"} />
               </ModalButton>
             </ModalHeader>
-            <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+            <Formik
+              initialValues={initialValues}
+              onSubmit={(values, actions) => {
+                handleSubmit(values, actions);
+                (
+                  document.forms.namedItem("connection-form") as HTMLFormElement
+                )?.submit();
+              }}
+            >
               {({ handleSubmit, setFieldValue }) => (
                 <FormStyled
                   name="connection-form"
                   data-netlify="true"
-                  method="post"
+                  method="POST"
                   onSubmit={handleSubmit}
                   action="/success"
                 >
