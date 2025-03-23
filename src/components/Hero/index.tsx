@@ -159,13 +159,16 @@ const PageContainer = styled.div`
   background-size: cover;
   background-position: center;
   width: 100%;
-  min-height: 90vh;
+  min-height: 85dvh;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   flex-direction: column;
   flex-grow: 1;
+  @media screen and (min-width: 768px) {
+    min-height: 90vh;
+  }
 `;
 
 export const Gradient = styled.div`

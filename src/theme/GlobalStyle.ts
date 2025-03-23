@@ -98,6 +98,11 @@ const GlobalStyle = createGlobalStyle`
     padding: 0;
     margin: 0;
   }
+
+  body.modal-open {
+    overflow: hidden;
+    height: 100vh;
+  }
 `;
 
 export default GlobalStyle;
