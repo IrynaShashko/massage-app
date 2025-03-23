@@ -31,6 +31,7 @@ import { Review } from "./types";
 const ReviewsPage = () => {
   const [t] = useTranslation();
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [info, setInfo] = useState<string>("");
   const [newReview, setNewReview] = useState<Review>({
     name: "",
     comment: "",
@@ -63,6 +64,7 @@ const ReviewsPage = () => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      setInfo("");
     } catch (error) {
       console.error("Error signing in with Google:", error);
     }
@@ -98,7 +100,7 @@ const ReviewsPage = () => {
 
   const handleAddReview = async () => {
     if (!isAuthenticated) {
-      alert("Please sign in to add a review");
+      setInfo(t("googleSignIn"));
       return;
     }
 
@@ -140,6 +142,8 @@ const ReviewsPage = () => {
       totalPositiveStars: 0,
       timestamp: new Date(),
     });
+
+    setInfo("");
   };
 
   const handleStarClick = (stars: number) => {
@@ -243,14 +247,13 @@ const ReviewsPage = () => {
                       <ErrorText>{t("rating_required")}</ErrorText>
                     )}
                   </StarsWrapper>
-                  {isAuthenticated && (
-                    <button onClick={handleAddReview}>{t("add_review")}</button>
-                  )}
-                  {!isAuthenticated && (
+                  {info && <p>{info}</p>}
+                  {info && (
                     <button onClick={signInWithGoogle}>
-                      {t("add_review")}
+                      {t("googleButton")}
                     </button>
                   )}
+                  <button onClick={handleAddReview}>{t("add_review")}</button>
                 </FeedbackForm>
               </ReviewsWrapper>
             </Container>

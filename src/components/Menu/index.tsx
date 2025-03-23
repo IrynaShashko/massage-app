@@ -18,6 +18,8 @@ import { ReactComponent as MenuIcon } from "../../icons/menu.svg";
 
 import { ThemeType } from "../../theme/theme";
 
+import { LogOut } from "lucide-react";
+import { handleLogout } from "../../auth";
 import { MenuPropsType } from "./types";
 
 export const Menu: FC<MenuPropsType> = ({
@@ -25,6 +27,7 @@ export const Menu: FC<MenuPropsType> = ({
   language,
   darkMode,
   themeToggle,
+  isAuthenticated,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
@@ -90,6 +93,15 @@ export const Menu: FC<MenuPropsType> = ({
               language={language}
             />
             <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
+            {isAuthenticated && (
+              <button onClick={handleLogout}>
+                <LogOut
+                  color={darkMode ? "rgb(195, 193, 193)" : "rgb(55, 61, 70)"}
+                  size={24}
+                  style={{ marginRight: "8px" }}
+                />
+              </button>
+            )}
           </ButtonContainer>
           <ModalButton onClick={toggleMenu}>
             <IconStyled as={MenuIcon} color={"#007586"} />
@@ -231,7 +243,7 @@ const ModalButtonContainer = styled.div`
 const ModalButton = styled.button`
   border: none;
   background-color: transparent;
-  @media screen and (min-width: 975px) {
+  @media screen and (min-width: 1055px) {
     display: none;
   }
 `;

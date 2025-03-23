@@ -318,7 +318,7 @@ export const Input = styled(Field)`
   font-size: 14px;
   outline: none;
   color: ${(props) => props.theme.colors.text};
-  background-color: transparent;
+  /* background-color: transparent; */
 
   &::placeholder {
     font-size: 14px;
@@ -338,7 +338,7 @@ export const Comment = styled(Field)`
   font-size: 14px;
   resize: none;
   font-family: "Montserrat", sans-serif;
-
+  color: ${(props) => props.theme.colors.text};
   &::placeholder {
     font-size: 14px;
     color: #aaa;

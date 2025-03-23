@@ -1,6 +1,7 @@
 export interface MenuPropsType {
+  darkMode: boolean;
+  isAuthenticated: boolean;
   language: string;
   languageToggle: () => void;
-  darkMode: boolean;
   themeToggle: () => void;
 }

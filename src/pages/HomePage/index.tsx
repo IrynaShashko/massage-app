@@ -13,9 +13,9 @@ import { HomePagePropsType } from "./types";
 const HomePage: FC<HomePagePropsType> = ({ language }) => {
   return (
     <>
-      <HomeContainer>
-        <Hero language={language} />
-      </HomeContainer>
+      {/* <HomeContainer> */}
+      <Hero language={language} />
+      {/* </HomeContainer> */}
       <InfoDiv>
         <About />
       </InfoDiv>
@@ -30,11 +30,11 @@ export const HomeContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  box-sizing: border-box;
+  /* box-sizing: border-box; */
   align-items: center;
-  background-size: cover;
+  /* background-size: cover;
   background-repeat: no-repeat;
-  background-position: center;
+  background-position: center; */
   height: 550px;
   @media screen and (min-width: 768px) {
     height: 600px;

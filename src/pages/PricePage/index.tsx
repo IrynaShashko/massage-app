@@ -104,8 +104,6 @@ const DecorativeElementBottomRight = styled.div`
   background-image: url(${circleRight});
   background-size: contain;
   background-repeat: no-repeat;
-  @media screen and (min-width: 768px) {
-  }
   @media screen and (min-width: 1024px) {
     bottom: 1%;
     right: 1%;
@@ -122,7 +120,7 @@ const BackgroundImageStyle = styled.div`
   padding-top: 20px;
   color: white;
   z-index: 3;
-
+  min-height: 100vh;
   @media screen and (min-width: 768px) {
     padding-top: 50px;
     padding-bottom: 50px;

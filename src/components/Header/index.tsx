@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Link, NavLink, useLocation } from "react-router-dom";
 
@@ -13,6 +13,10 @@ import { LanguageButton } from "../LanguageButton";
 import { Menu } from "../Menu";
 import { ThemeButton } from "../ThemeButton";
 
+import { onAuthStateChanged } from "firebase/auth";
+import { LogOut } from "lucide-react";
+import { handleLogout } from "../../auth";
+import { auth } from "../../firebase";
 import { HeaderPropsType } from "./types";
 
 export const Header: React.FC<HeaderPropsType> = ({
@@ -21,6 +25,23 @@ export const Header: React.FC<HeaderPropsType> = ({
   language,
   darkMode,
 }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const checkAuthState = () => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        console.log("No user logged in");
+        setIsAuthenticated(false);
+      }
+    });
+  };
+
+  useEffect(() => {
+    checkAuthState();
+  }, []);
+
   const [t] = useTranslation();
 
   const location = useLocation();
@@ -80,6 +101,15 @@ export const Header: React.FC<HeaderPropsType> = ({
               language={language}
             />
             <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
+            {isAuthenticated && (
+              <button onClick={handleLogout}>
+                <LogOut
+                  color={darkMode ? "rgb(195, 193, 193)" : "rgb(55, 61, 70)"}
+                  size={24}
+                  style={{ marginRight: "8px" }}
+                />
+              </button>
+            )}
           </ButtonContainer>
         </Wrapper>
         <MenuWrapper>
@@ -88,6 +118,7 @@ export const Header: React.FC<HeaderPropsType> = ({
             language={language}
             darkMode={darkMode}
             themeToggle={themeToggle}
+            isAuthenticated={isAuthenticated}
           />
         </MenuWrapper>
       </Container>
@@ -117,7 +148,7 @@ const HeaderContainer = styled.header<{ $darkMode: boolean }>`
 
 const Wrapper = styled.nav`
   display: none;
-  @media screen and (min-width: 975px) {
+  @media screen and (min-width: 1055px) {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -127,7 +158,7 @@ const Wrapper = styled.nav`
 const MenuWrapper = styled.div`
   display: block;
   position: relative;
-  @media screen and (min-width: 975px) {
+  @media screen and (min-width: 1055px) {
     display: none;
   }
 `;
