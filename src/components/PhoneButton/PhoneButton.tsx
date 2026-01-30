@@ -175,7 +175,11 @@ export const PhoneButton = () => {
           </ContactButton>
         ))}
       </ButtonContainer>
-      <MainButton onClick={toggleButtons} stopAnimation={isExpanded}>
+      <MainButton
+        type="button"
+        onClick={toggleButtons}
+        stopAnimation={isExpanded}
+      >
         <IconStyled
           as={Phone}
           color={"#fff"}

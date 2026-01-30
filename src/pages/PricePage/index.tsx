@@ -36,6 +36,7 @@ const PricePage: FC<PricePagePropsType> = ({ language }) => {
             <CategoryTabs>
               {Object.keys(categoriesData).map((categoryKey, index) => (
                 <TabButton
+                  type="button"
                   key={categoryKey}
                   active={index + 1 === activeCategory}
                   onClick={() => setActiveCategory(index + 1)}

@@ -9,7 +9,9 @@ export const LanguageButton: FC<LanguageButtonPropsType> = ({
   languageToggle,
 }) => {
   return (
-    <Button onClick={languageToggle}>{language === "ua" ? "en" : "ua"}</Button>
+    <Button type="button" onClick={languageToggle}>
+      {language === "ua" ? "en" : "ua"}
+    </Button>
   );
 };
 const Button = styled.button`

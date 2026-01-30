@@ -11,7 +11,7 @@ export const ThemeButton: FC<ThemeButtonPropsType> = ({
   const Icon = darkMode ? SunIcon : MoonIcon;
 
   return (
-    <Button onClick={themeToggle}>
+    <Button type="button" onClick={themeToggle}>
       <IconStyled as={Icon} />
     </Button>
   );

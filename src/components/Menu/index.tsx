@@ -124,7 +124,7 @@ export const Menu: FC<MenuPropsType> = ({
                   />
                   <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
                 </ButtonContainer>
-                <ModalButton onClick={toggleMenu}>
+                <ModalButton type="button" onClick={toggleMenu}>
                   {isMenuOpen ? (
                     <IconStyled as={CloseIcon} color={"#007586"} />
                   ) : (

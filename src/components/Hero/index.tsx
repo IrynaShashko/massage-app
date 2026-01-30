@@ -125,7 +125,7 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
           </Text>
           {info && <InfoText>{info}</InfoText>}
           {info && (
-            <ModalSubmitBtn onClick={signInWithGoogle}>
+            <ModalSubmitBtn type="button" onClick={signInWithGoogle}>
               {t("googleButton")}
             </ModalSubmitBtn>
           )}
@@ -136,7 +136,7 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
               initial="hidden"
               animate={inView ? "visible" : "hidden"}
             >
-              <ModalSubmitBtn onClick={handleBookNowButton}>
+              <ModalSubmitBtn type="button" onClick={handleBookNowButton}>
                 {t("bookNow")}
               </ModalSubmitBtn>
             </motion.div>
