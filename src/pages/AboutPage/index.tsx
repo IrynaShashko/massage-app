@@ -10,11 +10,11 @@ import photo from "../../images/photo.jpg";
 import experience from "../../json/experience.json";
 import experienceEn from "../../json/experienceEn.json";
 
-import { Container } from "../../App";
-import { Contacts } from "../../components/Contacts";
+import { SectionContainer } from "../../App";
 
 import { ThemeType } from "../../theme/theme";
 
+import BookNow from "../../components/BookNow";
 import { AboutPagePropsType } from "./types";
 
 const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
@@ -23,23 +23,23 @@ const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
   const data = language === "ua" ? experience : experienceEn;
 
   const studyItems = data.study.map((item) => (
-    <li key={item.id}>
+    <ListItem key={item.id}>
       <DataTitle>{item.data}</DataTitle>
       <ItemText>{item.type}</ItemText>
-    </li>
+    </ListItem>
   ));
 
   const experienceItems = data.experience.map((item) => (
-    <li key={item.id}>
+    <ListItem key={item.id}>
       <DataTitle>{item.data}</DataTitle>
       <ItemText>{item.type}</ItemText>
-    </li>
+    </ListItem>
   ));
 
   const elseItems = data.else.map((item) => (
-    <li key={item.id}>
+    <ListItem key={item.id}>
       <ItemText style={{ textIndent: "0px" }}>{item.type}</ItemText>
-    </li>
+    </ListItem>
   ));
 
   return (
@@ -47,7 +47,7 @@ const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
       <AboutContainer>
         <StudyContainer>
           <BackgroundContainer>
-            <Container>
+            <SectionContainer>
               <ImageContainer>
                 <ImageWrapper>
                   <ImageBorder>
@@ -69,21 +69,19 @@ const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
                   <Text>{t("book_now")}</Text>
                 </TitleContainer>
               </ImageContainer>
-            </Container>
+            </SectionContainer>
           </BackgroundContainer>
         </StudyContainer>
-        <Container>
-          <ItemWrapper>
-            <ItemTitle>{t("education")}</ItemTitle>
-            <ul>{studyItems}</ul>
-            <ItemTitle>{t("experience")}</ItemTitle>
-            <ul>{experienceItems}</ul>
-            <ItemTitle>{t("additional_skills")}</ItemTitle>
-            <ul>{elseItems}</ul>
-          </ItemWrapper>
-        </Container>
+        <SectionContainer>
+          <ItemTitle>{t("education")}</ItemTitle>
+          <ul>{studyItems}</ul>
+          <ItemTitle>{t("experience")}</ItemTitle>
+          <ul>{experienceItems}</ul>
+          <ItemTitle>{t("additional_skills")}</ItemTitle>
+          <ul>{elseItems}</ul>
+        </SectionContainer>
       </AboutContainer>
-      <Contacts />
+      <BookNow language={language} />
     </>
   );
 };
@@ -92,8 +90,7 @@ export default AboutPage;
 
 export const AboutContainer = styled.div<{ theme?: ThemeType }>`
   background-color: ${(props) => props.theme.colors.background};
-  @media screen and (min-width: 768px) {
-  }
+  min-height: 100dvh;
 `;
 
 export const StudyContainer = styled.div`
@@ -111,15 +108,12 @@ export const ImageContainer = styled.div<{ theme?: ThemeType }>`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
   gap: 20px;
   @media screen and (min-width: 768px) {
-    padding: 50px;
     gap: 50px;
   }
   @media screen and (min-width: 970px) {
     display: flex;
-    padding: 50px;
     flex-direction: row;
     justify-content: center;
   }
@@ -197,7 +191,7 @@ const Title = styled.h2`
   margin-top: 20px;
   color: #f7f7f7;
   margin-bottom: 20px;
-  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.9);
+  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.5);
   letter-spacing: 5px;
   text-align: center;
   @media screen and (min-width: 768px) {
@@ -215,10 +209,10 @@ const AfterTitle = styled.p<{ theme?: ThemeType }>`
   }
 `;
 
-const TitleText = styled.p<{ theme?: ThemeType }>`
+const TitleText = styled.h1<{ theme?: ThemeType }>`
   font-size: 22px;
   line-height: 30px;
-  color: ${(props) => props.theme.colors.aboutText};
+  color: ${(props) => props.theme.colors.primary};
   margin-bottom: 20px;
   text-align: center;
   @media screen and (min-width: 768px) {
@@ -226,16 +220,33 @@ const TitleText = styled.p<{ theme?: ThemeType }>`
   }
 `;
 
-const ItemWrapper = styled.div`
-  padding: 20px;
-  @media screen and (min-width: 768px) {
-    padding: 50px;
+const ListItem = styled.li<{ theme?: ThemeType }>`
+  position: relative;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  display: block;
+
+  &:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      ${(props) => props.theme.colors.text},
+      transparent
+    );
   }
 `;
 
 const Text = styled.p<{ theme?: ThemeType }>`
   font-size: 18px;
-  line-height: 20px;
+  line-height: 26px;
   color: ${(props) => props.theme.colors.text};
   margin-bottom: 20px;
   text-align: left;
@@ -255,11 +266,11 @@ const ItemText = styled.p<{ theme?: ThemeType }>`
 `;
 
 const ItemTitle = styled.h4<{ theme?: ThemeType }>`
-  font-size: 20px;
+  font-size: 30px;
   color: ${(props) => props.theme.colors.primary};
   margin-bottom: 10px;
   text-transform: uppercase;
-  line-height: 50px;
+  font-weight: lighter;
   text-align: left;
 `;
 
@@ -268,6 +279,6 @@ const DataTitle = styled.span<{ theme?: ThemeType }>`
   font-size: 16px;
   font-weight: 800;
   @media screen and (min-width: 768px) {
-    font-size: 18px;
+    font-size: 20px;
   }
 `;

@@ -1,43 +1,34 @@
-import {
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithPopup,
-} from "firebase/auth";
-import { onValue, ref } from "firebase/database";
-import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import { Container } from "../../App";
 import { IconStyled } from "../../components/ConnectionButton";
 import { Label } from "../../components/ConnectionForm";
-import { Contacts } from "../../components/Contacts";
 import { Loader } from "../../components/Loader";
-import {
-  auth,
-  database,
-  writeReview,
-  writeReviewToFirestore,
-} from "../../firebase";
 import { ReactComponent as StarSvg } from "../../icons/star.svg";
 import { ReactComponent as StarActiveSvg } from "../../icons/starActive.svg";
-import circleRight from "../../images/circleRight.png";
 import dotArrowRight from "../../images/dotArrowRight.png";
 import reviewImage from "../../images/flowers.png";
-import leftCircle from "../../images/leftCircle.png";
 
+import BookNow from "../../components/BookNow";
+import { useModal } from "../../context/ModalContext";
+import { useProfile, useUpdateProfile } from "../../hooks/useAuth";
+import { useCreateReview, useReviews } from "../../hooks/useReviews";
 import { Review } from "./types";
 
-const ReviewsPage = () => {
+const ReviewsPage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const { data: user } = useProfile();
+  const isAuthenticated = !!user;
   const [info, setInfo] = useState<string>("");
   const [newReview, setNewReview] = useState<Review>({
-    name: "",
+    name: user?.name || "",
     comment: "",
-    totalPositiveStars: 0,
-    timestamp: new Date(),
+    rating: 0,
+    userId: user?.id || "",
   });
+  const [isNameInitialized, setIsNameInitialized] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
     name: boolean;
     comment: boolean;
@@ -47,198 +38,192 @@ const ReviewsPage = () => {
     comment: false,
     stars: false,
   });
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const checkAuthState = () => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsAuthenticated(true);
-      } else {
-        console.log("No user logged in");
-        setIsAuthenticated(false);
-      }
-    });
-  };
+  const { data: reviews = [], isLoading } = useReviews();
+  const createReviewMutation = useCreateReview();
+  const updateProfileMutation = useUpdateProfile();
 
-  const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      setInfo("");
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
-    }
-  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 3;
 
-  useEffect(() => {
-    checkAuthState();
-  }, []);
-
-  const fetchReviews = () => {
-    const reviewsRef = ref(database, "reviews");
-    onValue(reviewsRef, (snapshot) => {
-      const data = snapshot.val();
-      const reviewsList = data
-        ? Object.keys(data).map((key) => ({
-            ...data[key],
-            id: key,
-          }))
-        : [];
-
-      reviewsList.sort((a, b) => {
-        const dateA = new Date(a.timestamp);
-        const dateB = new Date(b.timestamp);
-        return dateB.getTime() - dateA.getTime();
-      });
-      setReviews(reviewsList);
-    });
-  };
-
-  useEffect(() => {
-    fetchReviews();
-  }, []);
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+  const { openModal } = useModal();
 
   const handleAddReview = async () => {
     if (!isAuthenticated) {
-      setInfo(t("googleSignIn"));
+      openModal();
       return;
     }
 
-    const { name, comment, totalPositiveStars } = newReview;
-
-    setErrors({
-      name: !name,
-      comment: !comment,
-      stars: totalPositiveStars === 0,
-    });
-
-    if (!name || !comment || totalPositiveStars === 0) {
-      return;
-    }
-
-    const timestamp = new Date().getTime();
+    const newErrors = {
+      name: newReview.name.trim() === "",
+      comment: newReview.comment.trim() === "",
+      stars: newReview.rating === 0,
+    };
+    setErrors(newErrors);
+    if (Object.values(newErrors).some(Boolean)) return;
 
     try {
-      await writeReview(
-        newReview.comment,
-        `${nanoid()}`,
-        newReview.name,
-        newReview.totalPositiveStars,
-        timestamp,
-      );
-      await writeReviewToFirestore(
-        newReview.comment,
-        newReview.name,
-        newReview.totalPositiveStars,
-        timestamp,
-      );
+      setIsSubmitting(true);
+      setInfo("");
+
+      if (newReview.name !== user?.name) {
+        await updateProfileMutation.mutateAsync({
+          name: newReview.name,
+        });
+      }
+      await createReviewMutation.mutateAsync({
+        name: newReview.name,
+        comment: newReview.comment,
+        rating: newReview.rating,
+        userId: user?.id || "",
+      });
+      setNewReview({
+        name: newReview.name,
+        comment: "",
+        rating: 0,
+        userId: user?.id || "",
+      });
+      setInfo("Відгук успішно додано!");
+      setTimeout(() => setInfo(""), 2000);
+      setCurrentPage(1);
     } catch (error) {
-      console.error("Error writing review to database:", error);
+      console.error(error);
+      setInfo("Сталася помилка при додаванні відгуку.");
+      setTimeout(() => setInfo(""), 2000);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setNewReview({
-      name: "",
-      comment: "",
-      totalPositiveStars: 0,
-      timestamp: new Date(),
-    });
-
-    setInfo("");
   };
 
   const handleStarClick = (stars: number) => {
-    setNewReview((prevReview) => ({
-      ...prevReview,
-      totalPositiveStars: stars,
-    }));
+    setNewReview((prev) => ({ ...prev, rating: stars }));
   };
 
-  const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNewReview({ ...newReview, comment: event.target.value });
-    event.target.style.height = "auto";
-    event.target.style.height = `${event.target.scrollHeight}px`;
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewReview({ ...newReview, comment: e.target.value });
+    e.target.style.height = "auto";
+    e.target.style.height = `${e.target.scrollHeight}px`;
   };
+
+  const sortedReviews = [...reviews].reverse();
+
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = sortedReviews.slice(
+    indexOfFirstReview,
+    indexOfLastReview,
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
+  useEffect(() => {
+    if (user && !isNameInitialized) {
+      setNewReview((prev) => ({
+        ...prev,
+        name: user.name || "",
+        userId: user.id || "",
+      }));
+      setIsNameInitialized(true);
+    }
+  }, [user, isNameInitialized]);
 
   return (
     <>
-      {!reviews.length ? (
+      {isLoading ? (
         <Loader />
       ) : (
-        <ReviewDecContainer>
-          <DecorativeElementLeft />
-          <DecorativeElementBottomRight />
+        <>
           <ReviewsContainer>
             <Container>
               <ReviewsWrapper>
-                <ReviewList>
-                  {reviews.map((review, index) => (
-                    <ReviewItem key={index}>
-                      <UserName>{review.name}</UserName>
-                      <UserIconDiv>
-                        <StarsContainer>
-                          <Stars>
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <StarIconStyled
-                                key={i}
-                                as={
-                                  i < review.totalPositiveStars
-                                    ? StarActiveSvg
-                                    : StarSvg
-                                }
-                              />
-                            ))}
-                          </Stars>
-                          <ImageStyled src={reviewImage} alt="Review Image" />
-                        </StarsContainer>
-                      </UserIconDiv>
-                      <Text>{review.comment}</Text>
-                    </ReviewItem>
-                  ))}
-                </ReviewList>
+                <LeftColumn>
+                  <ReviewList>
+                    {currentReviews.map((review, index) => (
+                      <ReviewItem key={index}>
+                        <UserName>{review.user.name}</UserName>
+                        <UserIconDiv>
+                          <StarsContainer>
+                            <Stars>
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <StarIconStyled
+                                  key={i}
+                                  as={
+                                    i < review.rating ? StarActiveSvg : StarSvg
+                                  }
+                                />
+                              ))}
+                            </Stars>
+                            <ImageStyled src={reviewImage} alt="Review Image" />
+                          </StarsContainer>
+                        </UserIconDiv>
+                        <Text>{review.comment}</Text>
+                      </ReviewItem>
+                    ))}
+                  </ReviewList>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <Pagination>
+                      <PageButton
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        {"<"}
+                      </PageButton>
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <PageButton
+                          key={i}
+                          $active={currentPage === i + 1}
+                          onClick={() => handlePageChange(i + 1)}
+                        >
+                          {i + 1}
+                        </PageButton>
+                      ))}
+                      <PageButton
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        {">"}
+                      </PageButton>
+                    </Pagination>
+                  )}
+                </LeftColumn>
+
                 <FeedbackForm>
                   <DecorativeElementTopRight />
                   <FormTitle>{t("leave_review")}</FormTitle>
-                  <Label htmlFor="name">
-                    {t("your_name_label")}
-                    <Input
-                      type="text"
-                      id="name"
-                      value={newReview.name}
-                      onChange={(e) =>
-                        setNewReview({ ...newReview, name: e.target.value })
-                      }
-                      placeholder={t("your_name_placeholder")}
-                      required
-                      style={{
-                        borderColor: errors.name ? "red" : "#ccc",
-                      }}
-                    />
-                  </Label>
-                  <Label htmlFor="comment">
-                    {t("your_review_label")}
-                    <Comment
-                      id="comment"
-                      value={newReview.comment}
-                      placeholder={t("your_review_placeholder")}
-                      required
-                      onChange={handleInput}
-                      rows={1}
-                      style={{
-                        borderColor: errors.comment ? "red" : "#ccc",
-                      }}
-                    />
-                  </Label>
+                  <Label htmlFor="name">{t("your_name_label")}</Label>
+                  <Input
+                    type="text"
+                    id="name"
+                    value={newReview.name}
+                    onChange={(e) =>
+                      setNewReview({ ...newReview, name: e.target.value })
+                    }
+                    placeholder={t("your_name_placeholder")}
+                    required
+                    style={{ borderColor: errors.name ? "red" : "#ccc" }}
+                  />
+                  <Label htmlFor="comment">{t("your_review_label")}</Label>
+                  <Comment
+                    id="comment"
+                    value={newReview.comment}
+                    placeholder={t("your_review_placeholder")}
+                    required
+                    onChange={handleInput}
+                    rows={1}
+                    style={{ borderColor: errors.comment ? "red" : "#ccc" }}
+                  />
                   <StarsWrapper>
-                    <span>{t("rating_label")}</span>
+                    <RatingLabel>{t("rating_label")}</RatingLabel>
                     <StarsRating>
                       {Array.from({ length: 5 }, (_, i) => (
                         <StarIconStyled
                           key={i}
-                          as={
-                            i < newReview.totalPositiveStars
-                              ? StarActiveSvg
-                              : StarSvg
-                          }
+                          as={i < newReview.rating ? StarActiveSvg : StarSvg}
                           onClick={() => handleStarClick(i + 1)}
                         />
                       ))}
@@ -248,52 +233,34 @@ const ReviewsPage = () => {
                     )}
                   </StarsWrapper>
                   {info && <p>{info}</p>}
-                  {info && (
-                    <button onClick={signInWithGoogle}>
-                      {t("googleButton")}
-                    </button>
-                  )}
-                  <button onClick={handleAddReview}>{t("add_review")}</button>
+                  <button onClick={handleAddReview} disabled={isSubmitting}>
+                    {isSubmitting ? "Відправка..." : t("add_review")}
+                  </button>
                 </FeedbackForm>
               </ReviewsWrapper>
             </Container>
           </ReviewsContainer>
-        </ReviewDecContainer>
+          <BookNow language={language} />
+        </>
       )}
-      <Contacts />
     </>
   );
 };
 
 export default ReviewsPage;
 
-const ReviewDecContainer = styled.div`
-  position: relative;
-`;
-
 const ReviewsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   background-color: ${(props) => props.theme.colors.aboutBg};
   padding: 30px;
   justify-content: center;
+  min-height: calc(100vh - 80px);
 `;
 
-const DecorativeElementLeft = styled.div`
-  position: absolute;
-  left: 0;
-  top: 40%;
-  width: 300px;
-  height: 700px;
-  background-image: url(${leftCircle});
-  background-size: contain;
-  background-repeat: no-repeat;
-  transform: translateY(-70%);
-  @media screen and (min-width: 768px) {
-    width: 500px;
-    height: 1000px;
-  }
+const LeftColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: calc(100vh - 120px);
 `;
 
 const DecorativeElementTopRight = styled.div`
@@ -312,37 +279,53 @@ const DecorativeElementTopRight = styled.div`
   }
 `;
 
-const DecorativeElementBottomRight = styled.div`
-  position: absolute;
-  right: 5%;
-  bottom: 10%;
-  width: 400px;
-  height: 400px;
-  background-image: url(${circleRight});
-  background-size: contain;
-  background-repeat: no-repeat;
-  @media screen and (min-width: 768px) {
-    bottom: 15%;
-    width: 700px;
-    height: 700px;
-  }
-`;
-
 const ReviewList = styled.ul`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 20px;
-  @media screen and (min-width: 768px) {
-    width: 50%;
-  }
+  gap: 24px;
+  padding: 0;
+  margin: 0;
+  height: 100%;
 `;
 
 const ReviewItem = styled.li`
-  background-color: ${(props) => props.theme.colors.cardBg};
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px ${(props) => props.theme.colors.boxShadow};
+  background: ${(props) => props.theme.colors.cardBg};
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px ${(props) => props.theme.colors.boxShadow};
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 35px ${(props) => props.theme.colors.boxShadow};
+  }
+`;
+
+const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 20px;
+`;
+
+const PageButton = styled.button<{ $active?: boolean }>`
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #007586;
+  background-color: ${({ $active }) => ($active ? "#007586" : "#fff")};
+  color: ${({ $active }) => ($active ? "#fff" : "#007586")};
+  cursor: pointer;
+  font-weight: 600;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 const StarsContainer = styled.div`
@@ -366,27 +349,16 @@ const ImageStyled = styled.img`
 const UserIconDiv = styled.div`
   display: flex;
   flex-direction: column;
-  padding-bottom: 10px;
 `;
 
 const UserName = styled.p`
-  color: ${(props) => props.theme.colors.aboutText};
   font-size: 18px;
-  margin-bottom: 5px;
-  z-index: 3;
-  max-width: 260px;
-  word-wrap: break-word;
-  white-space: normal;
-  @media screen and (min-width: 425px) {
-    max-width: 340px;
-  }
-  @media screen and (min-width: 1024px) {
-    max-width: 500px;
-  }
+  font-weight: 600;
+  color: ${(props) => props.theme.colors.primary};
 `;
 
 const Stars = styled.div`
-  color: orange;
+  color: #faf32e;
 `;
 
 const Text = styled.p`
@@ -398,13 +370,13 @@ const Text = styled.p`
 `;
 
 const ReviewsWrapper = styled.div`
-  display: flex;
+  display: grid;
   width: 100%;
-  flex-direction: column-reverse;
-  gap: 20px;
-  justify-content: center;
-  @media screen and (min-width: 700px) {
-    flex-direction: row;
+  gap: 40px;
+
+  @media screen and (min-width: 900px) {
+    grid-template-columns: 1fr 420px;
+    align-items: stretch;
   }
 `;
 
@@ -419,9 +391,6 @@ const FeedbackForm = styled.div`
   box-shadow: 0 4px 6px ${(props) => props.theme.colors.boxShadow};
   padding: 30px;
   height: fit-content;
-  @media screen and (min-width: 768px) {
-    width: 45%;
-  }
 
   input,
   textarea {
@@ -436,22 +405,25 @@ const FeedbackForm = styled.div`
   input:focus,
   textarea:focus {
     border-color: ${(props) => props.theme.colors.primary};
+    box-shadow: 0 0 0 3px rgba(0, 95, 114, 0.1);
     outline: none;
   }
 
   button {
-    padding: 12px;
+    padding: 14px;
     font-size: 16px;
-    background-color: ${(props) => props.theme.colors.primary};
+    font-weight: 600;
+    background: ${(props) => props.theme.colors.primary};
     color: ${(props) => props.theme.colors.buttonText};
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.25s ease;
     margin-top: 10px;
 
     &:hover {
-      background-color: #005f72;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
     }
   }
 `;
@@ -472,7 +444,7 @@ const StarsWrapper = styled.div`
 const StarsRating = styled.div`
   display: flex;
   gap: 5px;
-  color: orange;
+  color: #faf32e;
   cursor: pointer;
 `;
 
@@ -506,4 +478,11 @@ const Comment = styled.textarea`
 const StarIconStyled = styled(IconStyled)`
   width: 20px;
   height: 20px;
+`;
+
+const RatingLabel = styled.span`
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: ${(props) => props.theme.colors.text};
 `;

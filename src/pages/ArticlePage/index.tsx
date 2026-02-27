@@ -3,23 +3,17 @@ import { NavLink, Outlet } from "react-router-dom";
 import styled from "@emotion/styled";
 
 import { Container } from "../../App";
-import { Contacts } from "../../components/Contacts";
 
-import circleRight from "../../images/circleRight.png";
-import dotLine from "../../images/dotLine.png";
 import lady from "../../images/lady.png";
-import leftCircle from "../../images/leftCircle.png";
 
 import { useTranslation } from "react-i18next";
+import BookNow from "../../components/BookNow";
 import { ThemeType } from "../../theme/theme";
 
-const ArticlePage = () => {
+const ArticlePage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
   return (
     <DecorativeWrapper>
-      <DecorativeElementLeft />
-      <DecorativeElementTopRight />
-      <DecorativeElementBottomRight />
       <PageContainer>
         <Container>
           <PageWrapper>
@@ -49,7 +43,7 @@ const ArticlePage = () => {
           </PageWrapper>
         </Container>
       </PageContainer>
-      <Contacts />
+      <BookNow language={language} />
     </DecorativeWrapper>
   );
 };
@@ -70,60 +64,6 @@ const PageContainer = styled.section<{ theme?: ThemeType }>`
   }
   @media screen and (min-width: 1024px) {
     padding: 50px;
-  }
-`;
-
-const DecorativeElementLeft = styled.div`
-  position: absolute;
-  left: 0;
-  top: 15%;
-  width: 300px;
-  height: 600px;
-  background-image: url(${leftCircle});
-  background-size: contain;
-  background-repeat: no-repeat;
-  transform: translateY(-70%);
-  @media screen and (min-width: 768px) {
-    top: 25%;
-    width: 400px;
-    height: 800px;
-  }
-  @media screen and (min-width: 1024px) {
-    top: 45%;
-    width: 500px;
-    height: 1000px;
-  }
-`;
-
-const DecorativeElementTopRight = styled.div`
-  position: absolute;
-  top: 1%;
-  right: 1%;
-  width: 300px;
-  height: 300px;
-  background-image: url(${dotLine});
-  background-size: contain;
-  background-repeat: no-repeat;
-`;
-
-const DecorativeElementBottomRight = styled.div`
-  position: absolute;
-  right: 1%;
-  bottom: 20%;
-  width: 350px;
-  height: 350px;
-  background-image: url(${circleRight});
-  background-size: contain;
-  background-repeat: no-repeat;
-  @media screen and (min-width: 768px) {
-    bottom: 25%;
-    width: 500px;
-    height: 500px;
-  }
-  @media screen and (min-width: 1024px) {
-    bottom: 20%;
-    width: 700px;
-    height: 700px;
   }
 `;
 
@@ -212,7 +152,7 @@ export const ArticleTitle = styled.h1`
 
 export const ArticleAfterTitle = styled.h2<{ theme?: ThemeType }>`
   font-size: 20px;
-  color: ${(props) => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.text};
   margin-top: 10px;
   margin-bottom: 10px;
   text-align: center;
@@ -224,7 +164,7 @@ export const ArticleText = styled.p<{ theme?: ThemeType }>`
   font-size: 18px;
   color: ${(props) => props.theme.colors.text};
   margin-bottom: 10px;
-  text-indent: 50px;
+  /* text-indent: 50px; */
   line-height: 30px;
 `;
 

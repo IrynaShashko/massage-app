@@ -1,88 +1,49 @@
-import { FC, useEffect, useState } from "react";
+import { FC } from "react";
 
-import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
-import { motion } from "framer-motion";
+import { motion, Variants, easeOut } from "framer-motion";
 
+import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
 
-import bg from "../../images/10.jpg";
-import noise from "../../images/noise.png";
-
-import { ConnectionForm } from "../ConnectionForm";
-import { PhoneButton } from "../PhoneButton/PhoneButton";
-
 import { ThemeType } from "../../theme/theme";
 
-import {
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithPopup,
-} from "firebase/auth";
-import { auth } from "../../firebase";
+import bg from "../../images/10.jpg";
+
+import { PhoneButton } from "../PhoneButton/PhoneButton";
+
 import { HeroPropsType } from "./types";
 
 export const Hero: FC<HeroPropsType> = ({ language }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [info, setInfo] = useState<string>("");
-
-  const checkAuthState = () => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsAuthenticated(true);
-      } else {
-        console.log("No user logged in");
-        setIsAuthenticated(false);
-      }
-    });
-  };
-
-  const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      setInfo("");
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
-    }
-  };
-
-  useEffect(() => {
-    checkAuthState();
-  }, []);
-
-  const [t] = useTranslation();
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const onCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const animationElement = {
-    hidden: {
-      y: -50,
-      opacity: 0,
-    },
-    visible: (custom: number) => ({
-      y: 0,
-      opacity: 1,
-      transition: { ease: "easeOut", duration: 2, delay: custom * 0.3 },
-    }),
-  };
-
   const { ref, inView } = useInView({
     triggerOnce: true,
   });
 
-  const handleBookNowButton = () => {
-    if (!isAuthenticated) {
-      setInfo(t("bookServices"));
-      return;
-    }
+  const [t] = useTranslation();
 
-    setIsModalOpen(true);
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.3, delayChildren: 0.2 },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.8, ease: "easeOut" },
+    },
+  };
+
+  const handleBookNowButton = () => {
+    const bookingSection = document.getElementById("booking-section");
+    if (bookingSection) {
+      bookingSection.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -90,148 +51,100 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
       <PhoneButton />
       <PageContainer>
         <Gradient />
-        <TextContainer
+        <Content
+          variants={containerVariants}
           initial="hidden"
-          animate={inView ? "visible" : "hidden"}
-          variants={animationElement}
-          ref={ref}
-          custom={1}
+          animate="visible"
         >
-          <TitleText variants={animationElement} custom={2}>
-            {t("welcome")}
-          </TitleText>
-          <Text variants={animationElement} custom={3}>
-            {t("hereYouCan")}
-          </Text>
-          <Text variants={animationElement} custom={4}>
-            {"✔ "}
-            {t("harmony")}
-          </Text>
-          <Text variants={animationElement} custom={5}>
-            {"✔ "}
-            {t("balance")}
-          </Text>
-          <Text variants={animationElement} custom={6}>
-            {"✔ "}
-            {t("stressRelief")}
-          </Text>
-          <Text variants={animationElement} custom={7}>
-            {"✔ "}
-            {t("painRelief")}
-          </Text>
-          <Text variants={animationElement} custom={8}>
-            {"✔ "}
-            {t("restoreFunction")}
-          </Text>
-          {info && <InfoText>{info}</InfoText>}
-          {info && (
-            <ModalSubmitBtn type="button" onClick={signInWithGoogle}>
-              {t("googleButton")}
-            </ModalSubmitBtn>
-          )}
-          <ButtonContainer>
-            <motion.div
-              variants={animationElement}
-              custom={9}
-              initial="hidden"
-              animate={inView ? "visible" : "hidden"}
-            >
-              <ModalSubmitBtn type="button" onClick={handleBookNowButton}>
-                {t("bookNow")}
-              </ModalSubmitBtn>
-            </motion.div>
-          </ButtonContainer>
-        </TextContainer>
-        {isModalOpen && (
-          <ConnectionForm
-            isOpen={isModalOpen}
-            onClose={onCloseModal}
-            language={language}
-          />
-        )}
+          <Title variants={itemVariants}>{t("welcome")}</Title>
+
+          <TextContainer
+            initial="hidden"
+            animate={inView ? "visible" : "hidden"}
+            variants={animationElement}
+            ref={ref}
+            custom={1}
+          >
+            <Text variants={animationElement} custom={3}>
+              {t("hereYouCan")}
+            </Text>
+
+            <Text variants={animationElement} custom={4}>
+              {"✔ "}
+              {t("harmony")}
+            </Text>
+
+            <Text variants={animationElement} custom={5}>
+              {"✔ "}
+              {t("balance")}
+            </Text>
+
+            <Text variants={animationElement} custom={6}>
+              {"✔ "}
+              {t("stressRelief")}
+            </Text>
+
+            <Text variants={animationElement} custom={7}>
+              {"✔ "}
+              {t("painRelief")}
+            </Text>
+
+            <Text variants={animationElement} custom={8}>
+              {"✔ "}
+              {t("restoreFunction")}
+            </Text>
+          </TextContainer>
+
+          <StyledButton onClick={handleBookNowButton}>
+            <p>{t("cta_button")}</p>
+            <ChevronDown />
+          </StyledButton>
+        </Content>
       </PageContainer>
     </>
   );
 };
 
-const PageContainer = styled.div`
-  background-image: url(${bg});
-  background-size: cover;
-  background-position: center;
-  width: 100%;
-  min-height: 85dvh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+const Content = styled(motion.div)`
   position: relative;
-  flex-direction: column;
-  flex-grow: 1;
-  @media screen and (min-width: 768px) {
-    min-height: 90vh;
-  }
-`;
-
-export const Gradient = styled.div`
-  background-image: linear-gradient(
-    180deg,
-    rgba(41, 37, 37, 0.15) 0%,
-    rgba(3, 0, 0, 0.15) 100%
-  );
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-`;
-
-const InfoText = styled.p<{ theme?: ThemeType }>`
-  color: #f7f7f7;
-  text-decoration: underline;
-  font-size: 15px;
-  width: 300px;
-  text-align: center;
-  @media screen and (min-width: 1024px) {
-    width: 500px;
-    font-size: 20px;
-  }
-`;
-
-export const Noise = styled.div`
-  background-image: url(${noise});
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 2;
-  opacity: 0.3;
-  background-repeat: repeat;
-  background-size: 100px 100px;
-`;
-
-const growFont = keyframes`
-  from {
-    opacity: 0;
-    transform: translate(0px, 50px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(0px, 0px);
-  }
-`;
-
-export const ButtonContainer = styled.div`
+  z-index: 10;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  & button {
-    animation: ${growFont} 0.3s ease-out forwards;
-    opacity: 0;
+  text-align: center;
+  color: white;
+  padding: 0 20px;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 80px 0;
+  gap: 2rem;
+  @media screen and (min-width: 600px) {
+    max-width: 350px;
   }
-  & button:nth-of-type(1) {
-    animation-delay: 3.2s;
+  @media screen and (min-width: 769px) {
+    max-width: 500px;
+  }
+  @media screen and (min-width: 1024px) {
+    max-width: 600px;
+  }
+  @media screen and (min-width: 1280px) {
+    max-width: 1000px;
+  }
+`;
+
+const Title = styled(motion.h1)`
+  font-size: 2rem;
+  /* font-weight: 700; */
+  line-height: 1.1;
+  letter-spacing: 0.05em;
+  font-weight: lighter;
+  font-family: "Great Vibes", cursive;
+  @media screen and (min-width: 1024px) {
+    font-size: 2.5rem;
+  }
+  @media screen and (min-width: 1280px) {
+    font-size: 4.5rem;
   }
 `;
 
@@ -270,44 +183,76 @@ export const Text = styled(motion.p)<{ theme?: ThemeType }>`
     max-width: 700px;
   }
   @media screen and (min-width: 1024px) {
-    line-height: 25px;
+    line-height: 20px;
     max-width: 800px;
   }
 `;
 
-const TitleText = styled(Text)`
-  letter-spacing: 3px;
-  font-size: 25px;
-  font-weight: 800;
-  @media screen and (min-width: 425px) {
-    line-height: 1.5;
-    font-size: 30px;
+const StyledButton = styled.button`
+  background-color: #007586;
+  color: white;
+  padding: 18px 48px;
+  border-radius: 9999px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  gap: 12px;
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 25px -5px rgba(0, 117, 134, 0.4);
+
+  &:hover {
+    background-color: #005f6e;
+    transform: scale(1.05);
   }
 `;
 
-export const ModalSubmitBtn = styled(motion.button)<{ theme?: ThemeType }>`
-  border: none;
-  background-color: transparent;
-  border-radius: 8px;
-  align-self: center;
-  padding: 10px;
-  color: ${(props) => props.theme.colors.buttonText};
-  width: 220px;
-  font-size: 20px;
-  font-family: 400;
-  font-weight: lighter;
-  cursor: pointer;
-  box-shadow: 0px 0px 2px 1px rgba(255, 255, 255, 1);
-  text-transform: uppercase;
-  margin-top: 20px;
-  &:hover {
-    background: rgba(0, 0, 0, 0.5);
-    transform: scale(1.1);
-  }
-  @media screen and (min-width: 425px) {
-    width: 250px;
-  }
+const animationElement: Variants = {
+  hidden: {
+    y: -50,
+    opacity: 0,
+  },
+  visible: (custom: number) => ({
+    y: 0,
+    opacity: 1,
+    transition: { ease: easeOut, duration: 2, delay: custom * 0.3 },
+  }),
+};
+
+const PageContainer = styled.div`
+  background-image: url(${bg});
+  background-size: cover;
+  background-position: center;
+  width: 100%;
+  min-height: 85dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  flex-direction: column;
+  flex-grow: 1;
+
   @media screen and (min-width: 768px) {
-    width: 350px;
+    min-height: 90vh;
   }
+`;
+
+export const Gradient = styled.div`
+  background-image: linear-gradient(
+    180deg,
+    rgba(41, 37, 37, 0.7) 0%,
+    rgba(3, 0, 0, 0.15) 100%
+  );
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
 `;

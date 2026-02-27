@@ -11,7 +11,8 @@ import categories from "../../json/price.json";
 import categoriesEn from "../../json/priceEn.json";
 
 import { Container } from "../../App";
-import { Contacts } from "../../components/Contacts";
+
+import BookNow from "../../components/BookNow";
 
 import { Categories, PricePagePropsType } from "./types";
 
@@ -64,7 +65,7 @@ const PricePage: FC<PricePagePropsType> = ({ language }) => {
           </Container>
         </BackgroundImageStyle>
       </Wrapper>
-      <Contacts />
+      <BookNow language={language} />
     </>
   );
 };
@@ -201,8 +202,9 @@ const ServiceHeader = styled.div`
 
 const ServiceName = styled.h3`
   color: ${(props) => props.theme.colors.text};
+  font-family: "Roboto", sans-serif;
   margin: 0;
-  margin-bottom: 0.5rem;
+  line-height: 1.2;
 `;
 
 const ServiceDuration = styled.span`
@@ -211,7 +213,7 @@ const ServiceDuration = styled.span`
 `;
 
 const ServicePrice = styled.div`
-  font-size: 1.5rem;
+  font-size: 1rem;
   color: ${(props) => props.theme.colors.text};
   font-weight: bold;
   margin-top: auto;

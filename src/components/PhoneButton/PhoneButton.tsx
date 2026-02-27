@@ -61,11 +61,11 @@ const PhoneContainer = styled.div`
   }
 `;
 
-const MainButton = styled.button<{ stopAnimation: boolean }>`
+const MainButton = styled.button<{ $stopAnimation: boolean }>`
   padding: 16px 18px;
   font-size: 16px;
-  animation: ${({ stopAnimation }) =>
-    stopAnimation
+  animation: ${({ $stopAnimation }) =>
+    $stopAnimation
       ? "none"
       : css`
           ${pulse} 2s infinite
@@ -88,7 +88,7 @@ const MainButton = styled.button<{ stopAnimation: boolean }>`
   }
 `;
 
-const ButtonContainer = styled.div<{ animationShow: boolean }>`
+const ButtonContainer = styled.div<{ $animationShow: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -96,8 +96,8 @@ const ButtonContainer = styled.div<{ animationShow: boolean }>`
 
   button {
     opacity: 0;
-    animation: ${({ animationShow }) =>
-      animationShow
+    animation: ${({ $animationShow }) =>
+      $animationShow
         ? css`
             ${slideInFromRight} 0.3s ease-out forwards
           `
@@ -168,7 +168,7 @@ export const PhoneButton = () => {
 
   return (
     <PhoneContainer>
-      <ButtonContainer animationShow={isExpanded}>
+      <ButtonContainer $animationShow={isExpanded}>
         {contactButtons.map((button, index) => (
           <ContactButton key={index} onClick={button.onClick}>
             <IconStyled as={button.icon} color={"#fff"} />
@@ -178,7 +178,7 @@ export const PhoneButton = () => {
       <MainButton
         type="button"
         onClick={toggleButtons}
-        stopAnimation={isExpanded}
+        $stopAnimation={isExpanded}
       >
         <IconStyled
           as={Phone}

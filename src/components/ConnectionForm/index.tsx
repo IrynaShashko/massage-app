@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
 
@@ -6,23 +6,11 @@ import { useTranslation } from "react-i18next";
 
 import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
 
-import { ReactComponent as CloseIcon } from "../../icons/close.svg";
-
-import logo from "../../images/logo.png";
-
 import priceData from "../../json/price.json";
 import priceDataEn from "../../json/priceEn.json";
 
 import { ThemeType } from "../../theme/theme";
 
-import {
-  ModalBackdrop,
-  ModalButton,
-  ModalContent,
-  ModalHeader,
-} from "../Modal";
-
-import { IconStyled } from "../ConnectionButton";
 import { ConnectionFormPropsType } from "./types";
 
 export const ConnectionForm: FC<ConnectionFormPropsType> = ({
@@ -91,7 +79,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
     } else {
       setSubServiceOptions([]);
     }
-  }, [selectedService, selectedServiceData]);
+  }, [selectedService, selectedServiceData, language]);
 
   useEffect(() => {
     if (isOpen) {
@@ -118,15 +106,6 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
-
-  const handleBackdropClick = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      if (event.currentTarget === event.target) {
-        onClose();
-      }
-    },
-    [onClose],
-  );
 
   const handleServiceChange = (
     event: React.ChangeEvent<HTMLSelectElement>,
@@ -155,197 +134,171 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   };
 
   return (
-    <>
-      <ModalBackdrop onClick={handleBackdropClick}>
-        <ModalContent>
-          <Container>
-            <ModalHeader>
-              <img src={logo} width={120} alt="logo" />
-              <ModalButton onClick={onClose}>
-                <IconStyled as={CloseIcon} color={"#007586"} />
-              </ModalButton>
-            </ModalHeader>
-            <Formik
-              initialValues={initialValues}
-              onSubmit={(values, actions) => {
-                handleSubmit(values, actions);
-                (
-                  document.forms.namedItem("connection-form") as HTMLFormElement
-                )?.submit();
+    <Formik
+      initialValues={initialValues}
+      enableReinitialize={true}
+      onSubmit={(values, actions) => {
+        handleSubmit(values, actions);
+        (
+          document.forms.namedItem("connection-form") as HTMLFormElement
+        )?.submit();
+      }}
+    >
+      {({ handleSubmit, setFieldValue }) => (
+        <FormStyled name="connection-form" onSubmit={handleSubmit}>
+          <input type="hidden" name="form-name" value="connection-form" />
+          <FormTitle>{t("formTitle")}</FormTitle>
+          <FormGroup>
+            <Label htmlFor="service">{t("for_whom")}</Label>
+            <OptionLable
+              as="select"
+              id="service"
+              name="service"
+              value={selectedService}
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                handleServiceChange(event, setFieldValue);
               }}
             >
-              {({ handleSubmit, setFieldValue }) => (
-                <FormStyled
-                  name="connection-form"
-                  data-netlify="true"
-                  method="POST"
-                  onSubmit={handleSubmit}
-                  action="/success"
-                >
-                  <input
-                    type="hidden"
-                    name="form-name"
-                    value="connection-form"
-                  />
-                  <div>
-                    <Label htmlFor="service">
-                      {t("for_whom")}
-                      <OptionLable
-                        as="select"
-                        id="service"
-                        name="service"
-                        value={selectedService}
-                        onChange={(
-                          event: React.ChangeEvent<HTMLSelectElement>,
-                        ) => {
-                          handleServiceChange(event, setFieldValue);
-                        }}
-                      >
-                        <Option value="">{t("select")}</Option>
-                        {services.map((service) => (
-                          <Option key={service.name} value={service.name}>
-                            {t(service.name)}
-                          </Option>
-                        ))}
-                      </OptionLable>
-                      <ErrorMessage name="service" component="div" />
-                    </Label>
-                  </div>
-                  {subServiceOptions.length > 0 && (
-                    <div>
-                      <Label htmlFor="subService">
-                        {t("select_service")}
-                        <OptionLable
-                          as="select"
-                          id="subService"
-                          name="subService"
-                          value={selectedSubService}
-                          onChange={(
-                            event: React.ChangeEvent<HTMLSelectElement>,
-                          ) => {
-                            handleSubServiceChange(event, setFieldValue);
-                          }}
-                        >
-                          <Option value="">{t("select")}</Option>
-                          {subServiceOptions.map((subService) => (
-                            <Option key={subService} value={subService}>
-                              {subService}
-                            </Option>
-                          ))}
-                        </OptionLable>
-                        <ErrorMessage name="subService" component="div" />
-                      </Label>
-                    </div>
-                  )}
-                  <div>
-                    <Label htmlFor="name">
-                      {t("name")}
-                      <Input
-                        type="text"
-                        id="name"
-                        name="name"
-                        placeholder={t("enter_your_name")}
-                        required
-                      />
-                      <ErrorMessage name="name" component="div" />
-                    </Label>
-                  </div>
-                  <div>
-                    <Label htmlFor="tel">
-                      {t("phone")}
-                      <Input
-                        type="tel"
-                        id="tel"
-                        name="tel"
-                        placeholder={t("enter_your_phone_number")}
-                        required
-                      />
-                      <ErrorMessage name="tel" component="div" />
-                    </Label>
-                  </div>
-                  <div>
-                    <Label htmlFor="text">
-                      {t("comment")}
-                      <Comment
-                        as="textarea"
-                        type="text"
-                        id="text"
-                        name="text"
-                        placeholder={t("write_a_comment")}
-                      />
-                      <ErrorMessage name="text" component="div" />
-                    </Label>
-                  </div>
-                  <ModalSubmitBtn type="submit">{t("send")}</ModalSubmitBtn>
-                </FormStyled>
-              )}
-            </Formik>
-          </Container>
-        </ModalContent>
-      </ModalBackdrop>
-    </>
+              <Option value="">{t("select")}</Option>
+              {services.map((service) => (
+                <Option key={service.name} value={service.name}>
+                  {t(service.name)}
+                </Option>
+              ))}
+            </OptionLable>
+            <ErrorMessage name="service" component="div" />
+          </FormGroup>
+          {subServiceOptions.length > 0 && (
+            <FormGroup>
+              <Label htmlFor="subService">{t("select_service")}</Label>
+              <OptionLable
+                as="select"
+                id="subService"
+                name="subService"
+                value={selectedSubService}
+                onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                  handleSubServiceChange(event, setFieldValue);
+                }}
+              >
+                <Option value="">{t("select")}</Option>
+                {subServiceOptions.map((subService) => (
+                  <Option key={subService} value={subService}>
+                    {subService}
+                  </Option>
+                ))}
+              </OptionLable>
+              <ErrorMessage name="subService" component="div" />
+            </FormGroup>
+          )}
+          <FormGroup>
+            <Label htmlFor="name">{t("name")}</Label>
+            <Input
+              type="text"
+              id="name"
+              name="name"
+              placeholder={t("enter_your_name")}
+              required
+            />
+            <ErrorMessage name="name" component="div" />
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="tel">{t("phone")}</Label>
+            <Input
+              type="tel"
+              id="tel"
+              name="tel"
+              placeholder={t("enter_your_phone_number")}
+              required
+            />
+            <ErrorMessage name="tel" component="div" />
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="text">{t("comment")}</Label>
+            <Comment
+              as="textarea"
+              type="text"
+              id="text"
+              name="text"
+              placeholder={t("write_a_comment")}
+            />
+            <ErrorMessage name="text" component="div" />
+          </FormGroup>
+          <ModalSubmitBtn type="submit">{t("send")}</ModalSubmitBtn>
+        </FormStyled>
+      )}
+    </Formik>
   );
 };
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-`;
 
 const FormStyled = styled(Form)`
   display: flex;
   flex-direction: column;
   width: 100%;
   box-sizing: border-box;
+  gap: 1rem;
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const FormTitle = styled.h2`
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  align-self: center;
 `;
 
 export const Label = styled.label<{ theme?: ThemeType }>`
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
   color: ${(props) => props.theme.colors.text};
-  padding-top: 10px;
 `;
 
-export const Input = styled(Field)`
-  padding: 10px;
-  border: 1px solid ${(props) => props.theme.colors.primary};
-  border-radius: 16px;
-  margin-top: 5px;
-  font-size: 14px;
+export const Input = styled(Field)<{ theme?: ThemeType }>`
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid ${(props) => props.theme.colors.border};
+  font-size: 16px;
   outline: none;
+  transition: all 0.3s ease;
+  width: 100%;
   color: ${(props) => props.theme.colors.text};
-  /* background-color: transparent; */
-
   &::placeholder {
-    font-size: 14px;
-    color: #aaa;
+    color: ${(props) => props.theme.colors.text};
+    opacity: 0.7;
   }
-
   &:focus {
-    border-color: ${(props) => props.theme.colors.primary};
+    border-color: #007586;
+    box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
+    &::placeholder {
+      opacity: 0.3;
+    }
   }
 `;
 
 export const Comment = styled(Field)`
-  padding: 12px;
-  border: 1px solid ${(props) => props.theme.colors.primary};
-  border-radius: 16px;
-  margin-top: 10px;
-  font-size: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid ${(props) => props.theme.colors.border};
+  font-size: 16px;
   resize: none;
-  font-family: "Montserrat", sans-serif;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 100%;
   color: ${(props) => props.theme.colors.text};
   &::placeholder {
-    font-size: 14px;
-    color: #aaa;
+    color: ${(props) => props.theme.colors.text};
+    opacity: 0.7;
   }
-
   &:focus {
-    border-color: ${(props) => props.theme.colors.primary};
+    border-color: #007586;
+    box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
+    &::placeholder {
+      opacity: 0.3;
+    }
   }
 `;
 
@@ -357,31 +310,36 @@ const Option = styled.option`
 `;
 
 const OptionLable = styled(Field)`
-  padding: 10px;
-  border: 1px solid ${(props) => props.theme.colors.primary};
-  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
   background-color: ${(props) => props.theme.colors.background};
   color: ${(props) => props.theme.colors.text};
   font-size: 14px;
   width: 100%;
   appearance: none;
   margin-top: 5px;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Comfortaa", sans-serif;
   cursor: pointer;
+  &:focus {
+    border-color: #007586;
+    box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
+  }
 `;
 
 const ModalSubmitBtn = styled.button<{ theme?: ThemeType }>`
-  padding: 12px 20px;
-  font-size: 16px;
+  padding: 18px 48px;
+  border-radius: 90px;
+  font-size: 1.125rem;
+  font-weight: 600;
   color: ${(props) => props.theme.colors.buttonText};
   background-color: ${(props) => props.theme.colors.primary};
   border: none;
-  border-radius: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-top: 24px;
 
   &:hover {
-    background-color: ${(props) => props.theme.colors.primary};
+    background-color: #005f6e;
   }
 `;

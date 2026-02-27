@@ -18,7 +18,6 @@ export const ThemeButton: FC<ThemeButtonPropsType> = ({
 };
 
 const Button = styled.button`
-  align-self: center;
   background: none;
   border: none;
   cursor: pointer;
@@ -32,13 +31,12 @@ const Button = styled.button`
   }
 `;
 
-const IconStyled = styled.svg`
-  width: 25px;
-  height: 25px;
+export const IconStyled = styled.svg`
+  width: 28px;
+  height: 28px;
   transition: fill 0.3s ease-in-out;
-  fill: ${(props) => props.theme.colors.text};
-  /* Зміна кольору іконки при ховері */
+  fill: ${(props) => props.theme.colors.buttonBg};
   ${Button}:hover & {
-    fill: ${(props) => props.theme.colors.primary}; /* колір на ховер */
+    fill: ${(props) => props.theme.colors.primary};
   }
 `;
