@@ -5,44 +5,24 @@ import styled from "@emotion/styled";
 import "../../index.css";
 
 import { About } from "../../components/About";
-import { Contacts } from "../../components/Contacts";
 import { Hero } from "../../components/Hero";
 
+import BookNow from "../../components/BookNow";
 import { HomePagePropsType } from "./types";
 
 const HomePage: FC<HomePagePropsType> = ({ language }) => {
   return (
     <>
-      {/* <HomeContainer> */}
       <Hero language={language} />
-      {/* </HomeContainer> */}
       <InfoDiv>
         <About />
       </InfoDiv>
-      <Contacts />
+      <BookNow language={language} />
     </>
   );
 };
 
 export default HomePage;
-
-export const HomeContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  /* box-sizing: border-box; */
-  align-items: center;
-  /* background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center; */
-  height: 550px;
-  @media screen and (min-width: 768px) {
-    height: 600px;
-  }
-  @media screen and (min-width: 1440px) {
-    height: 700px;
-  }
-`;
 
 export const LocationText = styled.p`
   text-decoration: none;

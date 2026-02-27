@@ -3,10 +3,12 @@ import styled from "styled-components";
 import { ThemeType } from "../../theme/theme";
 
 export const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
     <CopyrightContainer>
       <CopyrightText>
-        {"Copyright 2025 © Maria Glushenko. All rights reserved"}
+        © {currentYear} Maria Glushenko. All rights reserved
       </CopyrightText>
     </CopyrightContainer>
   );

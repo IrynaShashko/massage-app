@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
@@ -8,12 +8,13 @@ import education from "../../images/education.png";
 import lotos from "../../images/lotos.png";
 import massage from "../../images/massage.png";
 
+import { SectionContainer } from "../../App";
 import { ThemeType } from "../../theme/theme";
 
 export const About = () => {
   const [t] = useTranslation();
 
-  const animationElement = {
+  const animationElement: Variants = {
     hidden: {
       y: -50,
       opacity: 0,
@@ -30,7 +31,7 @@ export const About = () => {
   });
 
   return (
-    <Container>
+    <SectionContainer>
       <Title>{t("whyChooseMe")}</Title>
       <InfoContainer
         initial="hidden"
@@ -70,16 +71,9 @@ export const About = () => {
           </InfoCard>
         </InfoItem>
       </InfoContainer>
-    </Container>
+    </SectionContainer>
   );
 };
-
-const Container = styled.section`
-  padding: 20px;
-  @media screen and (min-width: 900px) {
-    padding: 50px;
-  }
-`;
 
 const InfoContainer = styled(motion.ul)`
   display: grid;
@@ -99,13 +93,13 @@ const InfoItem = styled(motion.li)`
 `;
 
 const InfoCard = styled.div<{ theme?: ThemeType }>`
-  padding: 50px;
+  padding: 50px 30px 30px 30px;
   background-color: ${(props) => props.theme.colors.cardBg};
   border-radius: 12px;
   box-shadow: 0 4px 12px ${(props) => props.theme.colors.boxShadow};
   width: 100%;
   height: 100%;
-  min-height: 300px;
+  min-height: 260px;
   display: flex;
   flex-direction: column;
   text-align: left;
@@ -148,15 +142,15 @@ const BlurEffect = styled.div`
   z-index: 0;
 `;
 
-const Title = styled.h3<{ theme?: ThemeType }>`
+export const Title = styled.h3<{ theme?: ThemeType }>`
   color: ${(props) => props.theme.colors.primary};
   font-size: 30px;
   font-weight: lighter;
   text-transform: uppercase;
   text-align: center;
-  margin-bottom: 70px;
+  margin-bottom: 50px;
   @media screen and (min-width: 1024px) {
-    margin-bottom: 100px;
+    margin-bottom: 70px;
   }
 `;
 

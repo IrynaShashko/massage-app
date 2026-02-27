@@ -13,3 +13,4 @@ expectation.json
 expectationEn.json
 question.json
 questionEn.json
+*.json

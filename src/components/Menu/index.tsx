@@ -18,8 +18,8 @@ import { ReactComponent as MenuIcon } from "../../icons/menu.svg";
 
 import { ThemeType } from "../../theme/theme";
 
-import { LogOut } from "lucide-react";
-import { handleLogout } from "../../auth";
+import { CircleUserRound, LogOut } from "lucide-react";
+import { useLogout } from "../../hooks/useAuth";
 import { MenuPropsType } from "./types";
 
 export const Menu: FC<MenuPropsType> = ({
@@ -80,6 +80,12 @@ export const Menu: FC<MenuPropsType> = ({
     }
   };
 
+  const logoutMutation = useLogout();
+
+  const onLogout = () => {
+    logoutMutation.mutate();
+  };
+
   return (
     <>
       <MobileHeaderContainer>
@@ -93,14 +99,17 @@ export const Menu: FC<MenuPropsType> = ({
               language={language}
             />
             <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
-            {isAuthenticated && (
-              <button onClick={handleLogout}>
+            {isAuthenticated ? (
+              <LogoutButton onClick={onLogout}>
                 <LogOut
                   color={darkMode ? "rgb(195, 193, 193)" : "rgb(55, 61, 70)"}
                   size={24}
-                  style={{ marginRight: "8px" }}
                 />
-              </button>
+              </LogoutButton>
+            ) : (
+              <StyledUserLink to="/auth">
+                <CircleUserRound size={30} />
+              </StyledUserLink>
             )}
           </ButtonContainer>
           <ModalButton onClick={toggleMenu}>
@@ -155,6 +164,7 @@ export const Menu: FC<MenuPropsType> = ({
                 <ConnectionButtons
                   background={theme.colors.text}
                   color={theme.colors.modalIconColor}
+                  menu
                 />
               </ConnectionButtonContainer>
             </LinkContainer>
@@ -282,9 +292,25 @@ const ContactTitle = styled.p<{ theme?: ThemeType }>`
 `;
 
 export const ConnectionButtonContainer = styled.div`
-  max-width: 260px;
   margin-inline: auto;
-  @media (min-width: 580px) {
-    max-width: 500px;
+`;
+
+const LogoutButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: opacity 0.3s;
+
+  &:hover {
+    opacity: 0.7;
+  }
+`;
+
+const StyledUserLink = styled(Link)`
+  &:hover {
+    color: #007586;
   }
 `;

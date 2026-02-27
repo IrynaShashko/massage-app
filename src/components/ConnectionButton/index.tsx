@@ -1,4 +1,5 @@
 import { FC } from "react";
+
 import styled from "@emotion/styled";
 
 import { useTranslation } from "react-i18next";
@@ -15,122 +16,128 @@ import { ConnectionButtonContainer } from "../Menu";
 import { ThemeType } from "../../theme/theme";
 
 import { ConnectionButtonsPropsType } from "./types";
-
 export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
   background,
   color,
+  menu,
 }) => {
   const [t] = useTranslation();
 
-  function openTelegram() {
-    window.open("https://t.me/MashaHlushenko", "_blank");
-  }
-
-  function openWhatsApp() {
-    window.open("https://api.whatsapp.com/send?phone=380936193616", "_blank");
-  }
-
-  function openViber() {
-    window.open("viber://chat?number=+380936193616", "_blank");
-  }
-
-  function openInstagram() {
-    window.open(
-      "https://instagram.com/maria.glushenko?igshid=MzRlODBiNWFlZA==",
-      "_blank",
-    );
-  }
-
-  function makeCall() {
-    window.open("tel:+380936193616");
-  }
-
   return (
     <ConnectionButtonContainer>
-      <ButtonContainer>
-        <ButtonsItem iconColor={background} color={color}>
-          <Buttons
-            aria-label="Open instagram"
-            href="https://instagram.com/maria.glushenko?igshid=MzRlODBiNWFlZA=="
-            onClick={openInstagram}
-            target="_blank"
-          >
-            <IconStyled as={Instagram} color={color} />
-          </Buttons>
-        </ButtonsItem>
-        <ButtonsItem iconColor={background} color={color}>
-          <Buttons
+      <InfoList menu={menu}>
+        <InfoItem>
+          <InfoLink
             aria-label="Location"
             href="https://goo.gl/maps/o3qvsXRkfv8h3hdw5"
             target="_blank"
+            rel="noopener noreferrer"
           >
-            <IconStyled as={Location} color={color} />
-          </Buttons>
-        </ButtonsItem>
-        <ButtonsItem iconColor={background} color={color}>
-          <Buttons
+            <ButtonsItem iconColor={background} color={color}>
+              <IconStyled as={Location} color={color} />
+            </ButtonsItem>
+            {!menu && (
+              <InfoText>
+                <InfoTitle>Address</InfoTitle>
+                <InfoDescription>{t("address")}</InfoDescription>
+              </InfoText>
+            )}
+          </InfoLink>
+        </InfoItem>
+
+        <InfoItem>
+          <InfoLink aria-label="Phone number" href="tel:+380936193616">
+            <ButtonsItem iconColor={background} color={color}>
+              <IconStyled as={Phone} color={color} />
+            </ButtonsItem>
+            {!menu && (
+              <InfoText>
+                <InfoTitle>Phone</InfoTitle>
+                <InfoDescription>+38 093 619 36 16</InfoDescription>
+              </InfoText>
+            )}
+          </InfoLink>
+        </InfoItem>
+
+        <InfoItem>
+          <InfoLink
+            aria-label="Open instagram"
+            href="https://instagram.com/maria.glushenko?igshid=MzRlODBiNWFlZA=="
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ButtonsItem iconColor={background} color={color}>
+              <IconStyled as={Instagram} color={color} />
+            </ButtonsItem>
+            {!menu && (
+              <InfoText>
+                <InfoTitle>Instagram</InfoTitle>
+                <InfoDescription>@mariia.hlushenko</InfoDescription>
+              </InfoText>
+            )}
+          </InfoLink>
+        </InfoItem>
+
+        <InfoItem>
+          <InfoLink
             aria-label="Open telegram"
             href="https://t.me/MashaHlushenko"
-            onClick={openTelegram}
             target="_blank"
+            rel="noopener noreferrer"
           >
-            <IconStyled as={Telegram} color={color} />
-          </Buttons>
-        </ButtonsItem>
-        <ButtonsItem iconColor={background} color={color}>
-          <Buttons
-            aria-label="Open whatsapp"
-            href="https://api.whatsapp.com/send?phone=380936193616"
-            onClick={openWhatsApp}
-            target="_blank"
-          >
-            <IconStyled as={Whatsapp} color={color} />
-          </Buttons>
-        </ButtonsItem>
-        <ButtonsItem iconColor={background} color={color}>
-          <Buttons
+            <ButtonsItem iconColor={background} color={color}>
+              <IconStyled as={Telegram} color={color} />
+            </ButtonsItem>
+            {!menu && (
+              <InfoText>
+                <InfoTitle>Telegram</InfoTitle>
+                <InfoDescription>@MashaHlushenko</InfoDescription>
+              </InfoText>
+            )}
+          </InfoLink>
+        </InfoItem>
+
+        <InfoItem>
+          <InfoLink
             aria-label="Open viber"
             href="viber://chat?number=+380936193616"
-            onClick={openViber}
-            target="_blank"
           >
-            <IconStyled as={Viber} color={color} />
-          </Buttons>
-        </ButtonsItem>
-        <ButtonsItem iconColor={background} color={color}>
-          <Buttons aria-label="Phone number" onClick={makeCall}>
-            <IconStyled as={Phone} color={color} />
-          </Buttons>
-        </ButtonsItem>
-      </ButtonContainer>
-      <ContactsLinkContainer>
-        <AddressText color={color}>
-          <IconLocation as={Location} color={color} />
-          {t("address")}
-        </AddressText>
-      </ContactsLinkContainer>
+            <ButtonsItem iconColor={background} color={color}>
+              <IconStyled as={Viber} color={color} />
+            </ButtonsItem>
+            {!menu && (
+              <InfoText>
+                <InfoTitle>Viber</InfoTitle>
+                <InfoDescription>+38 093 619 36 16</InfoDescription>
+              </InfoText>
+            )}
+          </InfoLink>
+        </InfoItem>
+
+        <InfoItem>
+          <InfoLink
+            aria-label="Open whatsapp"
+            href="https://api.whatsapp.com/send?phone=380936193616"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ButtonsItem iconColor={background} color={color}>
+              <IconStyled as={Whatsapp} color={color} />
+            </ButtonsItem>
+            {!menu && (
+              <InfoText>
+                <InfoTitle>WhatsApp</InfoTitle>
+                <InfoDescription>+38 093 619 36 16</InfoDescription>
+              </InfoText>
+            )}
+          </InfoLink>
+        </InfoItem>
+      </InfoList>
     </ConnectionButtonContainer>
   );
 };
 
-const ContactsLinkContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-top: 30px;
-`;
-
-const ButtonContainer = styled.ul`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-  gap: 10px;
-`;
-
-const ButtonsItem = styled.li<{
+const ButtonsItem = styled.div<{
   iconColor: string;
   color: string;
   theme?: ThemeType;
@@ -144,30 +151,66 @@ const ButtonsItem = styled.li<{
   border-radius: 50%;
   border: 2px solid
     ${(props) => (props.color ? props.color : props.theme.colors.iconColor)};
-  cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+`;
+
+const InfoList = styled.ul<{ menu?: boolean }>`
+  display: ${(props) => (props.menu ? "grid" : "flex")};
+
+  ${(props) =>
+    props.menu
+      ? `
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    justify-items: center;
+  `
+      : `
+    flex-direction: column;
+    gap: 1rem;
+  `}
+
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const InfoItem = styled.li<{ menu?: boolean }>`
+  ${(props) =>
+    props.menu &&
+    `
+      width: calc(50% - 0.5rem);
+      display: flex;
+      justify-content: center;
+    `}
+`;
+
+const InfoLink = styled.a<{ menu?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: ${(props) => (props.menu ? "center" : "flex-start")};
+  text-decoration: none;
+  cursor: pointer;
 
   &:hover {
-    background-color: #015663;
-    color: #f7f7f7;
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    transform: scale(1.05);
+    transition: all 0.4s ease;
   }
 `;
 
-const Buttons = styled.a`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: transparent;
-  cursor: pointer;
+const InfoText = styled.div`
+  margin-left: 16px;
 `;
 
-const AddressText = styled.p<{ theme?: ThemeType; color: string }>`
-  text-align: center;
-  color: ${(props) =>
-    props.color ? props.color : props.theme.colors.iconColor};
+const InfoTitle = styled.h3<{ theme?: ThemeType }>`
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: ${(props) => props.theme.colors.text};
+`;
+
+const InfoDescription = styled.p<{ theme?: ThemeType }>`
+  color: ${(props) => props.theme.colors.text};
+  line-height: 1.6;
 `;
 
 export const IconStyled = styled.svg<{ theme?: ThemeType; color?: string }>`
@@ -177,7 +220,7 @@ export const IconStyled = styled.svg<{ theme?: ThemeType; color?: string }>`
   fill: ${(props) =>
     props.color ? props.color : props.theme.colors.iconColor};
   &:hover & {
-    fill: ${(props) => props.theme.colors.primary};
+    fill: ${(props) => props.theme.colors.text};
   }
 `;
 

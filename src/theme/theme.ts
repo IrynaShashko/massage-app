@@ -8,11 +8,12 @@ export const lightTheme = {
     heroText: "var(--color-bg)",
     headerBg: "var(--color-header-bg)",
     boxShadow: "var(--color-box-shadow-light)",
-    cardBg: "var(--color-header-bg)",
+    cardBg: "var(--color-card-bg-light)",
     aboutBg: "var(--color-primary-light)",
     aboutText: "var(--color-primary-dark)",
     iconColor: "var(--color-bg-white)",
     modalIconColor: "var(--color-card-bg)",
+    langIconColor: "var(--color-bg)",
   },
 };
 
@@ -31,6 +32,7 @@ export const darkTheme = {
     aboutText: "var(--color-primary-light)",
     iconColor: "var(--color-bg)",
     modalIconColor: "var(--color-text-dark)",
+    langIconColor: "var(--color-bg-dark)",
   },
 };
 

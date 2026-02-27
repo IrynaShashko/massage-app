@@ -20,11 +20,13 @@ i18n
       escapeValue: false,
     },
   })
-  .then(() => {
-    console.log("i18next initialized successfully");
-  })
   .catch((err) => {
     console.error("Error initializing i18next", err);
   });
+
+i18n.on("languageChanged", (lng) => {
+  const htmlLang = lng === "ua" ? "uk" : lng;
+  document.documentElement.setAttribute("lang", htmlLang);
+});
 
 export default i18n;

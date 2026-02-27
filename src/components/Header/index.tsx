@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 import { Link, NavLink, useLocation } from "react-router-dom";
+
+import { LogOut, UserRound } from "lucide-react";
 
 import styled from "styled-components";
 
@@ -13,10 +15,9 @@ import { LanguageButton } from "../LanguageButton";
 import { Menu } from "../Menu";
 import { ThemeButton } from "../ThemeButton";
 
-import { onAuthStateChanged } from "firebase/auth";
-import { LogOut } from "lucide-react";
-import { handleLogout } from "../../auth";
-import { auth } from "../../firebase";
+import { useLogout, useProfile } from "../../hooks/useAuth";
+
+import { ThemeType } from "../../theme/theme";
 import { HeaderPropsType } from "./types";
 
 export const Header: React.FC<HeaderPropsType> = ({
@@ -25,26 +26,15 @@ export const Header: React.FC<HeaderPropsType> = ({
   language,
   darkMode,
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const checkAuthState = () => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsAuthenticated(true);
-      } else {
-        console.log("No user logged in");
-        setIsAuthenticated(false);
-      }
-    });
-  };
-
-  useEffect(() => {
-    checkAuthState();
-  }, []);
-
   const [t] = useTranslation();
 
   const location = useLocation();
+
+  const { data: user } = useProfile();
+
+  const logoutMutation = useLogout();
+
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,14 +44,16 @@ export const Header: React.FC<HeaderPropsType> = ({
     event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
   ) => {
     event.preventDefault();
-
     const section = document.getElementById("contacts");
-
     if (section) {
       section.scrollIntoView({ behavior: "smooth" });
     } else {
       window.location.href = "/#contacts";
     }
+  };
+
+  const onLogout = () => {
+    logoutMutation.mutate();
   };
 
   return (
@@ -101,14 +93,20 @@ export const Header: React.FC<HeaderPropsType> = ({
               language={language}
             />
             <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
-            {isAuthenticated && (
-              <button onClick={handleLogout}>
+            {isAuthenticated ? (
+              <LogoutButton onClick={onLogout}>
                 <LogOut
-                  color={darkMode ? "rgb(195, 193, 193)" : "rgb(55, 61, 70)"}
-                  size={24}
-                  style={{ marginRight: "8px" }}
+                  color={darkMode ? "#F6F1EA" : "rgb(55, 61, 70)"}
+                  size={30}
                 />
-              </button>
+              </LogoutButton>
+            ) : (
+              <StyledUserLink to="/auth">
+                <UserRound
+                  color={darkMode ? "#F6F1EA" : "rgb(55, 61, 70)"}
+                  size={30}
+                />
+              </StyledUserLink>
             )}
           </ButtonContainer>
         </Wrapper>
@@ -119,6 +117,7 @@ export const Header: React.FC<HeaderPropsType> = ({
             darkMode={darkMode}
             themeToggle={themeToggle}
             isAuthenticated={isAuthenticated}
+            user={user}
           />
         </MenuWrapper>
       </Container>
@@ -126,7 +125,27 @@ export const Header: React.FC<HeaderPropsType> = ({
   );
 };
 
-const HeaderContainer = styled.header<{ $darkMode: boolean }>`
+const LogoutButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: opacity 0.3s;
+
+  &:hover {
+    svg {
+      stroke: ${(props) => props.theme.colors.primary};
+      transition: stroke 0.3s ease;
+    }
+  }
+`;
+
+const HeaderContainer = styled.header<{
+  $darkMode: boolean;
+  theme?: ThemeType;
+}>`
   padding: 20px;
   position: fixed;
   top: 0;
@@ -134,8 +153,7 @@ const HeaderContainer = styled.header<{ $darkMode: boolean }>`
   right: 0;
   width: 100%;
   height: 80px;
-  background: ${(props) =>
-    props.$darkMode ? "rgba(34, 40, 49, 0.8)" : "rgba(255, 255, 255, 0.8)"};
+  background: ${(props) => props.theme.colors.headerBg};
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 1000;
@@ -182,13 +200,23 @@ const NavLinks = styled.ul`
   flex-grow: 1;
 `;
 
-const StyledNavLink = styled(NavLink)`
+const StyledUserLink = styled(Link)`
+  &:hover {
+    svg {
+      stroke: ${(props) => props.theme.colors.primary};
+      transition: stroke 0.3s ease;
+    }
+  }
+`;
+
+const StyledNavLink = styled(NavLink)<{ theme?: ThemeType }>`
   text-decoration: none;
   color: inherit;
   font-size: 18px;
   font-weight: bold;
   position: relative;
   transition: color 0.3s;
+  font-family: "Comfortaa", sans-serif;
   &::after {
     content: "";
     position: absolute;
@@ -211,12 +239,13 @@ const StyledNavLink = styled(NavLink)`
   }
 `;
 
-const StyledLink = styled.a`
+const StyledLink = styled.a<{ theme?: ThemeType }>`
   text-decoration: none;
   color: inherit;
   font-size: 18px;
   font-weight: bold;
   transition: color 0.3s;
+  font-family: "Comfortaa", sans-serif;
   &:hover {
     color: ${(props) => props.theme.colors.primary};
   }

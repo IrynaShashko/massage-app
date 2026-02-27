@@ -25,7 +25,7 @@ export const Contacts = () => {
 
   return (
     <Wrapper>
-      <ContactsContainer id="contacts">
+      <ContactsContainer>
         <Container>
           <GridContainer>
             <Grid1>
