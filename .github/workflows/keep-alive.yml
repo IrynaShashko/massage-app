@@ -1,0 +1,14 @@
+name: Keep Massage App Alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Reviews Page
+        run: |
+          curl -I https://massage-maria-glushenko.netlify.app/reviews
