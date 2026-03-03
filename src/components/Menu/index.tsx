@@ -18,7 +18,7 @@ import { ReactComponent as MenuIcon } from "../../icons/menu.svg";
 
 import { ThemeType } from "../../theme/theme";
 
-import { CircleUserRound, LogOut } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 import { useLogout } from "../../hooks/useAuth";
 import { MenuPropsType } from "./types";
 
@@ -108,7 +108,7 @@ export const Menu: FC<MenuPropsType> = ({
               </LogoutButton>
             ) : (
               <StyledUserLink to="/auth">
-                <CircleUserRound size={30} />
+                <UserRound size={30} />
               </StyledUserLink>
             )}
           </ButtonContainer>
@@ -163,7 +163,7 @@ export const Menu: FC<MenuPropsType> = ({
               <ConnectionButtonContainer>
                 <ConnectionButtons
                   background={theme.colors.text}
-                  color={theme.colors.modalIconColor}
+                  color={theme.colors.text}
                   menu
                 />
               </ConnectionButtonContainer>
@@ -245,7 +245,8 @@ const Logo = styled.img`
 const ModalButtonContainer = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 20px;
+  gap: 10px;
+  margin-left: 20px;
   justify-content: center;
   align-items: center;
 `;
@@ -253,7 +254,7 @@ const ModalButtonContainer = styled.div`
 const ModalButton = styled.button`
   border: none;
   background-color: transparent;
-  @media screen and (min-width: 1055px) {
+  @media screen and (min-width: 1080px) {
     display: none;
   }
 `;
@@ -281,8 +282,7 @@ const ButtonContainer = styled.div`
 
 const ContactTitle = styled.p<{ theme?: ThemeType }>`
   color: ${(props) => props.theme.colors.text};
-  font-size: 24px;
-  font-weight: 850;
+  font-size: 20px;
   padding: 10px 12px;
 
   @media (max-width: 768px) {

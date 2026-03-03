@@ -1,19 +1,26 @@
 import { useEffect, useState } from "react";
+
 import { useTranslation } from "react-i18next";
+
 import styled from "styled-components";
-import { Container } from "../../App";
+
+import { SectionContainer } from "../../App";
+import BookNow from "../../components/BookNow";
 import { IconStyled } from "../../components/ConnectionButton";
 import { Label } from "../../components/ConnectionForm";
 import { Loader } from "../../components/Loader";
+
 import { ReactComponent as StarSvg } from "../../icons/star.svg";
 import { ReactComponent as StarActiveSvg } from "../../icons/starActive.svg";
-import dotArrowRight from "../../images/dotArrowRight.png";
-import reviewImage from "../../images/flowers.png";
 
-import BookNow from "../../components/BookNow";
+import dotArrowRight from "../../images/dotArrowRight.png";
+
 import { useModal } from "../../context/ModalContext";
+import { ThemeType } from "../../theme/theme";
+
 import { useProfile, useUpdateProfile } from "../../hooks/useAuth";
 import { useCreateReview, useReviews } from "../../hooks/useReviews";
+
 import { Review } from "./types";
 
 const ReviewsPage = ({ language }: { language: string }) => {
@@ -138,7 +145,7 @@ const ReviewsPage = ({ language }: { language: string }) => {
       ) : (
         <>
           <ReviewsContainer>
-            <Container>
+            <SectionContainer>
               <ReviewsWrapper>
                 <LeftColumn>
                   <ReviewList>
@@ -157,14 +164,12 @@ const ReviewsPage = ({ language }: { language: string }) => {
                                 />
                               ))}
                             </Stars>
-                            <ImageStyled src={reviewImage} alt="Review Image" />
                           </StarsContainer>
                         </UserIconDiv>
                         <Text>{review.comment}</Text>
                       </ReviewItem>
                     ))}
                   </ReviewList>
-                  {/* Pagination */}
                   {totalPages > 1 && (
                     <Pagination>
                       <PageButton
@@ -238,7 +243,7 @@ const ReviewsPage = ({ language }: { language: string }) => {
                   </button>
                 </FeedbackForm>
               </ReviewsWrapper>
-            </Container>
+            </SectionContainer>
           </ReviewsContainer>
           <BookNow language={language} />
         </>
@@ -251,16 +256,20 @@ export default ReviewsPage;
 
 const ReviewsContainer = styled.div`
   background-color: ${(props) => props.theme.colors.aboutBg};
-  padding: 30px;
   justify-content: center;
-  min-height: calc(100vh - 80px);
+  clip-path: ellipse(200% 100% at 50% 0%);
+  overflow: hidden;
+
+  @media screen and (min-width: 1024px) {
+    min-height: calc(100dvh - 80px);
+    clip-path: ellipse(120% 100% at 50% 0%);
+  }
 `;
 
 const LeftColumn = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  min-height: calc(100vh - 120px);
+  gap: 10px;
 `;
 
 const DecorativeElementTopRight = styled.div`
@@ -283,7 +292,7 @@ const ReviewList = styled.ul`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 24px;
+  gap: 14px;
   padding: 0;
   margin: 0;
   height: 100%;
@@ -292,16 +301,12 @@ const ReviewList = styled.ul`
 const ReviewItem = styled.li`
   background: ${(props) => props.theme.colors.cardBg};
   padding: 20px;
+  padding-inline: 20px;
   border-radius: 16px;
-  box-shadow: 0 10px 25px ${(props) => props.theme.colors.boxShadow};
+  box-shadow: 0 4px 12px ${(props) => props.theme.colors.boxShadow};
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 35px ${(props) => props.theme.colors.boxShadow};
-  }
 `;
 
 const Pagination = styled.div`
@@ -335,17 +340,6 @@ const StarsContainer = styled.div`
   justify-content: space-between;
 `;
 
-const ImageStyled = styled.img`
-  width: auto;
-  height: 40px;
-  object-fit: cover;
-  align-self: flex-end;
-  cursor: pointer;
-  @media screen and (min-width: 768px) {
-    height: 50px;
-  }
-`;
-
 const UserIconDiv = styled.div`
   display: flex;
   flex-direction: column;
@@ -354,14 +348,15 @@ const UserIconDiv = styled.div`
 const UserName = styled.p`
   font-size: 18px;
   font-weight: 600;
-  color: ${(props) => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.text};
+  font-family: "Comfortaa", cursive;
 `;
 
 const Stars = styled.div`
   color: #faf32e;
 `;
 
-const Text = styled.p`
+const Text = styled.p<{ theme?: ThemeType }>`
   font-size: 16px;
   color: ${(props) => props.theme.colors.text};
   @media screen and (min-width: 768px) {
@@ -391,6 +386,9 @@ const FeedbackForm = styled.div`
   box-shadow: 0 4px 6px ${(props) => props.theme.colors.boxShadow};
   padding: 30px;
   height: fit-content;
+  @media screen and (max-width: 899px) {
+    margin-bottom: 60px;
+  }
 
   input,
   textarea {
@@ -431,14 +429,14 @@ const FeedbackForm = styled.div`
 const FormTitle = styled.h4`
   font-size: 20px;
   margin-bottom: 15px;
-  color: ${(props) => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.text};
   text-align: center;
 `;
 
 const StarsWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
+  /* margin-bottom: 15px; */
 `;
 
 const StarsRating = styled.div`
@@ -460,6 +458,10 @@ const Input = styled.input`
   resize: vertical;
   width: 100%;
   box-sizing: border-box;
+  &::placeholder {
+    color: ${(props) => props.theme.colors.text};
+    opacity: 0.7;
+  }
 `;
 
 const Comment = styled.textarea`
@@ -473,11 +475,15 @@ const Comment = styled.textarea`
   overflow: hidden;
   padding: 10px;
   height: auto;
+  &::placeholder {
+    color: ${(props) => props.theme.colors.text};
+    opacity: 0.7;
+  }
 `;
 
 const StarIconStyled = styled(IconStyled)`
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
 `;
 
 const RatingLabel = styled.span`

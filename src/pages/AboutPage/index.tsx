@@ -15,6 +15,7 @@ import { SectionContainer } from "../../App";
 import { ThemeType } from "../../theme/theme";
 
 import BookNow from "../../components/BookNow";
+
 import { AboutPagePropsType } from "./types";
 
 const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
@@ -90,18 +91,24 @@ export default AboutPage;
 
 export const AboutContainer = styled.div<{ theme?: ThemeType }>`
   background-color: ${(props) => props.theme.colors.background};
-  min-height: 100dvh;
 `;
 
 export const StudyContainer = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-around;
+  min-height: calc(100dvh - 80px);
 `;
 
 const BackgroundContainer = styled.div<{ theme?: ThemeType }>`
   width: 100%;
   background-color: ${(props) => props.theme.colors.aboutBg};
+  clip-path: ellipse(200% 100% at 50% 0%);
+  overflow: hidden;
+
+  @media screen and (min-width: 1024px) {
+    clip-path: ellipse(120% 100% at 50% 0%);
+  }
 `;
 
 export const ImageContainer = styled.div<{ theme?: ThemeType }>`
@@ -124,14 +131,11 @@ const ImageWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   flex: 0 0 auto;
-  max-width: 400px;
-  @media screen and (min-width: 768px) {
-    max-width: 450px;
-  }
+  max-width: 360px;
 `;
 
 const ImageBorder = styled.div`
-  padding: 20px;
+  padding: 16px;
   border-radius: 50%;
   background: linear-gradient(
     45deg,
@@ -167,7 +171,6 @@ const Image = styled.img`
   transition:
     transform var(--transition-duration) ease,
     box-shadow var(--transition-duration) ease;
-
   animation: ${scaleUp} 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 
   &:hover {
@@ -186,37 +189,35 @@ const TitleContainer = styled.div`
   }
 `;
 
-const Title = styled.h2`
-  font-size: 30px;
+const Title = styled.h2<{ theme?: ThemeType }>`
+  font-size: 45px;
   margin-top: 20px;
-  color: #f7f7f7;
+  color: ${(props) => props.theme.colors.text};
   margin-bottom: 20px;
-  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.5);
-  letter-spacing: 5px;
+  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.3);
+  letter-spacing: 2px;
   text-align: center;
-  @media screen and (min-width: 768px) {
-    font-size: 35px;
-  }
+  font-family: "Great Vibes", cursive;
+  font-weight: lighter;
 `;
 
 const AfterTitle = styled.p<{ theme?: ThemeType }>`
-  font-size: 18px;
-  letter-spacing: 5px;
+  font-size: 20px;
   color: ${(props) => props.theme.colors.text};
   text-align: center;
   @media screen and (min-width: 768px) {
-    font-size: 20px;
+    font-size: 24px;
   }
 `;
 
 const TitleText = styled.h1<{ theme?: ThemeType }>`
-  font-size: 22px;
-  line-height: 30px;
+  font-size: 18px;
   color: ${(props) => props.theme.colors.primary};
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   text-align: center;
+  font-family: "Roboto", sans-serif;
   @media screen and (min-width: 768px) {
-    font-size: 30px;
+    font-size: 24px;
   }
 `;
 
@@ -248,7 +249,7 @@ const Text = styled.p<{ theme?: ThemeType }>`
   font-size: 18px;
   line-height: 26px;
   color: ${(props) => props.theme.colors.text};
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   text-align: left;
   @media screen and (min-width: 768px) {
     font-size: 20px;

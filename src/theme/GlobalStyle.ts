@@ -12,8 +12,8 @@ const GlobalStyle = createGlobalStyle`
 
     --color-bg-dark:rgb(55, 61, 70);
     --color-card-bg:rgba(0, 0, 0, 0.2);
-    --color-text-dark:#F6F1EA;
-    --color-primary-dark: rgb(86, 143, 153);
+    --color-text-dark: #e4dfd5;
+    --color-primary-dark: rgb(95, 157, 168);
     --color-header-bg-dark: rgba(0, 0, 0, 0.5);
     --color-box-shadow-light: rgba(0, 0, 0, 0.1);
     --color-box-shadow-dark: rgba(0, 0, 0, 0.3);

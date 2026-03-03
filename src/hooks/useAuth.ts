@@ -42,7 +42,7 @@ export const useLogin = () => {
   });
 };
 
-export const useGoogleLogin = () => {
+export const useGoogleLoginMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation<any, Error, GoogleLoginVariables>({

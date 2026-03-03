@@ -12,6 +12,7 @@ import priceDataEn from "../../json/priceEn.json";
 import { ThemeType } from "../../theme/theme";
 
 import { useCreateBooking } from "../../hooks/useCreateBooking";
+import { useProfile } from "../../hooks/useAuth";
 
 import { ConnectionFormPropsType } from "./types";
 
@@ -21,7 +22,9 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   language,
 }) => {
   const [t] = useTranslation();
+  const user = useProfile();
   const { mutate, isPending, isError } = useCreateBooking();
+
   const [selectedService, setSelectedService] = useState("");
   const [selectedSubService, setSelectedSubService] = useState("");
   const [subServiceOptions, setSubServiceOptions] = useState<string[]>([]);
@@ -133,15 +136,14 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
     values: typeof initialValues,
     { resetForm }: FormikHelpers<typeof initialValues>,
   ) => {
-    // 2. Трансформуємо дані Formik у формат, який чекає бекенд
     const bookingData = {
       name: values.name,
-      phone: values.tel, // tel -> phone
-      comment: values.text, // text -> comment
-      service: `${values.service} - ${values.subService}`, // поєднуємо для імейлу
+      phone: values.tel,
+      email: user.data.email || "",
+      comment: values.text,
+      service: `${values.service} - ${values.subService}`,
     };
 
-    // 3. Відправляємо на бекенд
     mutate(bookingData, {
       onSuccess: () => {
         resetForm();
@@ -243,10 +245,6 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             />
             <ErrorMessage name="text" component="div" />
           </FormGroup>
-          {/* <ModalSubmitBtn type="submit">{t("send")}</ModalSubmitBtn> */}
-          {/* <ModalSubmitBtn type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? t("sending") : t("send")}
-          </ModalSubmitBtn> */}
           {isSuccess && (
             <SuccessText>
               {t("thanks_title")}
@@ -282,11 +280,12 @@ const FormGroup = styled.div`
   flex-direction: column;
 `;
 
-const FormTitle = styled.h2`
+const FormTitle = styled.h2<{ theme?: ThemeType }>`
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 16px;
   align-self: center;
+  color: ${(props) => props.theme.colors.text};
 `;
 
 export const Label = styled.label<{ theme?: ThemeType }>`
@@ -333,7 +332,7 @@ export const Comment = styled(Field)`
     opacity: 0.7;
   }
   &:focus {
-    border-color: #007586;
+    border-color: ${(props) => props.theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
     &::placeholder {
       opacity: 0.3;
@@ -350,7 +349,7 @@ const Option = styled.option`
 
 const OptionLable = styled(Field)`
   padding: 14px 16px;
-  border: 1px solid #d1d5db;
+  border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: 10px;
   background-color: ${(props) => props.theme.colors.background};
   color: ${(props) => props.theme.colors.text};
@@ -361,7 +360,7 @@ const OptionLable = styled(Field)`
   font-family: "Comfortaa", sans-serif;
   cursor: pointer;
   &:focus {
-    border-color: #007586;
+    border-color: ${(props) => props.theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
   }
 `;

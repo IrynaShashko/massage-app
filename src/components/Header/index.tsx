@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 
 import logo from "../../images/logo.png";
 
-import { Container } from "../../App";
 import { LanguageButton } from "../LanguageButton";
 import { Menu } from "../Menu";
 import { ThemeButton } from "../ThemeButton";
@@ -18,6 +17,7 @@ import { ThemeButton } from "../ThemeButton";
 import { useLogout, useProfile } from "../../hooks/useAuth";
 
 import { ThemeType } from "../../theme/theme";
+
 import { HeaderPropsType } from "./types";
 
 export const Header: React.FC<HeaderPropsType> = ({
@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderPropsType> = ({
 
   return (
     <HeaderContainer $darkMode={darkMode}>
-      <Container>
+      <StyledSectionContainer>
         <Wrapper>
           <Logo to="/">
             <img src={logo} alt="Logo" />
@@ -120,10 +120,19 @@ export const Header: React.FC<HeaderPropsType> = ({
             user={user}
           />
         </MenuWrapper>
-      </Container>
+      </StyledSectionContainer>
     </HeaderContainer>
   );
 };
+
+const StyledSectionContainer = styled.header`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px;
+  @media screen and (min-width: 900px) {
+    padding: 20px 40px;
+  }
+`;
 
 const LogoutButton = styled.button`
   background: none;
@@ -146,7 +155,6 @@ const HeaderContainer = styled.header<{
   $darkMode: boolean;
   theme?: ThemeType;
 }>`
-  padding: 20px;
   position: fixed;
   top: 0;
   left: 0;
@@ -166,7 +174,7 @@ const HeaderContainer = styled.header<{
 
 const Wrapper = styled.nav`
   display: none;
-  @media screen and (min-width: 1055px) {
+  @media screen and (min-width: 1080px) {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -176,7 +184,7 @@ const Wrapper = styled.nav`
 const MenuWrapper = styled.div`
   display: block;
   position: relative;
-  @media screen and (min-width: 1055px) {
+  @media screen and (min-width: 1080px) {
     display: none;
   }
 `;

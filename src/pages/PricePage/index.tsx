@@ -4,13 +4,10 @@ import styled from "styled-components";
 
 import { useTranslation } from "react-i18next";
 
-import circleRight from "../../images/circleRight.png";
-import leftCircle from "../../images/leftCircle.png";
-
 import categories from "../../json/price.json";
 import categoriesEn from "../../json/priceEn.json";
 
-import { Container } from "../../App";
+import { SectionContainer } from "../../App";
 
 import BookNow from "../../components/BookNow";
 
@@ -30,10 +27,8 @@ const PricePage: FC<PricePagePropsType> = ({ language }) => {
   return (
     <>
       <Wrapper>
-        <DecorativeElementLeft />
-        <DecorativeElementBottomRight />
         <BackgroundImageStyle>
-          <Container>
+          <SectionContainer>
             <CategoryTabs>
               {Object.keys(categoriesData).map((categoryKey, index) => (
                 <TabButton
@@ -62,7 +57,7 @@ const PricePage: FC<PricePagePropsType> = ({ language }) => {
                 ))}
               </ServiceGrid>
             </ServiceGridContainer>
-          </Container>
+          </SectionContainer>
         </BackgroundImageStyle>
       </Wrapper>
       <BookNow language={language} />
@@ -76,56 +71,20 @@ const Wrapper = styled.div`
   position: relative;
 `;
 
-const DecorativeElementLeft = styled.div`
-  position: absolute;
-  left: 0;
-  top: 40%;
-  width: 300px;
-  height: 700px;
-  background-image: url(${leftCircle});
-  background-size: contain;
-  background-repeat: no-repeat;
-  transform: translateY(-70%);
-  @media screen and (min-width: 768px) {
-    top: 60%;
-  }
-  @media screen and (min-width: 1024px) {
-    top: 50%;
-  }
-  @media screen and (min-width: 1440px) {
-    top: 70%;
-  }
-`;
-
-const DecorativeElementBottomRight = styled.div`
-  position: absolute;
-  right: 1%;
-  bottom: 5%;
-  width: 400px;
-  height: 400px;
-  background-image: url(${circleRight});
-  background-size: contain;
-  background-repeat: no-repeat;
-  @media screen and (min-width: 1024px) {
-    bottom: 1%;
-    right: 1%;
-    width: 500px;
-    height: 500px;
-  }
-`;
-
 const BackgroundImageStyle = styled.div`
   box-sizing: border-box;
   background-color: ${(props) => props.theme.colors.aboutBg};
   width: 100%;
-  padding: 12vw;
-  padding-top: 20px;
   color: white;
   z-index: 3;
-  min-height: 100vh;
-  @media screen and (min-width: 768px) {
-    padding-top: 50px;
-    padding-bottom: 50px;
+  clip-path: ellipse(300% 100% at 50% 0%);
+  overflow: hidden;
+  @media screen and (min-width: 1024px) {
+    clip-path: ellipse(150% 100% at 50% 0%);
+  }
+  @media screen and (min-width: 1200px) {
+    min-height: calc(100dvh - 80px);
+    clip-path: ellipse(120% 100% at 50% 0%);
   }
 `;
 
@@ -150,9 +109,9 @@ const CategoryTabs = styled.div`
 const TabButton = styled.button.withConfig({
   shouldForwardProp: (prop) => prop !== "active",
 })<{ active: boolean }>`
-  padding: 10px 15px;
+  padding: 12px 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: 90px;
   cursor: pointer;
   font-size: 1rem;
   background-color: ${(props) =>
@@ -166,7 +125,6 @@ const TabButton = styled.button.withConfig({
 
 const ServiceGridContainer = styled.div`
   overflow-y: auto;
-  padding-bottom: 10px;
 `;
 
 const ServiceGrid = styled.div`
@@ -179,10 +137,10 @@ const ServiceGrid = styled.div`
     grid-template-columns: repeat(auto-fit, 260px);
   }
   @media screen and (min-width: 1024px) {
-    grid-template-columns: repeat(auto-fit, 280px);
+    grid-template-columns: repeat(auto-fit, 240px);
   }
   @media screen and (min-width: 1440px) {
-    grid-template-columns: repeat(auto-fit, 260px);
+    grid-template-columns: repeat(auto-fit, 250px);
   }
 `;
 
@@ -193,7 +151,6 @@ const ServiceCard = styled.div`
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  height: 180px;
 `;
 
 const ServiceHeader = styled.div`
@@ -205,6 +162,8 @@ const ServiceName = styled.h3`
   font-family: "Roboto", sans-serif;
   margin: 0;
   line-height: 1.2;
+  font-weight: 500;
+  font-size: 1rem;
 `;
 
 const ServiceDuration = styled.span`
@@ -213,8 +172,10 @@ const ServiceDuration = styled.span`
 `;
 
 const ServicePrice = styled.div`
-  font-size: 1rem;
+  font-size: 1.5rem;
   color: ${(props) => props.theme.colors.text};
   font-weight: bold;
   margin-top: auto;
+  font-family: "Great Vibes", cursive;
+  font-weight: lighter;
 `;

@@ -16,6 +16,7 @@ import { ConnectionButtonContainer } from "../Menu";
 import { ThemeType } from "../../theme/theme";
 
 import { ConnectionButtonsPropsType } from "./types";
+
 export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
   background,
   color,
@@ -38,7 +39,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             </ButtonsItem>
             {!menu && (
               <InfoText>
-                <InfoTitle>Address</InfoTitle>
+                <InfoTitle>{t("address_title")}</InfoTitle>
                 <InfoDescription>{t("address")}</InfoDescription>
               </InfoText>
             )}
@@ -52,7 +53,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             </ButtonsItem>
             {!menu && (
               <InfoText>
-                <InfoTitle>Phone</InfoTitle>
+                <InfoTitle>{t("phone_title")}</InfoTitle>
                 <InfoDescription>+38 093 619 36 16</InfoDescription>
               </InfoText>
             )}
@@ -71,7 +72,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             </ButtonsItem>
             {!menu && (
               <InfoText>
-                <InfoTitle>Instagram</InfoTitle>
+                <InfoTitle>{t("instagram_title")}</InfoTitle>
                 <InfoDescription>@mariia.hlushenko</InfoDescription>
               </InfoText>
             )}
@@ -90,7 +91,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             </ButtonsItem>
             {!menu && (
               <InfoText>
-                <InfoTitle>Telegram</InfoTitle>
+                <InfoTitle>{t("telegram_title")}</InfoTitle>
                 <InfoDescription>@MashaHlushenko</InfoDescription>
               </InfoText>
             )}
@@ -107,7 +108,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             </ButtonsItem>
             {!menu && (
               <InfoText>
-                <InfoTitle>Viber</InfoTitle>
+                <InfoTitle>{t("viber_title")}</InfoTitle>
                 <InfoDescription>+38 093 619 36 16</InfoDescription>
               </InfoText>
             )}
@@ -126,7 +127,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             </ButtonsItem>
             {!menu && (
               <InfoText>
-                <InfoTitle>WhatsApp</InfoTitle>
+                <InfoTitle>{t("whatsapp_title")}</InfoTitle>
                 <InfoDescription>+38 093 619 36 16</InfoDescription>
               </InfoText>
             )}
@@ -192,8 +193,8 @@ const InfoLink = styled.a<{ menu?: boolean }>`
   cursor: pointer;
 
   &:hover {
-    transform: scale(1.05);
-    transition: all 0.4s ease;
+    transform: scale(1.02);
+    transition: all 0.6s ease;
   }
 `;
 

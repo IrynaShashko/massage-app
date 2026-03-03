@@ -1,7 +1,7 @@
 import { FC } from "react";
 
 import styled from "@emotion/styled";
-import { motion, Variants, easeOut } from "framer-motion";
+import { easeOut, motion, Variants } from "framer-motion";
 
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -70,27 +70,27 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
             </Text>
 
             <Text variants={animationElement} custom={4}>
-              {"✔ "}
+              {"✔\uFE0E "}
               {t("harmony")}
             </Text>
 
             <Text variants={animationElement} custom={5}>
-              {"✔ "}
+              {"✔\uFE0E "}
               {t("balance")}
             </Text>
 
             <Text variants={animationElement} custom={6}>
-              {"✔ "}
+              {"✔\uFE0E "}
               {t("stressRelief")}
             </Text>
 
             <Text variants={animationElement} custom={7}>
-              {"✔ "}
+              {"✔\uFE0E "}
               {t("painRelief")}
             </Text>
 
             <Text variants={animationElement} custom={8}>
-              {"✔ "}
+              {"✔\uFE0E "}
               {t("restoreFunction")}
             </Text>
           </TextContainer>
@@ -133,13 +133,13 @@ const Content = styled(motion.div)`
   }
 `;
 
-const Title = styled(motion.h1)`
+const Title = styled(motion.h1)<{ theme?: ThemeType }>`
   font-size: 2rem;
-  /* font-weight: 700; */
   line-height: 1.1;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
   font-weight: lighter;
   font-family: "Great Vibes", cursive;
+  color: ${(props) => props.theme.colors.heroText};
   @media screen and (min-width: 1024px) {
     font-size: 2.5rem;
   }
@@ -238,8 +238,12 @@ const PageContainer = styled.div`
   flex-direction: column;
   flex-grow: 1;
 
+  clip-path: ellipse(150% 100% at 50% 0%);
+  overflow: hidden;
+
   @media screen and (min-width: 768px) {
     min-height: 90vh;
+    clip-path: ellipse(120% 100% at 50% 0%);
   }
 `;
 

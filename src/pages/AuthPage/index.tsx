@@ -1,10 +1,21 @@
-import { GoogleLogin } from "@react-oauth/google";
 import React, { useState } from "react";
+
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+
+import { Eye, EyeOff } from "lucide-react";
+
 import styled from "styled-components";
+
 import { useModal } from "../../context/ModalContext";
-import { useGoogleLogin, useLogin, useRegister } from "../../hooks/useAuth";
+
+import { useGoogleLogin } from "@react-oauth/google";
+import {
+  useGoogleLoginMutation,
+  useLogin,
+  useRegister,
+} from "../../hooks/useAuth";
+import googleIcon from "../../icons/google.svg";
 
 const AuthPage: React.FC = () => {
   const [t] = useTranslation();
@@ -14,12 +25,13 @@ const AuthPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [showVerifyMessage, setShowVerifyMessage] = useState(false);
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
-  const googleMutation = useGoogleLogin();
+  const googleMutation = useGoogleLoginMutation();
 
   const { closeModal } = useModal();
 
@@ -46,21 +58,7 @@ const AuthPage: React.FC = () => {
             setTimeout(() => {
               closeModal();
               setShowVerifyMessage(false);
-            }, 5000);
-          },
-        },
-      );
-    }
-  };
-
-  const handleGoogleSuccess = (credentialResponse: any) => {
-    if (credentialResponse.credential) {
-      googleMutation.mutate(
-        { idToken: credentialResponse.credential },
-        {
-          onSuccess: () => {
-            closeModal();
-            navigate("/");
+            }, 10000);
           },
         },
       );
@@ -70,89 +68,122 @@ const AuthPage: React.FC = () => {
   const isLoading = loginMutation.isPending || registerMutation.isPending;
   const error = isLogin ? loginMutation.error : registerMutation.error;
 
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        googleMutation.mutate(
+          { idToken: tokenResponse.access_token },
+          {
+            onSuccess: () => {
+              closeModal();
+              navigate("/");
+            },
+          },
+        );
+      } catch (err) {
+        console.error("Google Auth Error:", err);
+      }
+    },
+    onError: (error) => console.log("Google Login Failed:", error),
+  });
+
   return (
     <FullPageSection>
       <CenteredWrapper>
         <AuthCard>
           <Title>{isLogin ? t("login_title") : t("register_title")}</Title>
-
           {showVerifyMessage && !isLogin ? (
-            <Message>✅ {t("check_email_for_verification")}</Message>
+            <Message>
+              <p>✅ {t("registration_success_check_email")}</p>
+              <p className="spam-hint">{t("check_spam_folder")}</p>
+            </Message>
           ) : (
-            <form onSubmit={handleSubmit}>
-              {!isLogin && (
+            <>
+              <form onSubmit={handleSubmit}>
+                {!isLogin && (
+                  <InputGroup>
+                    <label>{t("name_label")}</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t("name_placeholder")}
+                      required
+                    />
+                  </InputGroup>
+                )}
+
                 <InputGroup>
-                  <label>{t("name_label")}</label>
+                  <label>{t("email_label")}</label>
                   <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t("name_placeholder")}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t("email_placeholder")}
                     required
                   />
                 </InputGroup>
-              )}
+                <InputGroup>
+                  <label>{t("password_label")}</label>
+                  <PasswordWrapper>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                    />
+                    <ToggleButton
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </ToggleButton>
+                  </PasswordWrapper>
+                </InputGroup>
 
-              <InputGroup>
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@mail.com"
-                  required
-                />
-              </InputGroup>
+                {error && (
+                  <ErrorMessage>
+                    {(error as any)?.response?.data?.error ||
+                      (error as any)?.response?.data?.message ||
+                      t("auth_error")}
+                  </ErrorMessage>
+                )}
 
-              <InputGroup>
-                <label>{t("password_label")}</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-              </InputGroup>
+                <SubmitButton type="submit" disabled={isLoading}>
+                  {isLoading
+                    ? "..."
+                    : isLogin
+                      ? t("login_button")
+                      : t("create_account")}
+                </SubmitButton>
+              </form>
 
-              {error && (
-                <ErrorMessage>
-                  {(error as any)?.response?.data?.message || t("auth_error")}
-                </ErrorMessage>
-              )}
+              <Divider>
+                <span>{t("or") || "або"}</span>
+              </Divider>
+              <CustomGoogleButton
+                type="button"
+                onClick={() => loginWithGoogle()}
+              >
+                <img src={googleIcon} alt="Google" />
+                {isLogin ? t("signin_with") : t("signup_with")}
+              </CustomGoogleButton>
 
-              <SubmitButton type="submit" disabled={isLoading}>
-                {isLoading
-                  ? "..."
-                  : isLogin
-                    ? t("login_button")
-                    : t("create_account")}
-              </SubmitButton>
-            </form>
+              <SwitchText>
+                {isLogin ? t("no_account") : t("have_account")}
+                <span
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setShowVerifyMessage(false);
+                  }}
+                >
+                  {isLogin ? t("register_action") : t("login_action")}
+                </span>
+              </SwitchText>
+            </>
           )}
-          <Divider>
-            <span>{t("or") || "або"}</span>
-          </Divider>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => console.log("Login Failed")}
-            theme="outline"
-            shape="circle"
-            width="100%"
-            text="signin_with"
-          />
-
-          <SwitchText>
-            {isLogin ? t("no_account") : t("have_account")}
-            <span
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setShowVerifyMessage(false);
-              }}
-            >
-              {isLogin ? t("register_action") : t("login_action")}
-            </span>
-          </SwitchText>
         </AuthCard>
       </CenteredWrapper>
     </FullPageSection>
@@ -163,16 +194,27 @@ export default AuthPage;
 
 const Message = styled.div`
   text-align: center;
-  padding: 20px;
-  background: rgba(0, 255, 0, 0.1);
-  border-radius: 12px;
-  font-size: 16px;
-  color: #00aa00;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  line-height: 1.5;
+
+  p {
+    font-size: 16px;
+    color: ${(props) => props.theme.colors.primary};
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .spam-hint {
+    font-size: 14px;
+    color: ${(props) => props.theme.colors.text};
+    opacity: 0.7;
+    margin-top: 8px;
+    font-weight: normal;
+  }
 `;
 
 const ErrorMessage = styled.p`
-  color: #ff4d4d;
+  color: #a64747;
   font-size: 14px;
   text-align: center;
   margin-bottom: 15px;
@@ -208,7 +250,7 @@ const AuthCard = styled.div`
   max-width: 450px;
   background: ${(props) =>
     props.theme.colors.aboutBg || "rgba(255, 255, 255, 0.05)"};
-  padding: 40px;
+  padding: 30px;
   border-radius: 24px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
@@ -230,8 +272,8 @@ const AuthCard = styled.div`
 const Title = styled.h2`
   text-align: center;
   font-size: 28px;
-  margin-bottom: 30px;
-  color: ${(props) => props.theme.colors.primary || "#007586"};
+  margin-bottom: 10px;
+  color: ${(props) => props.theme.colors.text || "#007586"};
 
   @media (max-width: 480px) {
     font-size: 24px;
@@ -244,10 +286,10 @@ const InputGroup = styled.div`
 
   label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     font-size: 14px;
-    font-weight: 500;
-    opacity: 0.8;
+    font-weight: 700;
+    color: ${(props) => props.theme.colors.text};
   }
 
   input {
@@ -265,11 +307,46 @@ const InputGroup = styled.div`
       padding: 12px;
     }
 
-    &:focus {
-      outline: none;
-      border-color: #007586;
-      background: rgba(255, 255, 255, 0.12);
+    &::placeholder {
+      color: ${(props) => props.theme.colors.text};
+      opacity: 0.7;
     }
+    &:focus {
+      border-color: ${(props) => props.theme.colors.primary};
+      box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
+      &::placeholder {
+        opacity: 0.3;
+      }
+    }
+  }
+`;
+
+const PasswordWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    padding-right: 50px;
+  }
+`;
+
+const ToggleButton = styled.button`
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: ${(props) => props.theme.colors.text};
+  opacity: 0.6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
   }
 `;
 
@@ -300,15 +377,11 @@ const SubmitButton = styled.button`
     cursor: not-allowed;
     transform: none;
   }
-
-  @media (max-width: 480px) {
-    padding: 14px;
-  }
 `;
 
 const SwitchText = styled.p`
   text-align: center;
-  margin-top: 25px;
+  margin-top: 10px;
   font-size: 14px;
   opacity: 0.7;
   line-height: 1.4;
@@ -331,8 +404,8 @@ const Divider = styled.div`
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 25px 0;
-  color: rgba(255, 255, 255, 0.3);
+  margin: 10px 0;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 13px;
   letter-spacing: 1px;
 
@@ -340,11 +413,44 @@ const Divider = styled.div`
   &::after {
     content: "";
     flex: 1;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
   }
 
   span {
     padding: 0 15px;
     text-transform: uppercase;
+  }
+`;
+
+const CustomGoogleButton = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  color: #373d46;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  img {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background: #f8f9fa;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;

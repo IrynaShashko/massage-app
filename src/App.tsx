@@ -18,10 +18,12 @@ import { darkTheme, lightTheme } from "./theme/theme";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { Loader } from "./components/Loader";
+
 import { ModalProvider } from "./context/ModalContext";
 import { ScrollToTop } from "./utils/ScrollToTop";
 
 const queryClient = new QueryClient();
+
 export const App: FC = () => {
   const AboutPage = lazy(() => import("./pages/AboutPage"));
   const HomePage = lazy(() => import("./pages/HomePage"));
@@ -35,7 +37,9 @@ export const App: FC = () => {
   const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === null) return true;
+    return savedTheme === "dark";
   });
 
   const [language, setLanguage] = useState(
@@ -90,7 +94,7 @@ export const App: FC = () => {
                   language={language}
                   darkMode={isDarkMode}
                 />
-                <main>
+                <main style={{ flex: 1 }}>
                   <Suspense fallback={<Loader />}>
                     <Routes>
                       <Route
@@ -158,7 +162,7 @@ export const Container = styled.div`
 const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  /* min-height: 100vh; */
+  min-height: 100dvh;
   padding-top: 80px;
 
   main {
