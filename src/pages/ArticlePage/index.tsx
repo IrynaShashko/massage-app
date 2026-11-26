@@ -1,184 +1,212 @@
-import { NavLink, Outlet } from "react-router-dom";
-
 import styled from "@emotion/styled";
-
-import { Container } from "../../App";
+import { HeartPulse, HelpCircle, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { NavLink, Outlet } from "react-router-dom";
 
 import lady from "../../images/lady.png";
 
-import { useTranslation } from "react-i18next";
+import { SectionContainer } from "../../App";
 import BookNow from "../../components/BookNow";
+import { SectionHeading } from "../../components/SectionHeading";
+import { Glow, GlowSection } from "../../components/SectionHeading/Glow";
+
+import { cardSurface, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
+
+const ARTICLES = [
+  { to: "/article/questions", key: "questions", Icon: HelpCircle },
+  { to: "/article/health", key: "health", Icon: HeartPulse },
+  { to: "/article/expectation", key: "expectation", Icon: Sparkles },
+];
 
 const ArticlePage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
+
   return (
-    <DecorativeWrapper>
-      <PageContainer>
-        <Container>
-          <PageWrapper>
+    <>
+      <GlowSection>
+        <Glow />
+        <SectionContainer>
+          <SectionHeading
+            level="h1"
+            lead={t("articles_lead")}
+            accent={t("articles_accent")}
+          />
+          <Layout>
             <Sidebar>
-              <ImageStyled src={lady} alt="lady" />
-              <ListContainer>
-                <li key={1}>
-                  <ArticleLink to="/article/questions">
-                    <ArticleItem>{t("questions")}</ArticleItem>
-                  </ArticleLink>
-                </li>
-                <li key={2}>
-                  <ArticleLink to="/article/health">
-                    <ArticleItem>{t("health")}</ArticleItem>
-                  </ArticleLink>
-                </li>
-                <li key={3}>
-                  <ArticleLink to="/article/expectation">
-                    <ArticleItem>{t("expectation")}</ArticleItem>
-                  </ArticleLink>
-                </li>
-              </ListContainer>
+              <Illustration src={lady} alt="" aria-hidden />
+              <nav aria-label={t("article_button")}>
+                <ArticleList>
+                  {ARTICLES.map(({ to, key, Icon }) => (
+                    <li key={to}>
+                      <ArticleLink to={to}>
+                        <LinkIcon aria-hidden>
+                          <Icon size={20} />
+                        </LinkIcon>
+                        {/* titles in the translations end with a full stop */}
+                        <span>{t(key).replace(/\.$/, "")}</span>
+                      </ArticleLink>
+                    </li>
+                  ))}
+                </ArticleList>
+              </nav>
             </Sidebar>
+
             <Content>
               <Outlet />
             </Content>
-          </PageWrapper>
-        </Container>
-      </PageContainer>
+          </Layout>
+        </SectionContainer>
+      </GlowSection>
       <BookNow language={language} />
-    </DecorativeWrapper>
+    </>
   );
 };
 
 export default ArticlePage;
 
-const DecorativeWrapper = styled.article`
-  position: relative;
-`;
+const Layout = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  align-items: start;
 
-const PageContainer = styled.section<{ theme?: ThemeType }>`
-  display: flex;
-  min-height: 700px;
-  gap: 20px;
-  background-color: ${(props) => props.theme.colors.aboutBg};
-  @media screen and (min-width: 769px) {
-    padding: 30px;
-  }
-  @media screen and (min-width: 1024px) {
-    padding: 50px;
+  @media screen and (min-width: 900px) {
+    grid-template-columns: 320px minmax(0, 1fr);
   }
 `;
 
-const PageWrapper = styled.div<{ theme?: ThemeType }>`
+const Sidebar = styled.aside<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+  padding: var(--space-5);
+
+  @media screen and (min-width: 900px) {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-5));
+  }
+`;
+
+const Illustration = styled.img`
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  margin: 0 auto var(--space-5);
+
+  /* the drawing is black ink on transparent: lighten it at night */
+  [data-theme="dark"] & {
+    filter: invert(0.88);
+  }
+
+  @media screen and (max-width: 899px) {
+    display: none;
+  }
+`;
+
+const ArticleList = styled.ul`
+  list-style: none;
   display: flex;
   flex-direction: column;
-  @media screen and (min-width: 769px) {
-    flex-direction: row;
-    justify-content: space-between;
-  }
+  gap: var(--space-2);
 `;
 
-const ListContainer = styled.ul`
-  padding: 20px;
-  @media screen and (min-width: 769px) {
-    padding: 0;
-    padding-right: 20px;
-  }
+const LinkIcon = styled.span`
+  ${iconTile(40)}
+  border-radius: var(--radius-md);
 `;
 
-export const Sidebar = styled.aside<{ theme?: ThemeType }>`
-  align-items: flex-end;
-  flex-shrink: 0;
-  border-radius: 8px;
-  @media screen and (min-width: 769px) {
-    width: 350px;
-  }
-  @media screen and (min-width: 769px) {
-    width: 350px;
-  }
-  @media screen and (min-width: 1024px) {
-    width: 450px;
-  }
-`;
-
-export const Content = styled.section<{ theme?: ThemeType }>`
-  flex-grow: 1;
-  padding: 20px;
-  margin: 0 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1);
-  background-color: ${(props) => props.theme.colors.cardBg};
-  @media screen and (min-width: 769px) {
-    margin: 0;
-  }
-  @media screen and (min-width: 1440px) {
-    padding: 50px;
-  }
-`;
-
-export const ArticleLink = styled(NavLink)<{ theme?: ThemeType }>`
-  font-size: 20px;
-  color: #000;
-  cursor: pointer;
-  text-decoration: none;
-  display: block;
-  margin-bottom: 10px;
-  &.active {
-    color: ${(props) => props.theme.colors.primary};
-    font-weight: 850;
-  }
-`;
-
-export const ArticleItem = styled.div`
-  padding: 10px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  text-align: center;
-  transition: background 0.6s ease;
-  &:hover {
-    background-color: #e4e4e4;
-    transform: scale(1.02);
-  }
-`;
-
-export const ArticleTitle = styled.h1`
-  font-size: 25px;
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: 800;
-  @media screen and (min-width: 768px) {
-    margin-bottom: 50px;
-  }
-`;
-
-export const ArticleAfterTitle = styled.h2<{ theme?: ThemeType }>`
-  font-size: 20px;
+const ArticleLink = styled(NavLink)<{ theme?: ThemeType }>`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
   color: ${(props) => props.theme.colors.text};
-  margin-top: 10px;
-  margin-bottom: 10px;
-  text-align: center;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  font-weight: 600;
+  line-height: 1.35;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+
+  &.active {
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+
+  &.active > span:first-of-type {
+    background: var(--color-primary);
+    color: #fff;
+  }
+`;
+
+const Content = styled.article<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+  padding: var(--space-6);
+
+  @media screen and (min-width: 1100px) {
+    padding: var(--space-7) var(--space-8);
+  }
+
+  /* lists inside the articles */
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 var(--space-5);
+  }
+
+  ul li {
+    position: relative;
+    padding-left: var(--space-5);
+  }
+
+  ul li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.7em;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-accent);
+  }
+
+  strong {
+    font-weight: 700;
+  }
+`;
+
+/* ---------- article typography (used by the article components) ---------- */
+
+export const ArticleTitle = styled.h2<{ theme?: ThemeType }>`
+  margin-bottom: var(--space-5);
+  font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: ${(props) => props.theme.colors.text};
+  text-wrap: balance;
+`;
+
+export const ArticleAfterTitle = styled.h3<{ theme?: ThemeType }>`
+  margin: var(--space-6) 0 var(--space-3);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.3;
+  color: ${(props) => props.theme.colors.text};
 `;
 
 export const ArticleText = styled.p<{ theme?: ThemeType }>`
-  font-size: 18px;
+  max-width: 72ch;
+  margin-bottom: var(--space-3);
+  font-size: var(--text-lg);
+  line-height: 1.75;
   color: ${(props) => props.theme.colors.text};
-  margin-bottom: 10px;
-  /* text-indent: 50px; */
-  line-height: 30px;
-`;
-
-const ImageStyled = styled.img`
-  width: auto;
-  height: 150px;
-  margin-top: 30px;
-  margin-left: auto;
-  cursor: pointer;
-  @media screen and (min-width: 769px) {
-    height: 180px;
-    margin-top: 0;
-  }
-  @media screen and (min-width: 1024px) {
-    height: 270px;
-  }
+  opacity: 0.88;
 `;

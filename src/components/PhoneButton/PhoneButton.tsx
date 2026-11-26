@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import styled, { css, keyframes } from "styled-components";
+import { css, keyframes } from "@emotion/react";
+import styled from "@emotion/styled";
 
 import { ReactComponent as Phone } from "../../icons/phone.svg";
 import { ReactComponent as Telegram } from "../../icons/telegram.svg";
@@ -33,14 +34,15 @@ const slideInFromRight = keyframes`
 
 const PhoneContainer = styled.div`
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  /* sits above the mobile booking bar */
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  right: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   z-index: 50;
 
-  @media screen and (min-width: 768px) {
+  @media screen and (min-width: 1080px) {
     bottom: 30px;
     right: 30px;
   }
@@ -63,7 +65,7 @@ const RippleWrapper = styled.div<{ $active: boolean }>`
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background-color: #007586;
+    background-color: var(--color-primary);
     opacity: 0;
     z-index: -1;
     animation: ${({ $active }) =>
@@ -84,7 +86,7 @@ const MainButton = styled.button`
   z-index: 2;
   padding: 16px 18px;
   border-radius: 50%;
-  background-color: #007586;
+  background-color: var(--color-primary);
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -143,7 +145,7 @@ const ContactButton = styled.button`
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #007586;
+  background-color: var(--color-primary);
   cursor: pointer;
   display: flex;
   justify-content: center;

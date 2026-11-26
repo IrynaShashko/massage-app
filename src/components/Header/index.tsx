@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 import { LogOut, UserRound } from "lucide-react";
 
-import styled from "styled-components";
+import styled from "@emotion/styled";
 
 import { useTranslation } from "react-i18next";
 
@@ -15,6 +15,7 @@ import { Menu } from "../Menu";
 import { ThemeButton } from "../ThemeButton";
 
 import { useLogout, useProfile } from "../../hooks/useAuth";
+import { useBooking } from "../../context/BookingContext";
 
 import { ThemeType } from "../../theme/theme";
 
@@ -28,17 +29,22 @@ export const Header: React.FC<HeaderPropsType> = ({
 }) => {
   const [t] = useTranslation();
 
-  const location = useLocation();
-
   const { data: user } = useProfile();
 
   const logoutMutation = useLogout();
 
   const isAuthenticated = !!user;
 
+  const { startBooking } = useBooking();
+
+  const [isScrolled, setIsScrolled] = useState(false);
+
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location]);
+    const onScroll = () => setIsScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleScrollToContacts = (
     event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
@@ -57,7 +63,7 @@ export const Header: React.FC<HeaderPropsType> = ({
   };
 
   return (
-    <HeaderContainer $darkMode={darkMode}>
+    <HeaderContainer $darkMode={darkMode} $scrolled={isScrolled}>
       <StyledSectionContainer>
         <Wrapper>
           <Logo to="/">
@@ -94,20 +100,17 @@ export const Header: React.FC<HeaderPropsType> = ({
             />
             <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
             {isAuthenticated ? (
-              <LogoutButton onClick={onLogout}>
-                <LogOut
-                  color={darkMode ? "#F6F1EA" : "rgb(55, 61, 70)"}
-                  size={30}
-                />
+              <LogoutButton onClick={onLogout} aria-label="Log out">
+                <LogOut size={28} />
               </LogoutButton>
             ) : (
-              <StyledUserLink to="/auth">
-                <UserRound
-                  color={darkMode ? "#F6F1EA" : "rgb(55, 61, 70)"}
-                  size={30}
-                />
+              <StyledUserLink to="/auth" aria-label="Log in">
+                <UserRound size={28} />
               </StyledUserLink>
             )}
+            <CtaButton type="button" onClick={() => startBooking()}>
+              {t("bookNow")}
+            </CtaButton>
           </ButtonContainer>
         </Wrapper>
         <MenuWrapper>
@@ -135,6 +138,7 @@ const StyledSectionContainer = styled.header`
 `;
 
 const LogoutButton = styled.button`
+  color: ${(props) => props.theme.colors.text};
   background: none;
   border: none;
   cursor: pointer;
@@ -153,6 +157,7 @@ const LogoutButton = styled.button`
 
 const HeaderContainer = styled.header<{
   $darkMode: boolean;
+  $scrolled: boolean;
   theme?: ThemeType;
 }>`
   position: fixed;
@@ -160,16 +165,16 @@ const HeaderContainer = styled.header<{
   left: 0;
   right: 0;
   width: 100%;
-  height: 80px;
+  height: var(--header-height);
   background: ${(props) => props.theme.colors.headerBg};
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 1000;
-  box-shadow: 0 4px 8px ${(props) => props.theme.colors.boxShadow};
+  box-shadow: ${(props) =>
+    props.$scrolled ? `0 4px 16px ${props.theme.colors.boxShadow}` : "none"};
   transition:
-    background 0.6s ease,
-    backdrop-filter 0.6s ease,
-    box-shadow 0.6s ease;
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
 `;
 
 const Wrapper = styled.nav`
@@ -203,12 +208,16 @@ const Logo = styled(Link)`
 
 const NavLinks = styled.ul`
   display: flex;
-  gap: 20px;
+  gap: 24px;
+  margin: 0 24px;
   justify-content: center;
   flex-grow: 1;
 `;
 
 const StyledUserLink = styled(Link)`
+  display: flex;
+  align-items: center;
+  color: ${(props) => props.theme.colors.text};
   &:hover {
     svg {
       stroke: ${(props) => props.theme.colors.primary};
@@ -220,11 +229,12 @@ const StyledUserLink = styled(Link)`
 const StyledNavLink = styled(NavLink)<{ theme?: ThemeType }>`
   text-decoration: none;
   color: inherit;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
   position: relative;
   transition: color 0.3s;
-  font-family: "Comfortaa", sans-serif;
+  font-family: var(--font-body);
   &::after {
     content: "";
     position: absolute;
@@ -250,10 +260,11 @@ const StyledNavLink = styled(NavLink)<{ theme?: ThemeType }>`
 const StyledLink = styled.a<{ theme?: ThemeType }>`
   text-decoration: none;
   color: inherit;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
   transition: color 0.3s;
-  font-family: "Comfortaa", sans-serif;
+  font-family: var(--font-body);
   &:hover {
     color: ${(props) => props.theme.colors.primary};
   }
@@ -262,7 +273,32 @@ const StyledLink = styled.a<{ theme?: ThemeType }>`
   }
 `;
 
+const CtaButton = styled.button`
+  display: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--text-base);
+  white-space: nowrap;
+  box-shadow: 0 6px 16px -6px var(--color-primary-shadow);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s var(--ease-out);
+
+  &:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  @media screen and (min-width: 1200px) {
+    display: inline-flex;
+  }
+`;
+
 const ButtonContainer = styled.div`
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 14px;
 `;

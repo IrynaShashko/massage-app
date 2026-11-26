@@ -1,103 +1,86 @@
 import { FC } from "react";
 
 import styled from "@emotion/styled";
-import { easeOut, motion, Variants } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useInView } from "react-intersection-observer";
 
 import { ThemeType } from "../../theme/theme";
 
 import bg from "../../images/10.jpg";
 
+import { useBooking } from "../../context/BookingContext";
+
 import { PhoneButton } from "../PhoneButton/PhoneButton";
 
 import { HeroPropsType } from "./types";
 
-export const Hero: FC<HeroPropsType> = ({ language }) => {
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-  });
+const BENEFITS = [
+  "harmony",
+  "balance",
+  "stressRelief",
+  "painRelief",
+  "restoreFunction",
+];
 
+// Soft, unhurried reveal: gentle ease-in-out and a longer duration.
+const SOFT_EASE = [0.4, 0, 0.2, 1] as const;
+
+const container: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.18, delayChildren: 0.25 },
+  },
+};
+
+const item: Variants = {
+  hidden: { y: 24, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 1.2, ease: SOFT_EASE },
+  },
+};
+
+export const Hero: FC<HeroPropsType> = () => {
   const [t] = useTranslation();
-
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.3, delayChildren: 0.2 },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.8, ease: "easeOut" },
-    },
-  };
-
-  const handleBookNowButton = () => {
-    const bookingSection = document.getElementById("booking-section");
-    if (bookingSection) {
-      bookingSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const { startBooking } = useBooking();
 
   return (
     <>
       <PhoneButton />
       <PageContainer>
+        <Background
+          initial={{ opacity: 0, scale: 1.08 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 2.4, ease: SOFT_EASE }}
+        />
         <Gradient />
-        <Content
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <Title variants={itemVariants}>{t("welcome")}</Title>
+        <Content variants={container} initial="hidden" animate="visible">
+          <Title variants={item}>
+            {t("welcome_lead")} <Accent>{t("welcome_accent")}</Accent>
+          </Title>
 
-          <TextContainer
-            initial="hidden"
-            animate={inView ? "visible" : "hidden"}
-            variants={animationElement}
-            ref={ref}
-            custom={1}
+          <Lead variants={item}>{t("hereYouCan")}</Lead>
+
+          <BenefitList>
+            {BENEFITS.map((key) => (
+              <Benefit key={key} variants={item}>
+                <Check aria-hidden>✔&#xFE0E;</Check>
+                {t(key)}
+              </Benefit>
+            ))}
+          </BenefitList>
+
+          <StyledButton
+            type="button"
+            variants={item}
+            onClick={() => startBooking()}
           >
-            <Text variants={animationElement} custom={3}>
-              {t("hereYouCan")}
-            </Text>
-
-            <Text variants={animationElement} custom={4}>
-              {"✔\uFE0E "}
-              {t("harmony")}
-            </Text>
-
-            <Text variants={animationElement} custom={5}>
-              {"✔\uFE0E "}
-              {t("balance")}
-            </Text>
-
-            <Text variants={animationElement} custom={6}>
-              {"✔\uFE0E "}
-              {t("stressRelief")}
-            </Text>
-
-            <Text variants={animationElement} custom={7}>
-              {"✔\uFE0E "}
-              {t("painRelief")}
-            </Text>
-
-            <Text variants={animationElement} custom={8}>
-              {"✔\uFE0E "}
-              {t("restoreFunction")}
-            </Text>
-          </TextContainer>
-
-          <StyledButton onClick={handleBookNowButton}>
-            <p>{t("cta_button")}</p>
-            <ChevronDown />
+            {t("cta_button")}
+            <ChevronDown size={22} aria-hidden />
           </StyledButton>
         </Content>
       </PageContainer>
@@ -105,158 +88,139 @@ export const Hero: FC<HeroPropsType> = ({ language }) => {
   );
 };
 
-const Content = styled(motion.div)`
+const PageContainer = styled.section`
   position: relative;
-  z-index: 10;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  color: white;
-  padding: 0 20px;
-  max-width: 300px;
-  margin: 0 auto;
-  padding: 80px 0;
-  gap: 2rem;
-  @media screen and (min-width: 600px) {
-    max-width: 350px;
-  }
-  @media screen and (min-width: 769px) {
-    max-width: 500px;
-  }
-  @media screen and (min-width: 1024px) {
-    max-width: 600px;
-  }
-  @media screen and (min-width: 1280px) {
-    max-width: 1000px;
-  }
-`;
-
-const Title = styled(motion.h1)<{ theme?: ThemeType }>`
-  font-size: 2rem;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
-  font-weight: lighter;
-  font-family: "Great Vibes", cursive;
-  color: ${(props) => props.theme.colors.heroText};
-  @media screen and (min-width: 1024px) {
-    font-size: 2.5rem;
-  }
-  @media screen and (min-width: 1280px) {
-    font-size: 4.5rem;
-  }
-`;
-
-export const TextContainer = styled(motion.div)`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  z-index: 3;
-  & p:not(:last-child) {
-    margin-bottom: 10px;
-    @media screen and (min-width: 1440px) {
-      margin-bottom: 20px;
-    }
-  }
-`;
-
-export const Text = styled(motion.p)<{ theme?: ThemeType }>`
-  font-size: 18px;
-  color: ${(props) => props.theme.colors.heroText};
-  display: flex;
-  text-align: center;
-  align-items: center;
-  max-width: 300px;
-  flex-direction: row;
-  display: inline-flex;
-  align-items: flex-start;
-
-  @media screen and (min-width: 425px) {
-    max-width: 500px;
-  }
-  @media screen and (min-width: 768px) {
-    line-height: 30px;
-    font-size: 25px;
-    max-width: 700px;
-  }
-  @media screen and (min-width: 1024px) {
-    line-height: 20px;
-    max-width: 800px;
-  }
-`;
-
-const StyledButton = styled.button`
-  background-color: #007586;
-  color: white;
-  padding: 18px 48px;
-  border-radius: 9999px;
-  font-size: 1.125rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  gap: 12px;
-
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 25px -5px rgba(0, 117, 134, 0.4);
-
-  &:hover {
-    background-color: #005f6e;
-    transform: scale(1.05);
-  }
-`;
-
-const animationElement: Variants = {
-  hidden: {
-    y: -50,
-    opacity: 0,
-  },
-  visible: (custom: number) => ({
-    y: 0,
-    opacity: 1,
-    transition: { ease: easeOut, duration: 2, delay: custom * 0.3 },
-  }),
-};
-
-const PageContainer = styled.div`
-  background-image: url(${bg});
-  background-size: cover;
-  background-position: center;
   width: 100%;
   min-height: 85dvh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  flex-direction: column;
-  flex-grow: 1;
-
-  clip-path: ellipse(150% 100% at 50% 0%);
+  background-color: #1f1b18;
   overflow: hidden;
+  clip-path: ellipse(150% 100% at 50% 0%);
 
   @media screen and (min-width: 768px) {
-    min-height: 90vh;
+    min-height: calc(100dvh - var(--header-height));
     clip-path: ellipse(120% 100% at 50% 0%);
   }
 `;
 
-export const Gradient = styled.div`
-  background-image: linear-gradient(
-    180deg,
-    rgba(41, 37, 37, 0.7) 0%,
-    rgba(3, 0, 0, 0.15) 100%
-  );
+const Background = styled(motion.div)`
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
+  background-image: url(${bg});
+  background-size: cover;
+  background-position: center;
+  will-change: transform, opacity;
+`;
+
+const Gradient = styled.div`
+  position: absolute;
+  inset: 0;
   z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(41, 37, 37, 0.72) 0%,
+    rgba(20, 16, 13, 0.45) 55%,
+    rgba(3, 0, 0, 0.3) 100%
+  );
+`;
+
+const Content = styled(motion.div)`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-8) 20px var(--space-9);
+  text-align: center;
+  color: #fff;
+`;
+
+const Title = styled(motion.h1)<{ theme?: ThemeType }>`
+  font-family: var(--font-heading);
+  font-weight: 300;
+  /* Sized so the longest fixed line ("Ласкаво прошу у світ,") fits a 360px phone */
+  font-size: clamp(1.6rem, 0.9rem + 3.4vw, 3.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: ${(props) => props.theme.colors.heroText};
+  /* Line breaks come from the translation, so the composition is the same at every width */
+  white-space: pre-line;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+`;
+
+/* The key words in a hand-written script, on their own line, in the brand's light teal */
+const Accent = styled.span`
+  display: block;
+  margin-top: 0.05em;
+  font-family: var(--font-accent);
+  font-weight: 400;
+  font-size: 1.55em;
+  line-height: 1.05;
+  letter-spacing: 0;
+  color: var(--color-primary-light);
+  background: var(--gradient-accent-light);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Room for the script's swashes so the gradient never clips them */
+  padding: 0 0.15em 0.1em;
+`;
+
+const Lead = styled(motion.p)`
+  margin-top: var(--space-6);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+`;
+
+const BenefitList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+`;
+
+const Benefit = styled(motion.li)`
+  max-width: 36ch;
+  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+`;
+
+/* Inline so the tick stays next to the first word when a line wraps */
+const Check = styled.span`
+  margin-right: var(--space-2);
+  color: var(--color-primary-light);
+`;
+
+const StyledButton = styled(motion.button)`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-7);
+  padding: 18px 44px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 12px 28px -8px var(--color-primary-shadow);
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    background-color: var(--color-primary-hover);
+    box-shadow: 0 16px 32px -8px var(--color-primary-shadow);
+  }
 `;

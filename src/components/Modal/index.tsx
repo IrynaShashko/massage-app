@@ -48,7 +48,7 @@ export const Modal: FC<ModalPropsType> = ({ onClose }) => {
             onClick={onClose}
             aria-label={t("close_alt")}
           >
-            <IconStyled as={CloseIcon} color={"#007586"} />
+            <IconStyled as={CloseIcon} color={"var(--color-primary)"} />
           </ModalButton>
         </ModalHeader>
 
@@ -135,7 +135,7 @@ export const ModalButton = styled.button`
 `;
 
 export const ModalSubmitBtn = styled.button`
-  background-color: #007586;
+  background-color: var(--color-primary);
   border-radius: 25px;
   border: none;
   color: #fff;
@@ -148,6 +148,6 @@ export const ModalSubmitBtn = styled.button`
   &:hover {
     background-color: #005f70;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 117, 134, 0.3);
+    box-shadow: 0 5px 15px var(--color-primary-shadow);
   }
 `;

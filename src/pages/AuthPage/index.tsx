@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Eye, EyeOff } from "lucide-react";
 
-import styled from "styled-components";
+import styled from "@emotion/styled";
 
 import { useModal } from "../../context/ModalContext";
 
@@ -15,7 +15,13 @@ import {
   useLogin,
   useRegister,
 } from "../../hooks/useAuth";
+import { isGoogleAuthEnabled } from "../../config/google";
 import googleIcon from "../../icons/google.svg";
+import { cardSurface } from "../../theme/surfaces";
+import { ThemeType } from "../../theme/theme";
+
+/** Labels in the translations end with ":"; drop it to match the booking form */
+const label = (text: string) => text.replace(/:\s*$/, "");
 
 const AuthPage: React.FC = () => {
   const [t] = useTranslation();
@@ -68,24 +74,17 @@ const AuthPage: React.FC = () => {
   const isLoading = loginMutation.isPending || registerMutation.isPending;
   const error = isLogin ? loginMutation.error : registerMutation.error;
 
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        googleMutation.mutate(
-          { idToken: tokenResponse.access_token },
-          {
-            onSuccess: () => {
-              closeModal();
-              navigate("/");
-            },
-          },
-        );
-      } catch (err) {
-        console.error("Google Auth Error:", err);
-      }
-    },
-    onError: (error) => console.log("Google Login Failed:", error),
-  });
+  const handleGoogleToken = (accessToken: string) => {
+    googleMutation.mutate(
+      { idToken: accessToken },
+      {
+        onSuccess: () => {
+          closeModal();
+          navigate("/");
+        },
+      },
+    );
+  };
 
   return (
     <FullPageSection>
@@ -94,7 +93,7 @@ const AuthPage: React.FC = () => {
           <Title>{isLogin ? t("login_title") : t("register_title")}</Title>
           {showVerifyMessage && !isLogin ? (
             <Message>
-              <p>✅ {t("registration_success_check_email")}</p>
+              <p>{t("registration_success_check_email")}</p>
               <p className="spam-hint">{t("check_spam_folder")}</p>
             </Message>
           ) : (
@@ -102,8 +101,10 @@ const AuthPage: React.FC = () => {
               <form onSubmit={handleSubmit}>
                 {!isLogin && (
                   <InputGroup>
-                    <label>{t("name_label")}</label>
+                    <label htmlFor="auth-name">{label(t("name_label"))}</label>
                     <input
+                      id="auth-name"
+                      autoComplete="name"
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -114,8 +115,10 @@ const AuthPage: React.FC = () => {
                 )}
 
                 <InputGroup>
-                  <label>{t("email_label")}</label>
+                  <label htmlFor="auth-email">{label(t("email_label"))}</label>
                   <input
+                    id="auth-email"
+                    autoComplete="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -124,9 +127,15 @@ const AuthPage: React.FC = () => {
                   />
                 </InputGroup>
                 <InputGroup>
-                  <label>{t("password_label")}</label>
+                  <label htmlFor="auth-password">
+                    {label(t("password_label"))}
+                  </label>
                   <PasswordWrapper>
                     <input
+                      id="auth-password"
+                      autoComplete={
+                        isLogin ? "current-password" : "new-password"
+                      }
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -136,7 +145,9 @@ const AuthPage: React.FC = () => {
                     <ToggleButton
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      tabIndex={-1}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </ToggleButton>
@@ -160,27 +171,29 @@ const AuthPage: React.FC = () => {
                 </SubmitButton>
               </form>
 
-              <Divider>
-                <span>{t("or") || "або"}</span>
-              </Divider>
-              <CustomGoogleButton
-                type="button"
-                onClick={() => loginWithGoogle()}
-              >
-                <img src={googleIcon} alt="Google" />
-                {isLogin ? t("signin_with") : t("signup_with")}
-              </CustomGoogleButton>
+              {isGoogleAuthEnabled && (
+                <>
+                  <Divider>
+                    <span>{t("or") || "або"}</span>
+                  </Divider>
+                  <GoogleSignInButton
+                    label={isLogin ? t("signin_with") : t("signup_with")}
+                    onToken={handleGoogleToken}
+                  />
+                </>
+              )}
 
               <SwitchText>
                 {isLogin ? t("no_account") : t("have_account")}
-                <span
+                <button
+                  type="button"
                   onClick={() => {
                     setIsLogin(!isLogin);
                     setShowVerifyMessage(false);
                   }}
                 >
                   {isLogin ? t("register_action") : t("login_action")}
-                </span>
+                </button>
               </SwitchText>
             </>
           )}
@@ -192,131 +205,125 @@ const AuthPage: React.FC = () => {
 
 export default AuthPage;
 
-const Message = styled.div`
+/**
+ * Lives in its own component so useGoogleLogin only runs when Google sign-in
+ * is configured (the hook needs GoogleOAuthProvider with a client id).
+ */
+const GoogleSignInButton: React.FC<{
+  label: string;
+  onToken: (accessToken: string) => void;
+}> = ({ label, onToken }) => {
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: (tokenResponse) => onToken(tokenResponse.access_token),
+    onError: (error) => console.error("Google Login Failed:", error),
+  });
+
+  return (
+    <CustomGoogleButton type="button" onClick={() => loginWithGoogle()}>
+      <img src={googleIcon} alt="" aria-hidden />
+      {label}
+    </CustomGoogleButton>
+  );
+};
+
+const Message = styled.div<{ theme?: ThemeType }>`
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
   text-align: center;
-  margin-bottom: 25px;
   line-height: 1.5;
 
   p {
-    font-size: 16px;
-    color: ${(props) => props.theme.colors.primary};
-    font-weight: 500;
-    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: ${(props) => props.theme.colors.text};
   }
 
   .spam-hint {
-    font-size: 14px;
-    color: ${(props) => props.theme.colors.text};
-    opacity: 0.7;
-    margin-top: 8px;
-    font-weight: normal;
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    opacity: 0.75;
   }
 `;
 
 const ErrorMessage = styled.p`
-  color: #a64747;
-  font-size: 14px;
+  color: #d64545;
+  font-size: var(--text-sm);
+  font-weight: 600;
   text-align: center;
-  margin-bottom: 15px;
+  margin-bottom: var(--space-3);
 `;
 
-const FullPageSection = styled.section`
+const FullPageSection = styled.section<{ theme?: ThemeType }>`
   display: flex;
-  flex-direction: column;
   flex: 1;
   width: 100%;
-  min-height: calc(100vh - 160px);
+  min-height: calc(100dvh - var(--header-height) - 160px);
   align-items: center;
   justify-content: center;
-  background-color: ${(props) => props.theme.colors.background};
-
-  @media (max-width: 768px) {
-    align-items: center;
-    justify-content: center;
-    padding: 0 20px;
-  }
+  padding: var(--space-7) 20px;
 `;
 
 const CenteredWrapper = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
   width: 100%;
-  flex: 1;
 `;
 
-const AuthCard = styled.div`
+const AuthCard = styled.div<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
   width: 100%;
-  max-width: 450px;
-  background: ${(props) =>
-    props.theme.colors.aboutBg || "rgba(255, 255, 255, 0.05)"};
-  padding: 30px;
-  border-radius: 24px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-
-  @media (max-width: 768px) {
-    padding: 30px;
-    max-width: 400px;
-  }
+  max-width: 440px;
+  padding: var(--space-6);
 
   @media (max-width: 480px) {
-    padding: 25px 20px;
-    border-radius: 20px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    padding: var(--space-5);
   }
 `;
 
-const Title = styled.h2`
+const Title = styled.h1<{ theme?: ThemeType }>`
+  margin-bottom: var(--space-5);
   text-align: center;
-  font-size: 28px;
-  margin-bottom: 10px;
-  color: ${(props) => props.theme.colors.text || "#007586"};
-
-  @media (max-width: 480px) {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: ${(props) => props.theme.colors.text};
 `;
 
-const InputGroup = styled.div`
-  margin-bottom: 20px;
+const InputGroup = styled.div<{ theme?: ThemeType }>`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 
   label {
-    display: block;
-    margin-bottom: 4px;
-    font-size: 14px;
+    font-size: var(--text-base);
     font-weight: 700;
     color: ${(props) => props.theme.colors.text};
   }
 
   input {
     width: 100%;
-    padding: 14px;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    color: inherit;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid ${(props) => props.theme.colors.border};
+    background: transparent;
+    color: ${(props) => props.theme.colors.text};
     font-size: 16px;
-    transition: all 0.3s ease;
-
-    @media (max-width: 768px) {
-      font-size: 16px;
-      padding: 12px;
-    }
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
 
     &::placeholder {
       color: ${(props) => props.theme.colors.text};
-      opacity: 0.7;
+      opacity: 0.5;
     }
+
     &:focus {
-      border-color: ${(props) => props.theme.colors.primary};
-      box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
-      &::placeholder {
-        opacity: 0.3;
-      }
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 4px var(--color-primary-ring);
     }
   }
 `;
@@ -327,117 +334,111 @@ const PasswordWrapper = styled.div`
   align-items: center;
 
   input {
-    padding-right: 50px;
+    padding-right: 52px;
   }
 `;
 
-const ToggleButton = styled.button`
+const ToggleButton = styled.button<{ theme?: ThemeType }>`
   position: absolute;
-  right: 14px;
-  background: none;
-  border: none;
-  color: ${(props) => props.theme.colors.text};
-  opacity: 0.6;
-  cursor: pointer;
+  right: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  transition: opacity 0.2s;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  color: ${(props) => props.theme.colors.text};
+  opacity: 0.6;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease;
 
   &:hover {
     opacity: 1;
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
 `;
 
 const SubmitButton = styled.button`
   width: 100%;
+  margin-top: var(--space-2);
   padding: 16px;
-  background: #007586;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  box-shadow: 0 12px 28px -10px var(--color-primary-shadow);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s var(--ease-out);
 
-  &:hover {
-    background: #005f6b;
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
     transform: translateY(-1px);
   }
 
-  &:active {
-    transform: translateY(0);
-  }
-
   &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
+    opacity: 0.6;
+    cursor: wait;
   }
 `;
 
-const SwitchText = styled.p`
+const SwitchText = styled.p<{ theme?: ThemeType }>`
+  margin-top: var(--space-4);
   text-align: center;
-  margin-top: 10px;
-  font-size: 14px;
-  opacity: 0.7;
-  line-height: 1.4;
+  font-size: var(--text-sm);
+  color: ${(props) => props.theme.colors.text};
 
-  span {
-    color: #007586;
-    font-weight: bold;
-    cursor: pointer;
+  span,
+  button {
+    margin-left: 6px;
+    padding: 0;
+    color: var(--color-primary);
+    font-size: inherit;
+    font-weight: 700;
     text-decoration: underline;
-    margin-left: 5px;
-    display: inline-block;
-
-    &:hover {
-      opacity: 0.8;
-    }
+    text-underline-offset: 3px;
+    cursor: pointer;
   }
 `;
 
-const Divider = styled.div`
+const Divider = styled.div<{ theme?: ThemeType }>`
   display: flex;
   align-items: center;
-  text-align: center;
-  margin: 10px 0;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
-  letter-spacing: 1px;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+  color: ${(props) => props.theme.colors.text};
+  font-size: var(--text-sm);
 
   &::before,
   &::after {
     content: "";
     flex: 1;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    border-bottom: 1px solid ${(props) => props.theme.colors.border};
   }
 
   span {
-    padding: 0 15px;
-    text-transform: uppercase;
+    opacity: 0.6;
   }
 `;
 
-const CustomGoogleButton = styled.button`
+const CustomGoogleButton = styled.button<{ theme?: ThemeType }>`
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 16px;
-  background: white;
-  color: #373d46;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  gap: var(--space-3);
+  padding: 14px 16px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid ${(props) => props.theme.colors.border};
+  background: transparent;
+  color: ${(props) => props.theme.colors.text};
+  font-size: var(--text-base);
+  font-weight: 600;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 
   img {
     width: 20px;
@@ -445,12 +446,7 @@ const CustomGoogleButton = styled.button`
   }
 
   &:hover {
-    background: #f8f9fa;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
+    border-color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
   }
 `;

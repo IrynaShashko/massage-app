@@ -9,156 +9,176 @@ import lotos from "../../images/lotos.png";
 import massage from "../../images/massage.png";
 
 import { SectionContainer } from "../../App";
+import { SectionHeading } from "../SectionHeading";
+import { Glow } from "../SectionHeading/Glow";
+import { cardSurface, cardTitle, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
+
+const SOFT_EASE = [0.4, 0, 0.2, 1] as const;
+
+const list: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.18, delayChildren: 0.1 } },
+};
+
+const card: Variants = {
+  hidden: { y: 24, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 1.1, ease: SOFT_EASE },
+  },
+};
+
+const ITEMS = [
+  { icon: lotos, title: "moreThanAService", text: "moreThanAServiceText" },
+  { icon: education, title: "medicalEducation", text: "medicalEducationText" },
+  { icon: massage, title: "authorsTechniques", text: "authorsTechniquesText" },
+];
 
 export const About = () => {
   const [t] = useTranslation();
-
-  const animationElement: Variants = {
-    hidden: {
-      y: -50,
-      opacity: 0,
-    },
-    visible: (custom: number) => ({
-      y: 0,
-      opacity: 1,
-      transition: { ease: "easeOut", duration: 2, delay: custom * 0.3 },
-    }),
-  };
-
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-  });
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.15 });
 
   return (
-    <SectionContainer>
-      <Title>{t("whyChooseMe")}</Title>
-      <InfoContainer
-        initial="hidden"
-        animate={inView ? "visible" : "hidden"}
-        variants={animationElement}
-        ref={ref}
-        custom={1}
-      >
-        <InfoItem variants={animationElement} custom={2}>
-          <IconContainer>
-            <img src={lotos} alt="lotos" />
-            <BlurEffect />
-          </IconContainer>
-          <InfoCard>
-            <InfoTitle>{t("moreThanAService")}</InfoTitle>
-            <MainText>{t("moreThanAServiceText")}</MainText>
-          </InfoCard>
-        </InfoItem>
-        <InfoItem variants={animationElement} custom={4}>
-          <IconContainer>
-            <img src={education} alt="education" />
-            <BlurEffect />
-          </IconContainer>
-          <InfoCard>
-            <InfoTitle>{t("medicalEducation")}</InfoTitle>
-            <MainText>{t("medicalEducationText")}</MainText>
-          </InfoCard>
-        </InfoItem>
-        <InfoItem variants={animationElement} custom={6}>
-          <IconContainer>
-            <img src={massage} alt="massage" />
-            <BlurEffect />
-          </IconContainer>
-          <InfoCard>
-            <InfoTitle>{t("authorsTechniques")}</InfoTitle>
-            <MainText>{t("authorsTechniquesText")}</MainText>
-          </InfoCard>
-        </InfoItem>
-      </InfoContainer>
-    </SectionContainer>
+    <GlowSection>
+      <Glow />
+      <SectionContainer>
+        <SectionHeading lead={t("why_lead")} accent={t("why_accent")} />
+        <Grid
+          ref={ref}
+          variants={list}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+        >
+          {ITEMS.map((item) => (
+            <Card key={item.title} variants={card}>
+              <CardHeader>
+                <IconTile aria-hidden>
+                  <Icon $src={item.icon} />
+                </IconTile>
+                <CardTitle>{t(item.title)}</CardTitle>
+              </CardHeader>
+              <CardText>{t(item.text)}</CardText>
+            </Card>
+          ))}
+        </Grid>
+      </SectionContainer>
+    </GlowSection>
   );
 };
 
-const InfoContainer = styled(motion.ul)`
+const GlowSection = styled.section`
+  position: relative;
+  isolation: isolate;
+  /* Full width so the glow is never clipped by the centred wrapper */
+  width: 100%;
+  align-self: stretch;
+`;
+
+const Grid = styled(motion.ul)`
   display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  gap: 70px;
-  @media screen and (min-width: 900px) {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+
+  /* Tablet / small laptop: two short cards on top, the long one full width below */
+  @media screen and (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "first third"
+      "second second";
+  }
+
+  /* Wide screens: one row, the middle card (longest text) gets more width */
+  @media screen and (min-width: 1200px) {
+    grid-template-columns: 1fr 1.7fr 1fr;
+    grid-template-areas: "first second third";
   }
 `;
 
-const InfoItem = styled(motion.li)`
+const Card = styled(motion.li)<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+
+  @media screen and (min-width: 768px) {
+    &:nth-of-type(1) {
+      grid-area: first;
+    }
+    &:nth-of-type(2) {
+      grid-area: second;
+    }
+    &:nth-of-type(3) {
+      grid-area: third;
+    }
+  }
+
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  position: relative;
-`;
-
-const InfoCard = styled.div<{ theme?: ThemeType }>`
-  padding: 50px 30px 30px 30px;
-  background-color: ${(props) => props.theme.colors.cardBg};
-  border-radius: 12px;
-  box-shadow: 0 4px 12px ${(props) => props.theme.colors.boxShadow};
-  width: 100%;
+  gap: var(--space-3);
   height: 100%;
-  min-height: 260px;
-  display: flex;
-  flex-direction: column;
+  padding: var(--space-6);
   text-align: left;
-  overflow-y: auto;
-`;
+  transition:
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
 
-const InfoTitle = styled.p<{ theme?: ThemeType }>`
-  font-size: 20px;
-  margin-bottom: 10px;
-  color: ${(props) => props.theme.colors.primary};
-  text-align: center;
-`;
-
-const IconContainer = styled.div<{ theme?: ThemeType }>`
-  position: absolute;
-  top: -55px;
-  left: 20px;
-  width: 100px;
-  height: 100px;
-  padding: 20px;
-  background-color: ${(props) => props.theme.colors.aboutBg};
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 4px 10px ${(props) => props.theme.colors.boxShadow};
-  color: white;
-`;
-
-const BlurEffect = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
-  filter: blur(6px);
-  z-index: 0;
-`;
-
-export const Title = styled.h3<{ theme?: ThemeType }>`
-  color: ${(props) => props.theme.colors.primary};
-  font-size: 30px;
-  font-weight: lighter;
-  text-transform: uppercase;
-  text-align: center;
-  margin-bottom: 50px;
-  @media screen and (min-width: 1024px) {
-    margin-bottom: 70px;
+  &:hover {
+    box-shadow: var(--shadow-md);
+    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
   }
 `;
 
-const MainText = styled.p<{ theme?: ThemeType }>`
-  font-size: 16px;
-  color: ${(props) => props.theme.colors.text};
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+`;
 
-  @media screen and (min-width: 1440px) {
-    font-size: 18px;
+const IconTile = styled.div`
+  ${iconTile(60)}
+`;
+
+/** The PNG icons are black line art: use them as a mask so they take the brand colour in both themes */
+const Icon = styled.span<{ $src: string }>`
+  width: 38px;
+  height: 38px;
+  background-color: var(--color-primary);
+  -webkit-mask: url(${(props) => props.$src}) center / contain no-repeat;
+  mask: url(${(props) => props.$src}) center / contain no-repeat;
+`;
+
+const CardTitle = styled.h3<{ theme?: ThemeType }>`
+  ${(props) => cardTitle(props.theme as ThemeType)}
+  text-wrap: balance;
+`;
+
+const CardText = styled.p<{ theme?: ThemeType }>`
+  font-size: var(--text-base);
+  line-height: 1.65;
+  color: ${(props) => props.theme.colors.text};
+  opacity: 0.82;
+`;
+
+/** Section heading shared across the site: calm, dark text with a short brand accent underneath */
+export const Title = styled.h2<{ theme?: ThemeType }>`
+  font-family: var(--font-heading);
+  font-size: clamp(1.875rem, 1.4rem + 2vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: ${(props) => props.theme.colors.text};
+  text-align: center;
+  text-wrap: balance;
+  margin-bottom: var(--space-7);
+
+  &::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 3px;
+    margin: var(--space-4) auto 0;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
   }
 `;
