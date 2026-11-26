@@ -107,7 +107,6 @@ const MapPlaceholder = styled.iframe<{ theme?: ThemeType }>`
   height: clamp(320px, 40vw, 460px);
   border: 0;
   border-top: 1px solid ${(props) => props.theme.colors.border};
-  border-bottom: 1px solid ${(props) => props.theme.colors.border};
   background: ${(props) => props.theme.colors.cardBg};
 
   [data-theme="dark"] & {

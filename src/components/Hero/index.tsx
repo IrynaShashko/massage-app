@@ -59,7 +59,9 @@ export const Hero: FC<HeroPropsType> = () => {
         />
         <Gradient />
         <Content variants={container} initial="hidden" animate="visible">
-          <Title variants={item}>{t("welcome")}</Title>
+          <Title variants={item}>
+            {t("welcome_lead")} <Accent>{t("welcome_accent")}</Accent>
+          </Title>
 
           <Lead variants={item}>{t("hereYouCan")}</Lead>
 
@@ -139,13 +141,28 @@ const Content = styled(motion.div)`
 `;
 
 const Title = styled(motion.h1)<{ theme?: ThemeType }>`
+  font-family: var(--font-heading);
+  font-weight: 300;
+  /* Sized so the longest fixed line ("Ласкаво прошу у світ,") fits a 360px phone */
+  font-size: clamp(1.6rem, 0.9rem + 3.4vw, 3.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: ${(props) => props.theme.colors.heroText};
+  /* Line breaks come from the translation, so the composition is the same at every width */
+  white-space: pre-line;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+`;
+
+/* The key words in a hand-written script, on their own line, in the brand's light teal */
+const Accent = styled.span`
+  display: block;
+  margin-top: 0.05em;
   font-family: var(--font-accent);
   font-weight: 400;
-  font-size: clamp(2.5rem, 1.4rem + 4.5vw, 4.75rem);
-  line-height: 1.15;
-  color: ${(props) => props.theme.colors.heroText};
-  text-wrap: balance;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  font-size: 1.55em;
+  line-height: 1.05;
+  letter-spacing: 0;
+  color: var(--color-primary-light);
 `;
 
 const Lead = styled(motion.p)`
@@ -164,17 +181,17 @@ const BenefitList = styled.ul`
 `;
 
 const Benefit = styled(motion.li)`
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
   max-width: 36ch;
   font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
   line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
 `;
 
+/* Inline so the tick stays next to the first word when a line wraps */
 const Check = styled.span`
-  flex-shrink: 0;
+  margin-right: var(--space-2);
   color: var(--color-primary-light);
 `;
 

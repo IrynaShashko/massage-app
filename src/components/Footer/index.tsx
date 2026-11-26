@@ -111,9 +111,8 @@ export const Footer: FC = () => {
   );
 };
 
+/* Sits right under the full-width map: no gap and no divider line */
 const FooterRoot = styled.footer<{ theme?: ThemeType }>`
-  margin-top: var(--space-8);
-  border-top: 1px solid ${(props) => props.theme.colors.border};
   color: ${(props) => props.theme.colors.text};
 `;
 

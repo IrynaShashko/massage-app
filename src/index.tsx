@@ -7,6 +7,7 @@ import "./index.css";
 import "./i18n";
 
 import { App } from "./App";
+import { GOOGLE_CLIENT_ID, isGoogleAuthEnabled } from "./config/google";
 import reportWebVitals from "./reportWebVitals";
 
 const queryClient = new QueryClient();
@@ -16,14 +17,20 @@ const RootApp = () => {
   const googleLang =
     i18nInstance.language === "ua" ? "uk" : i18nInstance.language;
 
+  const app = (
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  );
+
+  if (!isGoogleAuthEnabled) return app;
+
   return (
     <GoogleOAuthProvider
-      clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""}
+      clientId={GOOGLE_CLIENT_ID}
       key={`google-auth-${googleLang}`}
     >
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
+      {app}
     </GoogleOAuthProvider>
   );
 };
