@@ -192,9 +192,16 @@ const InfoLink = styled.a<{ menu?: boolean }>`
   text-decoration: none;
   cursor: pointer;
 
+  /* Fill the tile and turn the icon white; set both explicitly so no
+     inherited fill or gradient can leave a dark icon on the teal tile */
   &:hover > div:first-of-type {
-    background-color: var(--color-primary);
+    background: var(--color-primary);
     color: #fff;
+  }
+
+  &:hover > div:first-of-type svg,
+  &:hover > div:first-of-type svg * {
+    fill: #fff;
   }
 `;
 

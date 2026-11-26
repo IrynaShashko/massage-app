@@ -264,7 +264,6 @@ const FullPageSection = styled.section<{ theme?: ThemeType }>`
   align-items: center;
   justify-content: center;
   padding: var(--space-7) 20px;
-  background-color: ${(props) => props.theme.colors.background};
 `;
 
 const CenteredWrapper = styled.div`

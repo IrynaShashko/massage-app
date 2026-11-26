@@ -9,6 +9,8 @@ import lotos from "../../images/lotos.png";
 import massage from "../../images/massage.png";
 
 import { SectionContainer } from "../../App";
+import { SectionHeading } from "../SectionHeading";
+import { Glow } from "../SectionHeading/Glow";
 import { cardSurface, cardTitle, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
@@ -39,29 +41,40 @@ export const About = () => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.15 });
 
   return (
-    <SectionContainer>
-      <Title>{t("whyChooseMe")}</Title>
-      <Grid
-        ref={ref}
-        variants={list}
-        initial="hidden"
-        animate={inView ? "visible" : "hidden"}
-      >
-        {ITEMS.map((item) => (
-          <Card key={item.title} variants={card}>
-            <CardHeader>
-              <IconTile aria-hidden>
-                <Icon $src={item.icon} />
-              </IconTile>
-              <CardTitle>{t(item.title)}</CardTitle>
-            </CardHeader>
-            <CardText>{t(item.text)}</CardText>
-          </Card>
-        ))}
-      </Grid>
-    </SectionContainer>
+    <GlowSection>
+      <Glow />
+      <SectionContainer>
+        <SectionHeading lead={t("why_lead")} accent={t("why_accent")} />
+        <Grid
+          ref={ref}
+          variants={list}
+          initial="hidden"
+          animate={inView ? "visible" : "hidden"}
+        >
+          {ITEMS.map((item) => (
+            <Card key={item.title} variants={card}>
+              <CardHeader>
+                <IconTile aria-hidden>
+                  <Icon $src={item.icon} />
+                </IconTile>
+                <CardTitle>{t(item.title)}</CardTitle>
+              </CardHeader>
+              <CardText>{t(item.text)}</CardText>
+            </Card>
+          ))}
+        </Grid>
+      </SectionContainer>
+    </GlowSection>
   );
 };
+
+const GlowSection = styled.section`
+  position: relative;
+  isolation: isolate;
+  /* Full width so the glow is never clipped by the centred wrapper */
+  width: 100%;
+  align-self: stretch;
+`;
 
 const Grid = styled(motion.ul)`
   display: grid;

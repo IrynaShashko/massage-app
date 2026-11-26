@@ -1,14 +1,18 @@
 import { ThemeType } from "./theme";
 
 /**
+ * No backdrop-filter on purpose: blurred cards scrolling under the blurred
+ * fixed header make it flicker in Chrome/Safari. A semi-opaque fill looks
+ * the same here because only the dotted page sits behind the cards.
+ *
  * Shared "card" surface so every boxed block on the site (feature cards,
  * contacts, booking form, map) looks like one family.
  */
-export const cardSurface = (theme: ThemeType) => `
-  background-color: ${theme.colors.cardBg};
-  border: 1px solid ${theme.colors.border};
+export const cardSurface = (_theme: ThemeType) => `
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-border);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-glass);
 `;
 
 /** Rounded-square icon tile used next to card titles and contact rows */
@@ -20,7 +24,11 @@ export const iconTile = (size = 56) => `
   width: ${size}px;
   height: ${size}px;
   border-radius: var(--radius-lg);
-  background-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 18%, transparent),
+    color-mix(in srgb, #6a7bd8 16%, transparent)
+  );
   color: var(--color-primary);
   transition:
     background-color 0.3s ease,

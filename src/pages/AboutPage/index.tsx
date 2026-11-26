@@ -1,8 +1,7 @@
 import { FC } from "react";
 
-import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
-
+import { ArrowRight, BookOpen, Briefcase, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import photo from "../../images/photo.jpg";
@@ -12,76 +11,124 @@ import experienceEn from "../../json/experienceEn.json";
 
 import { SectionContainer } from "../../App";
 
-import { ThemeType } from "../../theme/theme";
-
 import BookNow from "../../components/BookNow";
+import { SectionHeading } from "../../components/SectionHeading";
+import { Glow, GlowSection } from "../../components/SectionHeading/Glow";
+
+import { useBooking } from "../../context/BookingContext";
+import { cardSurface, cardTitle, iconTile } from "../../theme/surfaces";
+import { ThemeType } from "../../theme/theme";
 
 import { AboutPagePropsType } from "./types";
 
+/** Section labels in the translations end with ":"; drop it for headings */
+const label = (text: string) => text.replace(/:\s*$/, "");
+
+const STORY = ["massage_benefits", "oils", "about_session"];
+
 const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
   const [t] = useTranslation();
+  const { startBooking } = useBooking();
 
   const data = language === "ua" ? experience : experienceEn;
 
-  const studyItems = data.study.map((item) => (
-    <ListItem key={item.id}>
-      <DataTitle>{item.data}</DataTitle>
-      <ItemText>{item.type}</ItemText>
-    </ListItem>
-  ));
-
-  const experienceItems = data.experience.map((item) => (
-    <ListItem key={item.id}>
-      <DataTitle>{item.data}</DataTitle>
-      <ItemText>{item.type}</ItemText>
-    </ListItem>
-  ));
-
-  const elseItems = data.else.map((item) => (
-    <ListItem key={item.id}>
-      <ItemText style={{ textIndent: "0px" }}>{item.type}</ItemText>
-    </ListItem>
-  ));
-
   return (
     <>
-      <AboutContainer>
-        <StudyContainer>
-          <BackgroundContainer>
-            <SectionContainer>
-              <ImageContainer>
-                <ImageWrapper>
-                  <ImageBorder>
-                    <Image src={photo} alt="masseur" />
-                  </ImageBorder>
-                  <TitleContainer>
-                    <Title>{t("name_title")}</Title>
-                    <AfterTitle>{t("profession")}</AfterTitle>
-                  </TitleContainer>
-                </ImageWrapper>
-                <TitleContainer>
-                  <TitleText>{t("about_title")}</TitleText>
-                  <Text>{t("about_text")}</Text>
-                  <Text>{t("goal")}</Text>
-                  <Text>{t("massage_benefits")}</Text>
-                  <Text>{t("oils")}</Text>
-                  <Text>{t("invitation")}</Text>
-                  <Text>{t("escape")}</Text>
-                  <Text>{t("book_now")}</Text>
-                </TitleContainer>
-              </ImageContainer>
-            </SectionContainer>
-          </BackgroundContainer>
-        </StudyContainer>
+      <GlowSection>
+        <Glow />
         <SectionContainer>
-          <ItemTitle>{t("education")}</ItemTitle>
-          <ul>{studyItems}</ul>
-          <ItemTitle>{t("experience")}</ItemTitle>
-          <ul>{experienceItems}</ul>
-          <ItemTitle>{t("additional_skills")}</ItemTitle>
-          <ul>{elseItems}</ul>
+          <Intro>
+            <Aside>
+              <PhotoCard>
+                <Photo src={photo} alt={t("name_title")} />
+                <PhotoBadge>
+                  <strong>{t("name_title")}</strong>
+                  <span>{t("profession")}</span>
+                </PhotoBadge>
+              </PhotoCard>
+            </Aside>
+
+            <Story>
+              <SectionHeading
+                level="h1"
+                align="left"
+                lead={t("about_hello")}
+                accent={t("about_name")}
+              />
+              <Lead>{t("about_lead")}</Lead>
+              {STORY.map((key) => (
+                <Paragraph key={key}>{t(key)}</Paragraph>
+              ))}
+              <Quote>{t("goal")}</Quote>
+              <Paragraph>{t("about_cta")}</Paragraph>
+              <BookButton type="button" onClick={() => startBooking()}>
+                {t("cta_button")}
+                <ArrowRight size={20} aria-hidden />
+              </BookButton>
+            </Story>
+          </Intro>
         </SectionContainer>
-      </AboutContainer>
+      </GlowSection>
+
+      <GlowSection>
+        <Glow $flip />
+        <SectionContainer>
+          <SectionHeading
+            lead={t("journey_lead")}
+            accent={t("journey_accent")}
+          />
+          <JourneyGrid>
+            <Card $area="education">
+              <CardHeader>
+                <IconTile aria-hidden>
+                  <BookOpen size={26} />
+                </IconTile>
+                <CardTitle>{label(t("education"))}</CardTitle>
+              </CardHeader>
+              <Timeline>
+                {data.study.map((item) => (
+                  <TimelineItem key={item.id}>
+                    <DateChip>{item.data}</DateChip>
+                    <TimelineText>{item.type}</TimelineText>
+                  </TimelineItem>
+                ))}
+              </Timeline>
+            </Card>
+
+            <Card $area="experience">
+              <CardHeader>
+                <IconTile aria-hidden>
+                  <Briefcase size={26} />
+                </IconTile>
+                <CardTitle>{label(t("experience"))}</CardTitle>
+              </CardHeader>
+              <Timeline>
+                {data.experience.map((item) => (
+                  <TimelineItem key={item.id}>
+                    <DateChip>{item.data}</DateChip>
+                    <TimelineText>{item.type}</TimelineText>
+                  </TimelineItem>
+                ))}
+              </Timeline>
+            </Card>
+
+            <Card $area="skills">
+              <CardHeader>
+                <IconTile aria-hidden>
+                  <Sparkles size={26} />
+                </IconTile>
+                <CardTitle>{label(t("additional_skills"))}</CardTitle>
+              </CardHeader>
+              <Skills>
+                {data.else.map((item) => (
+                  <Skill key={item.id}>{item.type}</Skill>
+                ))}
+              </Skills>
+            </Card>
+          </JourneyGrid>
+        </SectionContainer>
+      </GlowSection>
+
       <BookNow language={language} />
     </>
   );
@@ -89,197 +136,236 @@ const AboutPage: FC<AboutPagePropsType> = ({ language }) => {
 
 export default AboutPage;
 
-export const AboutContainer = styled.div<{ theme?: ThemeType }>`
-  background-color: ${(props) => props.theme.colors.background};
-`;
+/* ---------- intro ---------- */
 
-export const StudyContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  min-height: calc(100dvh - 80px);
-`;
+const Intro = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-7);
+  /* centred so whichever column is shorter never leaves a hole at the bottom */
+  align-items: center;
 
-const BackgroundContainer = styled.div<{ theme?: ThemeType }>`
-  width: 100%;
-  background-color: ${(props) => props.theme.colors.aboutBg};
-  clip-path: ellipse(200% 100% at 50% 0%);
-  overflow: hidden;
-
-  @media screen and (min-width: 1024px) {
-    clip-path: ellipse(120% 100% at 50% 0%);
+  @media screen and (min-width: 900px) {
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: var(--space-8);
   }
 `;
 
-export const ImageContainer = styled.div<{ theme?: ThemeType }>`
+/* Photo with the "my goal" quote under it, so both columns end together */
+const Aside = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  @media screen and (min-width: 768px) {
-    gap: 50px;
-  }
-  @media screen and (min-width: 970px) {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-  }
-`;
-
-const ImageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 0 0 auto;
-  max-width: 360px;
-`;
-
-const ImageBorder = styled.div`
-  padding: 16px;
-  border-radius: 50%;
-  background: linear-gradient(
-    45deg,
-    var(--color-primary-light),
-    var(--color-primary-dark)
-  );
-  box-shadow: 0px 4px 20px var(--color-box-shadow-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-`;
-
-const scaleUp = keyframes`
-  0% {
-    transform: scale(1.2);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-`;
-
-const Image = styled.img`
+  gap: var(--space-5);
   width: 100%;
-  height: 100%;
-  max-width: 400px;
-  aspect-ratio: 1;
-  border-radius: 400px;
+  max-width: 460px;
+  margin: 0 auto;
+`;
+
+const PhotoCard = styled.figure<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+  position: relative;
+  width: 100%;
+  padding: var(--space-3);
+`;
+
+const Photo = styled.img`
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
-  box-shadow: 0px 5px 15px var(--color-box-shadow-dark);
+  object-position: center 20%;
+  border-radius: calc(var(--radius-xl) - var(--space-3));
+`;
+
+const PhotoBadge = styled.figcaption<{ theme?: ThemeType }>`
+  position: absolute;
+  left: var(--space-6);
+  right: var(--space-6);
+  bottom: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-border);
+  color: ${(props) => props.theme.colors.text};
+
+  strong {
+    font-size: var(--text-lg);
+  }
+
+  span {
+    font-size: var(--text-sm);
+    opacity: 0.75;
+  }
+`;
+
+const Story = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 68ch;
+
+  /* the heading component brings a large bottom margin of its own */
+  & > div:first-of-type {
+    margin-bottom: var(--space-2);
+  }
+`;
+
+const Lead = styled.p<{ theme?: ThemeType }>`
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.4;
+  color: ${(props) => props.theme.colors.text};
+`;
+
+const Paragraph = styled.p<{ theme?: ThemeType }>`
+  font-size: var(--text-lg);
+  line-height: 1.7;
+  color: ${(props) => props.theme.colors.text};
+  opacity: 0.85;
+`;
+
+const Quote = styled.blockquote<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+  margin: var(--space-2) 0;
+  padding: var(--space-5) var(--space-6);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: 1.5;
+  color: ${(props) => props.theme.colors.text};
+`;
+
+const BookButton = styled.button`
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding: 16px 32px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  box-shadow: 0 12px 28px -10px var(--color-primary-shadow);
   transition:
-    transform var(--transition-duration) ease,
-    box-shadow var(--transition-duration) ease;
-  animation: ${scaleUp} 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    background-color 0.2s ease,
+    transform 0.2s var(--ease-out);
 
   &:hover {
-    transform: scale(1.05);
-    box-shadow: 0px 10px 25px var(--color-box-shadow-light);
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
   }
 `;
 
-const TitleContainer = styled.div`
+/* ---------- education & experience ---------- */
+
+const JourneyGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  align-items: start;
+
+  /* the long education list on the left, experience and skills stacked on the right */
+  @media screen and (min-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "education experience"
+      "education skills";
+    /* first row hugs the experience card so skills sit right under it */
+    grid-template-rows: auto 1fr;
+  }
+`;
+
+const Card = styled.section<{
+  $area: "education" | "experience" | "skills";
+  theme?: ThemeType;
+}>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+  padding: var(--space-6);
+
+  @media screen and (min-width: 900px) {
+    grid-area: ${(props) => props.$area};
+  }
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+`;
+
+const IconTile = styled.div`
+  ${iconTile(56)}
+`;
+
+const CardTitle = styled.h3<{ theme?: ThemeType }>`
+  ${(props) => cardTitle(props.theme as ThemeType)}
+`;
+
+const Timeline = styled.ol`
+  list-style: none;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  flex: 1;
-  max-width: 1000px;
-  @media screen and (min-width: 768px) {
-  }
+  gap: var(--space-5);
+  margin-left: 6px;
+  padding-left: var(--space-5);
+  border-left: 2px solid
+    color-mix(in srgb, var(--color-primary) 25%, transparent);
 `;
 
-const Title = styled.h2<{ theme?: ThemeType }>`
-  font-size: 45px;
-  margin-top: 20px;
-  color: ${(props) => props.theme.colors.text};
-  margin-bottom: 20px;
-  text-shadow: 0px 0px 7px rgba(255, 255, 255, 0.3);
-  letter-spacing: 2px;
-  text-align: center;
-  font-family: "Great Vibes", cursive;
-  font-weight: lighter;
-`;
-
-const AfterTitle = styled.p<{ theme?: ThemeType }>`
-  font-size: 20px;
-  color: ${(props) => props.theme.colors.text};
-  text-align: center;
-  @media screen and (min-width: 768px) {
-    font-size: 24px;
-  }
-`;
-
-const TitleText = styled.h1<{ theme?: ThemeType }>`
-  font-size: 18px;
-  color: ${(props) => props.theme.colors.primary};
-  margin-bottom: 30px;
-  text-align: center;
-  font-family: var(--font-body);
-  @media screen and (min-width: 768px) {
-    font-size: 24px;
-  }
-`;
-
-const ListItem = styled.li<{ theme?: ThemeType }>`
+const TimelineItem = styled.li`
   position: relative;
-  padding-top: 16px;
-  padding-bottom: 16px;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
 
-  &:not(:last-child)::after {
+  /* dot sitting on the line */
+  &::before {
     content: "";
     position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-
-    width: 80%;
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent,
-      ${(props) => props.theme.colors.text},
-      transparent
-    );
+    left: calc(-1 * var(--space-5) - 7px);
+    top: 7px;
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-accent);
   }
 `;
 
-const Text = styled.p<{ theme?: ThemeType }>`
-  font-size: 18px;
-  line-height: 26px;
+const DateChip = styled.span`
+  display: inline-flex;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+`;
+
+const TimelineText = styled.p<{ theme?: ThemeType }>`
+  line-height: 1.6;
   color: ${(props) => props.theme.colors.text};
-  margin-bottom: 14px;
-  text-align: left;
-  @media screen and (min-width: 768px) {
-    font-size: 20px;
-  }
+  opacity: 0.85;
 `;
 
-const ItemText = styled.p<{ theme?: ThemeType }>`
-  font-size: 18px;
-  margin-bottom: 10px;
+const Skills = styled.ul`
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+`;
+
+const Skill = styled.li<{ theme?: ThemeType }>`
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid ${(props) => props.theme.colors.border};
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
   color: ${(props) => props.theme.colors.text};
-  text-align: left;
-  @media screen and (min-width: 768px) {
-    font-size: 20px;
-  }
-`;
-
-const ItemTitle = styled.h4<{ theme?: ThemeType }>`
-  font-size: 30px;
-  color: ${(props) => props.theme.colors.primary};
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  font-weight: lighter;
-  text-align: left;
-`;
-
-const DataTitle = styled.span<{ theme?: ThemeType }>`
-  color: ${(props) => props.theme.colors.text};
-  font-size: 16px;
-  font-weight: 800;
-  @media screen and (min-width: 768px) {
-    font-size: 20px;
-  }
+  font-weight: 600;
+  line-height: 1.4;
 `;

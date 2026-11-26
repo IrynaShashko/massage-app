@@ -6,7 +6,8 @@ import { cardSurface, cardTitle } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
 import { SectionContainer } from "../../App";
-import { Title } from "../About";
+import { SectionHeading } from "../SectionHeading";
+import { Glow } from "../SectionHeading/Glow";
 import { ConnectionButtons } from "../ConnectionButton";
 import { ConnectionForm } from "../ConnectionForm";
 import { BOOKING_SECTION_ID } from "../../context/BookingContext";
@@ -16,10 +17,13 @@ export default function BookNow({ language }: { language: string }) {
 
   return (
     <Section>
+      <Glow $flip />
       <SectionContainer>
-        <Header id="contacts">
-          <Title>{t("contact_information")}</Title>
-        </Header>
+        <SectionHeading
+          id="contacts"
+          lead={t("contacts_lead")}
+          accent={t("contacts_accent")}
+        />
 
         <Grid>
           <LeftColumn>
@@ -45,12 +49,10 @@ export default function BookNow({ language }: { language: string }) {
   );
 }
 
-const Section = styled.section<{ theme?: ThemeType }>`
-  background-color: ${(props) => props.theme.colors.background};
-`;
-
-const Header = styled.div`
-  scroll-margin-top: calc(var(--header-height) + var(--space-4));
+/* Transparent so the dotted page background shows through; holds the glow */
+const Section = styled.section`
+  position: relative;
+  isolation: isolate;
 `;
 
 const Grid = styled.div`

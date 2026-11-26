@@ -173,9 +173,8 @@ const HeaderContainer = styled.header<{
   box-shadow: ${(props) =>
     props.$scrolled ? `0 4px 16px ${props.theme.colors.boxShadow}` : "none"};
   transition:
-    background 0.6s ease,
-    backdrop-filter 0.6s ease,
-    box-shadow 0.6s ease;
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
 `;
 
 const Wrapper = styled.nav`

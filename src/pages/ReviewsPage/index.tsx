@@ -1,21 +1,17 @@
 import { useEffect, useState } from "react";
 
-import { useTranslation } from "react-i18next";
-
 import styled from "@emotion/styled";
+import { MessageSquareHeart, Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { SectionContainer } from "../../App";
 import BookNow from "../../components/BookNow";
-import { IconStyled } from "../../components/ConnectionButton";
-import { Label } from "../../components/ConnectionForm";
 import { Loader } from "../../components/Loader";
-
-import { ReactComponent as StarSvg } from "../../icons/star.svg";
-import { ReactComponent as StarActiveSvg } from "../../icons/starActive.svg";
-
-import dotArrowRight from "../../images/dotArrowRight.png";
+import { SectionHeading } from "../../components/SectionHeading";
+import { Glow, GlowSection } from "../../components/SectionHeading/Glow";
 
 import { useModal } from "../../context/ModalContext";
+import { cardSurface, cardTitle, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
 import { useProfile, useUpdateProfile } from "../../hooks/useAuth";
@@ -23,11 +19,19 @@ import { useCreateReview, useReviews } from "../../hooks/useReviews";
 
 import { Review } from "./types";
 
+const REVIEWS_PER_PAGE = 4;
+
+/** Labels in the translations end with ":"; drop it to match other forms */
+const label = (text: string) => text.replace(/:\s*$/, "");
+
 const ReviewsPage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
   const { data: user } = useProfile();
   const isAuthenticated = !!user;
-  const [info, setInfo] = useState<string>("");
+  const [info, setInfo] = useState<{
+    kind: "success" | "error";
+    text: string;
+  } | null>(null);
   const [newReview, setNewReview] = useState<Review>({
     name: user?.name || "",
     comment: "",
@@ -36,25 +40,24 @@ const ReviewsPage = ({ language }: { language: string }) => {
   });
   const [isNameInitialized, setIsNameInitialized] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{
-    name: boolean;
-    comment: boolean;
-    stars: boolean;
-  }>({
+  const [errors, setErrors] = useState({
     name: false,
     comment: false,
     stars: false,
   });
 
-  const { data: reviews = [], isLoading } = useReviews();
+  const { data: reviews = [], isLoading, isError, refetch } = useReviews();
   const createReviewMutation = useCreateReview();
   const updateProfileMutation = useUpdateProfile();
+  const { openModal } = useModal();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const reviewsPerPage = 3;
+  const totalPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE);
 
-  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
-  const { openModal } = useModal();
+  const showInfo = (kind: "success" | "error", text: string) => {
+    setInfo({ kind, text });
+    setTimeout(() => setInfo(null), 4000);
+  };
 
   const handleAddReview = async () => {
     if (!isAuthenticated) {
@@ -72,12 +75,10 @@ const ReviewsPage = ({ language }: { language: string }) => {
 
     try {
       setIsSubmitting(true);
-      setInfo("");
+      setInfo(null);
 
       if (newReview.name !== user?.name) {
-        await updateProfileMutation.mutateAsync({
-          name: newReview.name,
-        });
+        await updateProfileMutation.mutateAsync({ name: newReview.name });
       }
       await createReviewMutation.mutateAsync({
         name: newReview.name,
@@ -91,20 +92,14 @@ const ReviewsPage = ({ language }: { language: string }) => {
         rating: 0,
         userId: user?.id || "",
       });
-      setInfo("Відгук успішно додано!");
-      setTimeout(() => setInfo(""), 2000);
+      showInfo("success", t("review_added"));
       setCurrentPage(1);
     } catch (error) {
       console.error(error);
-      setInfo("Сталася помилка при додаванні відгуку.");
-      setTimeout(() => setInfo(""), 2000);
+      showInfo("error", t("review_error"));
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleStarClick = (stars: number) => {
-    setNewReview((prev) => ({ ...prev, rating: stars }));
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -114,12 +109,9 @@ const ReviewsPage = ({ language }: { language: string }) => {
   };
 
   const sortedReviews = [...reviews].reverse();
-
-  const indexOfLastReview = currentPage * reviewsPerPage;
-  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
   const currentReviews = sortedReviews.slice(
-    indexOfFirstReview,
-    indexOfLastReview,
+    (currentPage - 1) * REVIEWS_PER_PAGE,
+    currentPage * REVIEWS_PER_PAGE,
   );
 
   const handlePageChange = (page: number) => {
@@ -140,356 +132,449 @@ const ReviewsPage = ({ language }: { language: string }) => {
 
   return (
     <>
-      {isLoading ? (
-        <Loader />
-      ) : (
-        <>
-          <ReviewsContainer>
-            <SectionContainer>
-              <ReviewsWrapper>
-                <LeftColumn>
-                  <ReviewList>
-                    {currentReviews.map((review, index) => (
-                      <ReviewItem key={index}>
-                        <UserName>{review.user.name}</UserName>
-                        <UserIconDiv>
-                          <StarsContainer>
-                            <Stars>
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <StarIconStyled
-                                  key={i}
-                                  as={
-                                    i < review.rating ? StarActiveSvg : StarSvg
-                                  }
-                                />
-                              ))}
-                            </Stars>
-                          </StarsContainer>
-                        </UserIconDiv>
-                        <Text>{review.comment}</Text>
-                      </ReviewItem>
-                    ))}
-                  </ReviewList>
-                  {totalPages > 1 && (
-                    <Pagination>
-                      <PageButton
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                      >
-                        {"<"}
-                      </PageButton>
-                      {Array.from({ length: totalPages }, (_, i) => (
-                        <PageButton
-                          key={i}
-                          $active={currentPage === i + 1}
-                          onClick={() => handlePageChange(i + 1)}
-                        >
-                          {i + 1}
-                        </PageButton>
-                      ))}
-                      <PageButton
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                      >
-                        {">"}
-                      </PageButton>
-                    </Pagination>
-                  )}
-                </LeftColumn>
+      <GlowSection>
+        <Glow />
+        <SectionContainer>
+          <SectionHeading
+            level="h1"
+            lead={t("reviews_lead")}
+            accent={t("reviews_accent")}
+          />
 
-                <FeedbackForm>
-                  <DecorativeElementTopRight />
-                  <FormTitle>{t("leave_review")}</FormTitle>
-                  <Label htmlFor="name">{t("your_name_label")}</Label>
-                  <Input
-                    type="text"
-                    id="name"
-                    value={newReview.name}
-                    onChange={(e) =>
-                      setNewReview({ ...newReview, name: e.target.value })
-                    }
-                    placeholder={t("your_name_placeholder")}
-                    required
-                    style={{ borderColor: errors.name ? "red" : "#ccc" }}
-                  />
-                  <Label htmlFor="comment">{t("your_review_label")}</Label>
-                  <Comment
-                    id="comment"
-                    value={newReview.comment}
-                    placeholder={t("your_review_placeholder")}
-                    required
-                    onChange={handleInput}
-                    rows={1}
-                    style={{ borderColor: errors.comment ? "red" : "#ccc" }}
-                  />
-                  <StarsWrapper>
-                    <RatingLabel>{t("rating_label")}</RatingLabel>
-                    <StarsRating>
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <StarIconStyled
-                          key={i}
-                          as={i < newReview.rating ? StarActiveSvg : StarSvg}
-                          onClick={() => handleStarClick(i + 1)}
-                        />
-                      ))}
-                    </StarsRating>
-                    {errors.stars && (
-                      <ErrorText>{t("rating_required")}</ErrorText>
-                    )}
-                  </StarsWrapper>
-                  {info && <p>{info}</p>}
-                  <button onClick={handleAddReview} disabled={isSubmitting}>
-                    {isSubmitting ? "Відправка..." : t("add_review")}
-                  </button>
-                </FeedbackForm>
-              </ReviewsWrapper>
-            </SectionContainer>
-          </ReviewsContainer>
-          <BookNow language={language} />
-        </>
-      )}
+          <Layout>
+            <ListColumn>
+              {isLoading ? (
+                <Loader />
+              ) : isError ? (
+                <EmptyCard role="alert">
+                  <CardTitle>{t("reviews_load_error")}</CardTitle>
+                  <RetryButton type="button" onClick={() => refetch()}>
+                    {t("retry")}
+                  </RetryButton>
+                </EmptyCard>
+              ) : currentReviews.length === 0 ? (
+                <EmptyCard>
+                  <EmptyIcon aria-hidden>
+                    <MessageSquareHeart size={28} />
+                  </EmptyIcon>
+                  <CardTitle>{t("reviews_empty_title")}</CardTitle>
+                  <Muted>{t("reviews_empty_text")}</Muted>
+                </EmptyCard>
+              ) : (
+                <ReviewList>
+                  {currentReviews.map((review, index) => (
+                    <ReviewCard key={review.id ?? index}>
+                      <ReviewHeader>
+                        <Avatar aria-hidden>
+                          {(review.user?.name || "?").trim().charAt(0)}
+                        </Avatar>
+                        <div>
+                          <UserName>{review.user?.name}</UserName>
+                          <Stars aria-label={`${review.rating} / 5`}>
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <Star
+                                key={i}
+                                size={16}
+                                aria-hidden
+                                fill={
+                                  i < review.rating ? "currentColor" : "none"
+                                }
+                                strokeWidth={i < review.rating ? 0 : 1.6}
+                              />
+                            ))}
+                          </Stars>
+                        </div>
+                      </ReviewHeader>
+                      <ReviewText>{review.comment}</ReviewText>
+                    </ReviewCard>
+                  ))}
+                </ReviewList>
+              )}
+
+              {totalPages > 1 && (
+                <Pagination aria-label="Pagination">
+                  <PageButton
+                    type="button"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    aria-label="Previous page"
+                  >
+                    ‹
+                  </PageButton>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <PageButton
+                      type="button"
+                      key={i}
+                      $active={currentPage === i + 1}
+                      aria-current={currentPage === i + 1 ? "page" : undefined}
+                      onClick={() => handlePageChange(i + 1)}
+                    >
+                      {i + 1}
+                    </PageButton>
+                  ))}
+                  <PageButton
+                    type="button"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    aria-label="Next page"
+                  >
+                    ›
+                  </PageButton>
+                </Pagination>
+              )}
+            </ListColumn>
+
+            <FormCard
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddReview();
+              }}
+              noValidate
+            >
+              <CardTitle>{t("leave_review")}</CardTitle>
+
+              <Field>
+                <FieldLabel htmlFor="review-name">
+                  {label(t("your_name_label"))}
+                </FieldLabel>
+                <TextInput
+                  type="text"
+                  id="review-name"
+                  autoComplete="name"
+                  value={newReview.name}
+                  onChange={(e) =>
+                    setNewReview({ ...newReview, name: e.target.value })
+                  }
+                  placeholder={t("your_name_placeholder")}
+                  $invalid={errors.name}
+                  aria-invalid={errors.name}
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="review-comment">
+                  {label(t("your_review_label"))}
+                </FieldLabel>
+                <TextArea
+                  id="review-comment"
+                  value={newReview.comment}
+                  placeholder={t("your_review_placeholder")}
+                  onChange={handleInput}
+                  rows={3}
+                  $invalid={errors.comment}
+                  aria-invalid={errors.comment}
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel as="span">{label(t("rating_label"))}</FieldLabel>
+                <RatingRow role="radiogroup" aria-label={t("rating_label")}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <RatingStar
+                      key={i}
+                      type="button"
+                      role="radio"
+                      aria-checked={newReview.rating === i + 1}
+                      aria-label={`${i + 1} / 5`}
+                      $on={i < newReview.rating}
+                      onClick={() =>
+                        setNewReview((prev) => ({ ...prev, rating: i + 1 }))
+                      }
+                    >
+                      <Star
+                        size={30}
+                        aria-hidden
+                        fill={i < newReview.rating ? "currentColor" : "none"}
+                      />
+                    </RatingStar>
+                  ))}
+                </RatingRow>
+                {errors.stars && (
+                  <ErrorText role="alert">{t("rating_required")}</ErrorText>
+                )}
+              </Field>
+
+              {info && (
+                <InfoBox role="status" $kind={info.kind}>
+                  {info.text}
+                </InfoBox>
+              )}
+
+              <SubmitButton type="submit" disabled={isSubmitting}>
+                {isSubmitting ? t("sending") : t("add_review")}
+              </SubmitButton>
+            </FormCard>
+          </Layout>
+        </SectionContainer>
+      </GlowSection>
+      <BookNow language={language} />
     </>
   );
 };
 
 export default ReviewsPage;
 
-const ReviewsContainer = styled.div`
-  background-color: ${(props) => props.theme.colors.aboutBg};
-  justify-content: center;
-  clip-path: ellipse(200% 100% at 50% 0%);
-  overflow: hidden;
+const STAR_GOLD = "#e9b949";
 
-  @media screen and (min-width: 1024px) {
-    min-height: calc(100dvh - 80px);
-    clip-path: ellipse(120% 100% at 50% 0%);
+const Layout = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  align-items: start;
+
+  @media screen and (min-width: 960px) {
+    grid-template-columns: 1.35fr 1fr;
   }
 `;
 
-const LeftColumn = styled.div`
+const ListColumn = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
-`;
-
-const DecorativeElementTopRight = styled.div`
-  position: absolute;
-  right: -4%;
-  bottom: -12%;
-  width: 150px;
-  height: 150px;
-  background-image: url(${dotArrowRight});
-  background-size: contain;
-  background-repeat: no-repeat;
-  z-index: -1;
-  @media screen and (min-width: 1024px) {
-    right: -8%;
-    bottom: -12%;
-  }
+  gap: var(--space-5);
+  min-width: 0;
 `;
 
 const ReviewList = styled.ul`
+  list-style: none;
+  display: grid;
+  gap: var(--space-4);
+`;
+
+const ReviewCard = styled.li<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+  padding: var(--space-5) var(--space-6);
+`;
+
+const ReviewHeader = styled.div`
   display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 14px;
-  padding: 0;
-  margin: 0;
-  height: 100%;
-`;
-
-const ReviewItem = styled.li`
-  background: ${(props) => props.theme.colors.cardBg};
-  padding: 20px;
-  padding-inline: 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px ${(props) => props.theme.colors.boxShadow};
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-`;
-
-const Pagination = styled.div`
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 20px;
-`;
-
-const PageButton = styled.button<{ $active?: boolean }>`
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--color-primary);
-  background-color: ${({ $active }) =>
-    $active ? "var(--color-primary)" : "transparent"};
-  color: ${({ $active }) => ($active ? "#fff" : "inherit")};
-  cursor: pointer;
-  font-weight: 600;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const StarsContainer = styled.div`
-  display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
 `;
 
-const UserIconDiv = styled.div`
-  display: flex;
-  flex-direction: column;
+const Avatar = styled.span`
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--gradient-accent);
+  color: #fff;
+  font-weight: 800;
+  font-size: var(--text-lg);
+  text-transform: uppercase;
 `;
 
-const UserName = styled.p`
-  font-size: 18px;
-  font-weight: 600;
+const UserName = styled.p<{ theme?: ThemeType }>`
+  font-weight: 700;
   color: ${(props) => props.theme.colors.text};
-  font-family: var(--font-body);
 `;
 
 const Stars = styled.div`
-  color: #faf32e;
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+  color: ${STAR_GOLD};
 `;
 
-const Text = styled.p<{ theme?: ThemeType }>`
-  font-size: 16px;
+const ReviewText = styled.p<{ theme?: ThemeType }>`
+  line-height: 1.7;
   color: ${(props) => props.theme.colors.text};
-  @media screen and (min-width: 768px) {
-    font-size: 18px;
-  }
+  opacity: 0.85;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 `;
 
-const ReviewsWrapper = styled.div`
-  display: grid;
-  width: 100%;
-  gap: 40px;
-
-  @media screen and (min-width: 900px) {
-    grid-template-columns: 1fr 420px;
-    align-items: stretch;
-  }
-`;
-
-const FeedbackForm = styled.div`
-  position: relative;
+const EmptyCard = styled.div<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
   display: flex;
   flex-direction: column;
-  width: 100%;
-  background-color: ${(props) => props.theme.colors.cardBg};
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px ${(props) => props.theme.colors.boxShadow};
-  padding: 30px;
-  height: fit-content;
-  @media screen and (max-width: 899px) {
-    margin-bottom: 60px;
-  }
-
-  input,
-  textarea {
-    margin-bottom: 15px;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    transition: border 0.3s ease;
-  }
-
-  input:focus,
-  textarea:focus {
-    border-color: ${(props) => props.theme.colors.primary};
-    box-shadow: 0 0 0 3px rgba(0, 95, 114, 0.1);
-    outline: none;
-  }
-
-  button {
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 600;
-    background: ${(props) => props.theme.colors.primary};
-    color: ${(props) => props.theme.colors.buttonText};
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    margin-top: 10px;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-    }
-  }
-`;
-
-const FormTitle = styled.h4`
-  font-size: 20px;
-  margin-bottom: 15px;
-  color: ${(props) => props.theme.colors.text};
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-6);
   text-align: center;
 `;
 
-const StarsWrapper = styled.div`
+const RetryButton = styled.button`
+  padding: 10px 24px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+
+  &:hover {
+    background-color: var(--color-primary-hover);
+  }
+`;
+
+const EmptyIcon = styled.div`
+  ${iconTile(64)}
+`;
+
+const Muted = styled.p<{ theme?: ThemeType }>`
+  max-width: 40ch;
+  color: ${(props) => props.theme.colors.text};
+  opacity: 0.75;
+`;
+
+const CardTitle = styled.h2<{ theme?: ThemeType }>`
+  ${(props) => cardTitle(props.theme as ThemeType)}
+`;
+
+const Pagination = styled.nav`
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+`;
+
+const PageButton = styled.button<{ $active?: boolean; theme?: ThemeType }>`
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid
+    ${(props) =>
+      props.$active ? "var(--color-primary)" : "var(--surface-border)"};
+  background: ${(props) =>
+    props.$active ? "var(--color-primary)" : "var(--surface-glass)"};
+  color: ${(props) => (props.$active ? "#fff" : props.theme.colors.text)};
+  font-weight: 700;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+/* ---------- form ---------- */
+
+const FormCard = styled.form<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
   display: flex;
   flex-direction: column;
-  /* margin-bottom: 15px; */
+  gap: var(--space-5);
+  padding: var(--space-6);
+
+  @media screen and (min-width: 960px) {
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-5));
+  }
 `;
 
-const StarsRating = styled.div`
+const Field = styled.div`
   display: flex;
-  gap: 5px;
-  color: #faf32e;
-  cursor: pointer;
+  flex-direction: column;
+  gap: var(--space-2);
 `;
 
-const ErrorText = styled.span`
-  color: #a11818;
-  font-size: 12px;
-  margin-top: 5px;
-`;
-
-const Input = styled.input`
+const FieldLabel = styled.label<{ theme?: ThemeType }>`
+  font-weight: 700;
   color: ${(props) => props.theme.colors.text};
-  border-color: ${(errors) => (errors ? "red" : "#ccc")};
-  resize: vertical;
+`;
+
+const fieldStyles = (theme: ThemeType, invalid: boolean) => `
   width: 100%;
-  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid ${invalid ? "#d64545" : theme.colors.border};
+  background: transparent;
+  color: ${theme.colors.text};
+  font-size: 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
   &::placeholder {
-    color: ${(props) => props.theme.colors.text};
-    opacity: 0.7;
+    color: ${theme.colors.text};
+    opacity: 0.5;
+  }
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary-ring);
   }
 `;
 
-const Comment = styled.textarea`
-  color: ${(props) => props.theme.colors.text};
-  border-color: ${(errors) => (errors ? "red" : "#ccc")};
+const TextInput = styled("input", {
+  shouldForwardProp: (prop) => prop !== "$invalid",
+})<{ $invalid: boolean; theme?: ThemeType }>`
+  ${(props) => fieldStyles(props.theme as ThemeType, props.$invalid)}
+`;
+
+const TextArea = styled("textarea", {
+  shouldForwardProp: (prop) => prop !== "$invalid",
+})<{ $invalid: boolean; theme?: ThemeType }>`
+  ${(props) => fieldStyles(props.theme as ThemeType, props.$invalid)}
+  min-height: 110px;
   resize: vertical;
-  width: 100%;
-  min-height: 100px;
-  max-height: 700px;
-  box-sizing: border-box;
-  overflow: hidden;
-  padding: 10px;
-  height: auto;
-  &::placeholder {
-    color: ${(props) => props.theme.colors.text};
-    opacity: 0.7;
+`;
+
+const RatingRow = styled.div`
+  display: flex;
+  gap: var(--space-1);
+`;
+
+const RatingStar = styled.button<{ $on: boolean; theme?: ThemeType }>`
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  color: ${(props) => (props.$on ? STAR_GOLD : props.theme.colors.text)};
+  opacity: ${(props) => (props.$on ? 1 : 0.35)};
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    transform: scale(1.12);
+    opacity: 1;
+    color: ${STAR_GOLD};
   }
 `;
 
-const StarIconStyled = styled(IconStyled)`
-  width: 14px;
-  height: 14px;
-`;
-
-const RatingLabel = styled.span`
-  font-size: 18px;
+const ErrorText = styled.p`
+  color: #d64545;
+  font-size: var(--text-sm);
   font-weight: 600;
-  margin-bottom: 4px;
-  color: ${(props) => props.theme.colors.text};
+`;
+
+const InfoBox = styled.p<{ $kind: "success" | "error"; theme?: ThemeType }>`
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  color: ${(props) =>
+    props.$kind === "error" ? "#d64545" : props.theme.colors.text};
+  background: ${(props) =>
+    props.$kind === "error"
+      ? "rgba(214, 69, 69, 0.1)"
+      : "color-mix(in srgb, var(--color-primary) 12%, transparent)"};
+`;
+
+const SubmitButton = styled.button`
+  padding: 16px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  box-shadow: 0 12px 28px -10px var(--color-primary-shadow);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
 `;

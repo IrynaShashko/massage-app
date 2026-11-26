@@ -44,7 +44,8 @@ const globalStyles = (theme: Theme) => css`
     --color-primary-hover: #005f6e;
     --color-primary-light: rgb(156, 202, 209);
     --color-header-bg: rgba(246, 241, 234, 0.85);
-    --color-card-bg-light: rgba(237, 229, 221, 0.8);
+    /* Opaque so the dotted page background never shows through cards */
+    --color-card-bg-light: #efe7e0;
 
     /* Warm dark palette (matches the warm beige light theme) */
     --color-bg-dark: #1f1b18;
@@ -55,6 +56,27 @@ const globalStyles = (theme: Theme) => css`
     --color-box-shadow-light: rgba(0, 0, 0, 0.1);
     --color-box-shadow-dark: rgba(0, 0, 0, 0.4);
     --color-shadow: var(--color-box-shadow-light);
+    --color-dot: rgba(23, 22, 22, 0.1);
+    --glow-a: rgba(0, 117, 134, 0.16);
+    --glow-b: rgba(106, 123, 216, 0.16);
+    --gradient-accent: linear-gradient(
+      100deg,
+      #007586 0%,
+      #2a9bb0 45%,
+      #6a7bd8 100%
+    );
+    /* Lighter version of the same gradient for text on dark photos */
+    --gradient-accent-light: linear-gradient(
+      100deg,
+      #9ccad1 0%,
+      #7fd3de 45%,
+      #aab6f6 100%
+    );
+    --surface-glass: rgba(255, 255, 255, 0.78);
+    --surface-border: rgba(255, 255, 255, 0.95);
+    --shadow-glass:
+      0 1px 2px rgba(23, 22, 22, 0.04),
+      0 14px 34px -14px rgba(0, 117, 134, 0.28);
 
     --color-primary-ring: color-mix(
       in srgb,
@@ -82,6 +104,19 @@ const globalStyles = (theme: Theme) => css`
     --color-primary: #23919f;
     --color-primary-hover: #1b7d8a;
     --color-shadow: var(--color-box-shadow-dark);
+    --color-dot: rgba(237, 230, 220, 0.08);
+    --glow-a: rgba(35, 145, 159, 0.2);
+    --glow-b: rgba(120, 137, 230, 0.14);
+    --gradient-accent: linear-gradient(
+      100deg,
+      #3fb3c1 0%,
+      #5fb8d0 45%,
+      #9aa8f0 100%
+    );
+    --surface-glass: rgba(43, 38, 34, 0.82);
+    --surface-border: rgba(255, 255, 255, 0.08);
+    --shadow-glass:
+      0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 34px -14px rgba(0, 0, 0, 0.6);
     color-scheme: dark;
   }
 
@@ -135,6 +170,13 @@ const globalStyles = (theme: Theme) => css`
 
   body {
     overflow-x: hidden;
+    /* Subtle dotted texture over the page colour */
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      var(--color-dot) 1px,
+      transparent 1.5px
+    );
+    background-size: 22px 22px;
   }
 
   ul {

@@ -163,6 +163,12 @@ const Accent = styled.span`
   line-height: 1.05;
   letter-spacing: 0;
   color: var(--color-primary-light);
+  background: var(--gradient-accent-light);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Room for the script's swashes so the gradient never clips them */
+  padding: 0 0.15em 0.1em;
 `;
 
 const Lead = styled(motion.p)`
