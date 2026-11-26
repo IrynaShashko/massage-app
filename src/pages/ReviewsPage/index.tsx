@@ -350,7 +350,7 @@ const UserName = styled.p`
   font-size: 18px;
   font-weight: 600;
   color: ${(props) => props.theme.colors.text};
-  font-family: "Comfortaa", cursive;
+  font-family: var(--font-body);
 `;
 
 const Stars = styled.div`

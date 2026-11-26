@@ -4,7 +4,7 @@
   "about_title": "Ласкаво просимо до нашого спокійного оазису масажу!",
   "add_review": "Додати відгук",
   "additional_skills": "Додаткові навички:",
-  "address": "Київ, проспект Перемоги, 121а",
+  "address": "Київ, Берестейський проспект, 121а",
   "article_button": "Статті",
   "auth_error": "Виникла помилка. Спробуйте ще раз.",
   "authorsTechniques": "Авторські методики",
@@ -16,7 +16,7 @@
   "book_now": "Запишіться на сеанс масажу вже сьогодні, і дозвольте собі відчути справжнє блаженство і відновлення.",
   "children": "Для дітей",
   "comment": "Коментар*:",
-  "contact_information": "Контактна інформація:",
+  "contact_information": "Контакти та запис",
   "contacts_button": "Контакти",
   "create_account": "Створити акаунт",
   "cta_button": "Записатись",
@@ -119,5 +119,10 @@
   "footer_contacts": "Контакти",
   "footer_follow": "Соцмережі",
   "footer_rights": "Усі права захищено",
-  "footer_directions": "Як дістатися"
+  "footer_directions": "Як дістатися",
+  "date_placeholder": "Оберіть дату",
+  "date_clear": "Очистити",
+  "date_today": "Сьогодні",
+  "date_prev_month": "Попередній місяць",
+  "date_next_month": "Наступний місяць"
 }

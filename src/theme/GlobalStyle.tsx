@@ -34,7 +34,7 @@ const globalStyles = (theme: Theme) => css`
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
     --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
-    --font-heading: "Comfortaa", "Manrope", sans-serif;
+    --font-heading: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-accent: "Great Vibes", cursive;
 
     --color-bg: #f6f1ea;

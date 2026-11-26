@@ -190,8 +190,8 @@ const ContentContainer = styled.div`
 export const SectionContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: var(--space-7) 20px;
   @media screen and (min-width: 900px) {
-    padding: 80px 40px;
+    padding: var(--space-8) 40px;
   }
 `;

@@ -230,12 +230,12 @@ const StyledUserLink = styled(Link)`
 const StyledNavLink = styled(NavLink)<{ theme?: ThemeType }>`
   text-decoration: none;
   color: inherit;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
   position: relative;
   transition: color 0.3s;
-  font-family: "Comfortaa", sans-serif;
+  font-family: var(--font-body);
   &::after {
     content: "";
     position: absolute;
@@ -261,11 +261,11 @@ const StyledNavLink = styled(NavLink)<{ theme?: ThemeType }>`
 const StyledLink = styled.a<{ theme?: ThemeType }>`
   text-decoration: none;
   color: inherit;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
   transition: color 0.3s;
-  font-family: "Comfortaa", sans-serif;
+  font-family: var(--font-body);
   &:hover {
     color: ${(props) => props.theme.colors.primary};
   }

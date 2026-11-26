@@ -5,7 +5,7 @@
   "add_review": "Add review",
   "additional": "Additional",
   "additional_skills": "Additional skills:",
-  "address": "Kyiv, Peremohy Avenue, 121a",
+  "address": "Kyiv, Beresteiskyi Avenue, 121a",
   "address_title": "Address",
   "article_button": "Articles",
   "auth_action": "Sign Up / Log In",
@@ -20,7 +20,7 @@
   "children": "For Children",
   "close_alt": "Close",
   "comment": "Comment*:",
-  "contact_information": "Contact Information:",
+  "contact_information": "Contacts & booking",
   "contacts_button": "Get in touch",
   "create_account": "Create Account",
   "cta_button": "Book Now",
@@ -121,5 +121,10 @@
   "footer_contacts": "Contacts",
   "footer_follow": "Follow",
   "footer_rights": "All rights reserved",
-  "footer_directions": "Get directions"
+  "footer_directions": "Get directions",
+  "date_placeholder": "Choose a date",
+  "date_clear": "Clear",
+  "date_today": "Today",
+  "date_prev_month": "Previous month",
+  "date_next_month": "Next month"
 }

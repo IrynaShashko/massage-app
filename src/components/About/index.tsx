@@ -9,6 +9,7 @@ import lotos from "../../images/lotos.png";
 import massage from "../../images/massage.png";
 
 import { SectionContainer } from "../../App";
+import { cardSurface, cardTitle, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
 const SOFT_EASE = [0.4, 0, 0.2, 1] as const;
@@ -67,13 +68,36 @@ const Grid = styled(motion.ul)`
   grid-template-columns: 1fr;
   gap: var(--space-5);
 
-  /* The middle card has by far the longest text, so it gets more width */
-  @media screen and (min-width: 1024px) {
+  /* Tablet / small laptop: two short cards on top, the long one full width below */
+  @media screen and (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "first third"
+      "second second";
+  }
+
+  /* Wide screens: one row, the middle card (longest text) gets more width */
+  @media screen and (min-width: 1200px) {
     grid-template-columns: 1fr 1.7fr 1fr;
+    grid-template-areas: "first second third";
   }
 `;
 
 const Card = styled(motion.li)<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+
+  @media screen and (min-width: 768px) {
+    &:nth-of-type(1) {
+      grid-area: first;
+    }
+    &:nth-of-type(2) {
+      grid-area: second;
+    }
+    &:nth-of-type(3) {
+      grid-area: third;
+    }
+  }
+
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -81,10 +105,6 @@ const Card = styled(motion.li)<{ theme?: ThemeType }>`
   height: 100%;
   padding: var(--space-6);
   text-align: left;
-  border-radius: var(--radius-xl);
-  background-color: ${(props) => props.theme.colors.cardBg};
-  border: 1px solid ${(props) => props.theme.colors.border};
-  box-shadow: var(--shadow-sm);
   transition:
     box-shadow 0.4s ease,
     border-color 0.4s ease;
@@ -103,14 +123,7 @@ const CardHeader = styled.div`
 `;
 
 const IconTile = styled.div`
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  height: 60px;
-  border-radius: var(--radius-lg);
-  background-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  ${iconTile(60)}
 `;
 
 /** The PNG icons are black line art: use them as a mask so they take the brand colour in both themes */
@@ -123,10 +136,7 @@ const Icon = styled.span<{ $src: string }>`
 `;
 
 const CardTitle = styled.h3<{ theme?: ThemeType }>`
-  font-size: var(--text-xl);
-  font-weight: 700;
-  line-height: 1.3;
-  color: ${(props) => props.theme.colors.text};
+  ${(props) => cardTitle(props.theme as ThemeType)}
   text-wrap: balance;
 `;
 
@@ -137,14 +147,25 @@ const CardText = styled.p<{ theme?: ThemeType }>`
   opacity: 0.82;
 `;
 
+/** Section heading shared across the site: calm, dark text with a short brand accent underneath */
 export const Title = styled.h2<{ theme?: ThemeType }>`
-  color: ${(props) => props.theme.colors.primary};
-  font-size: 30px;
-  font-weight: lighter;
-  text-transform: uppercase;
+  font-family: var(--font-heading);
+  font-size: clamp(1.875rem, 1.4rem + 2vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: ${(props) => props.theme.colors.text};
   text-align: center;
-  margin-bottom: 50px;
-  @media screen and (min-width: 1024px) {
-    margin-bottom: 70px;
+  text-wrap: balance;
+  margin-bottom: var(--space-7);
+
+  &::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 3px;
+    margin: var(--space-4) auto 0;
+    border-radius: var(--radius-full);
+    background-color: var(--color-primary);
   }
 `;

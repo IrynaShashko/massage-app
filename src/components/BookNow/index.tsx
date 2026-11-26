@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import styled from "@emotion/styled";
 
+import { cardSurface, cardTitle } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
 import { SectionContainer } from "../../App";
@@ -22,6 +23,7 @@ export default function BookNow({ language }: { language: string }) {
 
         <Grid>
           <LeftColumn>
+            <CardHeading>{t("footer_contacts")}</CardHeading>
             <ConnectionButtons
               background={"var(--color-primary)"}
               color={"var(--color-primary)"}
@@ -48,15 +50,13 @@ const Section = styled.section<{ theme?: ThemeType }>`
 `;
 
 const Header = styled.div`
-  text-align: center;
-  margin-bottom: 64px;
-  scroll-margin-top: 100px;
+  scroll-margin-top: calc(var(--header-height) + var(--space-4));
 `;
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: 3rem;
+  gap: var(--space-5);
   align-items: start;
 
   & > *:first-of-type {
@@ -64,8 +64,7 @@ const Grid = styled.div`
   }
 
   @media (min-width: 1024px) {
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 4rem;
+    grid-template-columns: 0.75fr 1.25fr;
 
     & > *:first-of-type {
       order: 0;
@@ -73,31 +72,45 @@ const Grid = styled.div`
   }
 `;
 
-const LeftColumn = styled.div``;
-const RightColumn = styled.div<{ theme?: ThemeType }>`
-  scroll-margin-top: calc(var(--header-height) + var(--space-5));
+const cardBox = (theme: ThemeType) => `
+  ${cardSurface(theme)}
   padding: var(--space-5);
-  border-radius: var(--radius-xl);
-  background-color: ${(props) => props.theme.colors.cardBg};
-  box-shadow: var(--shadow-md);
 
   @media screen and (min-width: 600px) {
     padding: var(--space-6);
   }
 `;
 
-const MapPlaceholder = styled.iframe`
+/* No frame: the contacts sit on the page background, aligned with the form's content */
+const LeftColumn = styled.div`
+  @media (min-width: 1024px) {
+    padding-top: var(--space-6);
+    position: sticky;
+    top: calc(var(--header-height) + var(--space-5));
+  }
+`;
+
+const CardHeading = styled.h3<{ theme?: ThemeType }>`
+  ${(props) => cardTitle(props.theme as ThemeType)}
+  margin-bottom: var(--space-5);
+`;
+
+const RightColumn = styled.div<{ theme?: ThemeType }>`
+  ${(props) => cardBox(props.theme as ThemeType)}
+  scroll-margin-top: calc(var(--header-height) + var(--space-5));
+`;
+
+/* Full-bleed map closing the section, edge to edge */
+const MapPlaceholder = styled.iframe<{ theme?: ThemeType }>`
+  display: block;
+  width: 100%;
+  height: clamp(320px, 40vw, 460px);
   border: 0;
+  border-top: 1px solid ${(props) => props.theme.colors.border};
+  border-bottom: 1px solid ${(props) => props.theme.colors.border};
+  background: ${(props) => props.theme.colors.cardBg};
+
   [data-theme="dark"] & {
     filter: invert(0.9) hue-rotate(180deg) brightness(0.95) contrast(0.9);
   }
-  margin-top: 32px;
-  height: 350px;
-  width: 100%;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  color: #6b7280;
 `;

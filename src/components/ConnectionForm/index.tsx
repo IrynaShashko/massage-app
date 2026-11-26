@@ -18,11 +18,14 @@ import {
 import priceData from "../../json/price.json";
 import priceDataEn from "../../json/priceEn.json";
 
+import { cardTitle } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
 import { useBooking } from "../../context/BookingContext";
 import { useProfile } from "../../hooks/useAuth";
 import { useCreateBooking } from "../../hooks/useCreateBooking";
+
+import { DatePicker } from "../DatePicker";
 
 import { ConnectionFormPropsType } from "./types";
 
@@ -56,11 +59,8 @@ const initialValues: FormValues = {
   time: "",
 };
 
-const todayIso = () => {
-  const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-  return now.toISOString().slice(0, 10);
-};
+/** Labels in the translations end with ":"; drop it so every label in the form looks the same */
+const label = (text: string) => text.replace(/:\s*$/, "");
 
 export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   onClose,
@@ -120,7 +120,8 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
     { resetForm }: FormikHelpers<FormValues>,
   ) => {
     const details = [
-      values.date && `${t("preferred_date")}: ${values.date}`,
+      values.date &&
+        `${t("preferred_date")}: ${values.date.split("-").reverse().join(".")}`,
       values.time && `${t("preferred_time")}: ${t(values.time)}`,
       values.text,
     ].filter(Boolean);
@@ -158,7 +159,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
           <FormTitle>{t("formTitle")}</FormTitle>
 
           <Fieldset>
-            <Legend>{t("for_whom")}</Legend>
+            <Legend>{label(t("for_whom"))}</Legend>
             <ChipGroup role="radiogroup">
               {CATEGORIES.map((category) => (
                 <Chip
@@ -168,7 +169,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                   aria-checked={values.service === category}
                   $active={values.service === category}
                   onClick={() => {
-                    setFieldValue("service", category, false);
+                    setFieldValue("service", category, submitCount > 0);
                     if (values.service !== category) {
                       setFieldValue("subService", "", false);
                     }
@@ -184,8 +185,10 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             category={values.service}
             items={values.service ? (data[values.service] ?? []) : []}
             selected={values.subService}
-            onSelect={(service) => setFieldValue("subService", service, false)}
-            label={t("select_service")}
+            onSelect={(service) =>
+              setFieldValue("subService", service, submitCount > 0)
+            }
+            label={label(t("select_service"))}
           />
           {submitCount > 0 && errors.subService && (
             <FieldError role="alert">{errors.subService}</FieldError>
@@ -196,7 +199,19 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               <Label htmlFor="date">
                 {t("preferred_date")} <Muted>({t("optional")})</Muted>
               </Label>
-              <Input type="date" id="date" name="date" min={todayIso()} />
+              <DatePicker
+                id="date"
+                value={values.date}
+                onChange={(date) => setFieldValue("date", date, false)}
+                locale={language === "en" ? "en-GB" : "uk-UA"}
+                labels={{
+                  placeholder: t("date_placeholder"),
+                  clear: t("date_clear"),
+                  today: t("date_today"),
+                  previousMonth: t("date_prev_month"),
+                  nextMonth: t("date_next_month"),
+                }}
+              />
             </FormGroup>
             <Fieldset>
               <Legend>
@@ -228,7 +243,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
 
           <Row>
             <FormGroup>
-              <Label htmlFor="name">{t("name")}</Label>
+              <Label htmlFor="name">{label(t("name"))}</Label>
               <Input
                 innerRef={nameInputRef}
                 type="text"
@@ -242,7 +257,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               <ErrorMessage name="name" component={FieldError} />
             </FormGroup>
             <FormGroup>
-              <Label htmlFor="tel">{t("phone")}</Label>
+              <Label htmlFor="tel">{label(t("phone"))}</Label>
               <Input
                 type="tel"
                 id="tel"
@@ -259,7 +274,8 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
 
           <FormGroup>
             <Label htmlFor="text">
-              {t("comment").replace("*", "")} <Muted>({t("optional")})</Muted>
+              {label(t("comment").replace("*", ""))}{" "}
+              <Muted>({t("optional")})</Muted>
             </Label>
             <Comment
               as="textarea"
@@ -375,10 +391,8 @@ const FormStyled = styled(Form)`
   gap: var(--space-5);
 `;
 
-const FormTitle = styled.h2<{ theme?: ThemeType }>`
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  color: ${(props) => props.theme.colors.text};
+const FormTitle = styled.h3<{ theme?: ThemeType }>`
+  ${(props) => cardTitle(props.theme as ThemeType)}
 `;
 
 const Fieldset = styled.fieldset`

@@ -13,6 +13,7 @@ import { ReactComponent as Whatsapp } from "../../icons/whatsapp.svg";
 
 import { ConnectionButtonContainer } from "../Menu";
 
+import { iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
 import { ConnectionButtonsPropsType } from "./types";
@@ -143,16 +144,14 @@ const ButtonsItem = styled.div<{
   color: string;
   theme?: ThemeType;
 }>`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 60px;
-  width: 60px;
-  padding: 12px;
-  border-radius: 50%;
-  border: 2px solid
-    ${(props) => (props.color ? props.color : props.theme.colors.iconColor)};
-  transition: all 0.3s ease;
+  ${iconTile(52)}
+
+  /* Same rounded-square tile as the feature cards; the icon follows the tile colour */
+  svg {
+    width: 26px;
+    height: 26px;
+    fill: currentColor;
+  }
 `;
 
 const InfoList = styled.ul<{ menu?: boolean }>`
@@ -167,7 +166,7 @@ const InfoList = styled.ul<{ menu?: boolean }>`
   `
       : `
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
   `}
 
   list-style: none;
@@ -188,30 +187,37 @@ const InfoItem = styled.li<{ menu?: boolean }>`
 const InfoLink = styled.a<{ menu?: boolean }>`
   display: flex;
   align-items: center;
+  gap: var(--space-4);
   justify-content: ${(props) => (props.menu ? "center" : "flex-start")};
   text-decoration: none;
   cursor: pointer;
 
-  &:hover {
-    transform: scale(1.02);
-    transition: all 0.6s ease;
+  &:hover > div:first-of-type {
+    background-color: var(--color-primary);
+    color: #fff;
   }
 `;
 
 const InfoText = styled.div`
-  margin-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 `;
 
 const InfoTitle = styled.h3<{ theme?: ThemeType }>`
-  font-size: 18px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
   font-weight: 600;
-  margin-bottom: 4px;
   color: ${(props) => props.theme.colors.text};
+  opacity: 0.65;
 `;
 
 const InfoDescription = styled.p<{ theme?: ThemeType }>`
+  font-size: var(--text-base);
+  font-weight: 600;
   color: ${(props) => props.theme.colors.text};
-  line-height: 1.6;
+  overflow-wrap: anywhere;
 `;
 
 export const IconStyled = styled.svg<{ theme?: ThemeType; color?: string }>`
