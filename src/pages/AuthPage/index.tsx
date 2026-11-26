@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Eye, EyeOff } from "lucide-react";
 
-import styled from "styled-components";
+import styled from "@emotion/styled";
 
 import { useModal } from "../../context/ModalContext";
 
@@ -273,7 +273,7 @@ const Title = styled.h2`
   text-align: center;
   font-size: 28px;
   margin-bottom: 10px;
-  color: ${(props) => props.theme.colors.text || "#007586"};
+  color: ${(props) => props.theme.colors.text || "var(--color-primary)"};
 
   @media (max-width: 480px) {
     font-size: 24px;
@@ -313,7 +313,7 @@ const InputGroup = styled.div`
     }
     &:focus {
       border-color: ${(props) => props.theme.colors.primary};
-      box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
+      box-shadow: 0 0 0 3px var(--color-primary-ring);
       &::placeholder {
         opacity: 0.3;
       }
@@ -353,7 +353,7 @@ const ToggleButton = styled.button`
 const SubmitButton = styled.button`
   width: 100%;
   padding: 16px;
-  background: #007586;
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 12px;
@@ -387,7 +387,7 @@ const SwitchText = styled.p`
   line-height: 1.4;
 
   span {
-    color: #007586;
+    color: var(--color-primary);
     font-weight: bold;
     cursor: pointer;
     text-decoration: underline;

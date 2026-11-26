@@ -1,4 +1,5 @@
 export const lightTheme = {
+  mode: "light" as "light" | "dark",
   colors: {
     background: "var(--color-bg)",
     buttonBg: "var(--color-bg-dark)",
@@ -14,10 +15,12 @@ export const lightTheme = {
     iconColor: "var(--color-bg-white)",
     modalIconColor: "var(--color-card-bg)",
     langIconColor: "var(--color-bg)",
+    border: "rgba(23, 22, 22, 0.18)",
   },
 };
 
 export const darkTheme = {
+  mode: "dark" as "light" | "dark",
   colors: {
     background: "var(--color-bg-dark)",
     buttonBg: "var(--color-text-dark)",
@@ -33,6 +36,7 @@ export const darkTheme = {
     iconColor: "var(--color-bg)",
     modalIconColor: "var(--color-text-dark)",
     langIconColor: "var(--color-bg-dark)",
+    border: "rgba(237, 230, 220, 0.2)",
   },
 };
 

@@ -215,7 +215,7 @@ const TitleText = styled.h1<{ theme?: ThemeType }>`
   color: ${(props) => props.theme.colors.primary};
   margin-bottom: 30px;
   text-align: center;
-  font-family: "Roboto", sans-serif;
+  font-family: var(--font-body);
   @media screen and (min-width: 768px) {
     font-size: 24px;
   }

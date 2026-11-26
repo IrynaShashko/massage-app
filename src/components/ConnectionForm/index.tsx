@@ -1,269 +1,370 @@
 import { FC, useEffect, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
-
+import { AnimatePresence, motion } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
+import {
+  ErrorMessage,
+  Field,
+  Form,
+  Formik,
+  FormikErrors,
+  FormikHelpers,
+  FormikProps,
+} from "formik";
 
 import priceData from "../../json/price.json";
 import priceDataEn from "../../json/priceEn.json";
 
 import { ThemeType } from "../../theme/theme";
 
-import { useCreateBooking } from "../../hooks/useCreateBooking";
+import { useBooking } from "../../context/BookingContext";
 import { useProfile } from "../../hooks/useAuth";
+import { useCreateBooking } from "../../hooks/useCreateBooking";
 
 import { ConnectionFormPropsType } from "./types";
 
+type PriceItem = {
+  service: string;
+  price: string;
+  time?: string;
+  description?: string;
+};
+
+type FormValues = {
+  name: string;
+  tel: string;
+  text: string;
+  service: string;
+  subService: string;
+  date: string;
+  time: string;
+};
+
+const CATEGORIES = ["women", "men", "children", "body", "else"] as const;
+const TIME_SLOTS = ["time_morning", "time_day", "time_evening", "time_any"];
+
+const initialValues: FormValues = {
+  name: "",
+  tel: "",
+  text: "",
+  service: "",
+  subService: "",
+  date: "",
+  time: "",
+};
+
+const todayIso = () => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 10);
+};
+
 export const ConnectionForm: FC<ConnectionFormPropsType> = ({
-  isOpen,
   onClose,
   language,
 }) => {
   const [t] = useTranslation();
-  const user = useProfile();
+  const { data: user } = useProfile();
   const { mutate, isPending, isError } = useCreateBooking();
+  const { preset } = useBooking();
 
-  const [selectedService, setSelectedService] = useState("");
-  const [selectedSubService, setSelectedSubService] = useState("");
-  const [subServiceOptions, setSubServiceOptions] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
-  const previousSubServiceOptionsRef = useRef<string[]>([]);
+  const formikRef = useRef<FormikProps<FormValues>>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const data = language === "ua" ? priceData : priceDataEn;
+  const data = (language === "ua" ? priceData : priceDataEn) as Record<
+    string,
+    PriceItem[]
+  >;
 
-  const womenServises: string[] = data.women.map((item) => item.service);
-  const menServises: string[] = data.men.map((item) => item.service);
-  const childrenServises: string[] = data.children.map((item) => item.service);
-  const bodyServises: string[] = data.body.map((item) => item.service);
-  const elseServises: string[] = data.else.map((item) => item.service);
-
-  const initialValues = {
-    name: "",
-    tel: "",
-    text: "",
-    service: "",
-    subService: "",
-  };
-
-  const services = [
-    {
-      name: "women",
-      subServices: womenServises,
-    },
-    {
-      name: "men",
-      subServices: menServises,
-    },
-    {
-      name: "children",
-      subServices: childrenServises,
-    },
-    {
-      name: "body",
-      subServices: bodyServises,
-    },
-    {
-      name: "else",
-      subServices: elseServises,
-    },
-  ];
-
-  const selectedServiceData = services.find(
-    (service) => service.name === selectedService,
-  );
-
+  // Preselect a service when the visitor clicks "Book" on a price card
   useEffect(() => {
-    if (selectedServiceData) {
-      if (
-        JSON.stringify(previousSubServiceOptionsRef.current) !==
-        JSON.stringify(selectedServiceData.subServices)
-      ) {
-        setSubServiceOptions(selectedServiceData.subServices);
-        previousSubServiceOptionsRef.current = selectedServiceData.subServices;
-      }
-    } else {
-      setSubServiceOptions([]);
+    if (!preset || !formikRef.current) return;
+    formikRef.current.setValues(
+      {
+        ...formikRef.current.values,
+        service: preset.category,
+        subService: preset.service ?? "",
+      },
+      false,
+    );
+    const timer = window.setTimeout(
+      () => nameInputRef.current?.focus({ preventScroll: true }),
+      600,
+    );
+    return () => window.clearTimeout(timer);
+  }, [preset]);
+
+  const validate = (values: FormValues) => {
+    const errors: FormikErrors<FormValues> = {};
+    if (!values.service || !values.subService) {
+      errors.subService = t("error_service");
     }
-  }, [selectedService, selectedServiceData, language]);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.classList.remove("modal-open");
+    if (!values.name.trim()) {
+      errors.name = t("error_required");
     }
-
-    return () => {
-      document.body.classList.remove("modal-open");
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === "Escape") {
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [onClose]);
-
-  const handleServiceChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-    setFieldValue: any,
-  ) => {
-    const service = event.target.value;
-    setSelectedService(service);
-    setFieldValue("service", service);
-  };
-
-  const handleSubServiceChange = (
-    event: React.ChangeEvent<HTMLSelectElement>,
-    setFieldValue: any,
-  ) => {
-    const subService = event.target.value;
-    setSelectedSubService(subService);
-    setFieldValue("subService", subService);
+    const digits = values.tel.replace(/\D/g, "");
+    if (!values.tel.trim()) {
+      errors.tel = t("error_required");
+    } else if (digits.length < 10 || digits.length > 13) {
+      errors.tel = t("error_phone");
+    }
+    return errors;
   };
 
   const handleSubmit = (
-    values: typeof initialValues,
-    { resetForm }: FormikHelpers<typeof initialValues>,
+    values: FormValues,
+    { resetForm }: FormikHelpers<FormValues>,
   ) => {
-    const bookingData = {
-      name: values.name,
-      phone: values.tel,
-      email: user.data.email || "",
-      comment: values.text,
-      service: `${values.service} - ${values.subService}`,
-    };
+    const details = [
+      values.date && `${t("preferred_date")}: ${values.date}`,
+      values.time && `${t("preferred_time")}: ${t(values.time)}`,
+      values.text,
+    ].filter(Boolean);
 
-    mutate(bookingData, {
-      onSuccess: () => {
-        resetForm();
-        setSelectedService("");
-        setIsSuccess(true);
-        setTimeout(() => setIsSuccess(false), 5000);
-        onClose();
+    mutate(
+      {
+        name: values.name.trim(),
+        phone: values.tel.trim(),
+        email: user?.email || "",
+        comment: details.join("\n"),
+        service: `${t(values.service)} - ${values.subService}`,
       },
-      onError: () => {
-        alert(t("booking_error") || "Помилка відправки");
+      {
+        onSuccess: () => {
+          resetForm();
+          setIsSuccess(true);
+          window.setTimeout(() => setIsSuccess(false), 6000);
+          onClose();
+        },
       },
-    });
+    );
   };
 
   return (
     <Formik
+      innerRef={formikRef}
       initialValues={initialValues}
-      enableReinitialize={true}
-      onSubmit={(values, actions) => {
-        handleSubmit(values, actions);
-      }}
+      validate={validate}
+      validateOnBlur
+      validateOnChange={false}
+      onSubmit={handleSubmit}
     >
-      {({ handleSubmit, setFieldValue }) => (
-        <FormStyled name="connection-form" onSubmit={handleSubmit}>
-          <input type="hidden" name="form-name" value="connection-form" />
+      {({ values, setFieldValue, errors, touched, submitCount }) => (
+        <FormStyled name="connection-form" noValidate>
           <FormTitle>{t("formTitle")}</FormTitle>
-          <FormGroup>
-            <Label htmlFor="service">{t("for_whom")}</Label>
-            <OptionLable
-              as="select"
-              id="service"
-              name="service"
-              value={selectedService}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                handleServiceChange(event, setFieldValue);
-              }}
-            >
-              <Option value="">{t("select")}</Option>
-              {services.map((service) => (
-                <Option key={service.name} value={service.name}>
-                  {t(service.name)}
-                </Option>
+
+          <Fieldset>
+            <Legend>{t("for_whom")}</Legend>
+            <ChipGroup role="radiogroup">
+              {CATEGORIES.map((category) => (
+                <Chip
+                  key={category}
+                  type="button"
+                  role="radio"
+                  aria-checked={values.service === category}
+                  $active={values.service === category}
+                  onClick={() => {
+                    setFieldValue("service", category, false);
+                    if (values.service !== category) {
+                      setFieldValue("subService", "", false);
+                    }
+                  }}
+                >
+                  {t(category)}
+                </Chip>
               ))}
-            </OptionLable>
-            <ErrorMessage name="service" component="div" />
-          </FormGroup>
-          {subServiceOptions.length > 0 && (
-            <FormGroup>
-              <Label htmlFor="subService">{t("select_service")}</Label>
-              <OptionLable
-                as="select"
-                id="subService"
-                name="subService"
-                value={selectedSubService}
-                onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                  handleSubServiceChange(event, setFieldValue);
-                }}
-              >
-                <Option value="">{t("select")}</Option>
-                {subServiceOptions.map((subService) => (
-                  <Option key={subService} value={subService}>
-                    {subService}
-                  </Option>
-                ))}
-              </OptionLable>
-              <ErrorMessage name="subService" component="div" />
-            </FormGroup>
+            </ChipGroup>
+          </Fieldset>
+
+          <ServicePicker
+            category={values.service}
+            items={values.service ? (data[values.service] ?? []) : []}
+            selected={values.subService}
+            onSelect={(service) => setFieldValue("subService", service, false)}
+            label={t("select_service")}
+          />
+          {submitCount > 0 && errors.subService && (
+            <FieldError role="alert">{errors.subService}</FieldError>
           )}
+
+          <Row>
+            <FormGroup>
+              <Label htmlFor="date">
+                {t("preferred_date")} <Muted>({t("optional")})</Muted>
+              </Label>
+              <Input type="date" id="date" name="date" min={todayIso()} />
+            </FormGroup>
+            <Fieldset>
+              <Legend>
+                {t("preferred_time")} <Muted>({t("optional")})</Muted>
+              </Legend>
+              <ChipGroup role="radiogroup">
+                {TIME_SLOTS.map((slot) => (
+                  <Chip
+                    key={slot}
+                    type="button"
+                    role="radio"
+                    $small
+                    aria-checked={values.time === slot}
+                    $active={values.time === slot}
+                    onClick={() =>
+                      setFieldValue(
+                        "time",
+                        values.time === slot ? "" : slot,
+                        false,
+                      )
+                    }
+                  >
+                    {t(slot)}
+                  </Chip>
+                ))}
+              </ChipGroup>
+            </Fieldset>
+          </Row>
+
+          <Row>
+            <FormGroup>
+              <Label htmlFor="name">{t("name")}</Label>
+              <Input
+                innerRef={nameInputRef}
+                type="text"
+                id="name"
+                name="name"
+                autoComplete="name"
+                placeholder={t("enter_your_name")}
+                aria-invalid={!!(touched.name && errors.name)}
+                $invalid={!!(touched.name && errors.name)}
+              />
+              <ErrorMessage name="name" component={FieldError} />
+            </FormGroup>
+            <FormGroup>
+              <Label htmlFor="tel">{t("phone")}</Label>
+              <Input
+                type="tel"
+                id="tel"
+                name="tel"
+                autoComplete="tel"
+                inputMode="tel"
+                placeholder="+380 __ ___ __ __"
+                aria-invalid={!!(touched.tel && errors.tel)}
+                $invalid={!!(touched.tel && errors.tel)}
+              />
+              <ErrorMessage name="tel" component={FieldError} />
+            </FormGroup>
+          </Row>
+
           <FormGroup>
-            <Label htmlFor="name">{t("name")}</Label>
-            <Input
-              type="text"
-              id="name"
-              name="name"
-              placeholder={t("enter_your_name")}
-              required
-            />
-            <ErrorMessage name="name" component="div" />
-          </FormGroup>
-          <FormGroup>
-            <Label htmlFor="tel">{t("phone")}</Label>
-            <Input
-              type="tel"
-              id="tel"
-              name="tel"
-              placeholder={t("enter_your_phone_number")}
-              required
-            />
-            <ErrorMessage name="tel" component="div" />
-          </FormGroup>
-          <FormGroup>
-            <Label htmlFor="text">{t("comment")}</Label>
+            <Label htmlFor="text">
+              {t("comment").replace("*", "")} <Muted>({t("optional")})</Muted>
+            </Label>
             <Comment
               as="textarea"
-              type="text"
               id="text"
               name="text"
+              rows={3}
               placeholder={t("write_a_comment")}
             />
-            <ErrorMessage name="text" component="div" />
           </FormGroup>
-          {isSuccess && (
-            <SuccessText>
-              {t("thanks_title")}
-              <br />
-              {t("thanks_message")}
-            </SuccessText>
-          )}
-          <ModalSubmitBtn type="submit" disabled={isPending}>
-            {isPending ? t("sending") : t("send")}
-          </ModalSubmitBtn>
+
+          <AnimatePresence>
+            {isSuccess && (
+              <SuccessBox
+                role="status"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+              >
+                <CheckCircle2 size={28} aria-hidden />
+                <div>
+                  <strong>{t("thanks_title")}</strong>
+                  <p>{t("thanks_message")}</p>
+                </div>
+              </SuccessBox>
+            )}
+          </AnimatePresence>
 
           {isError && (
-            <p style={{ color: "red", textAlign: "center" }}>
-              Помилка: запит не відправлено
-            </p>
+            <FieldError role="alert">{t("booking_error")}</FieldError>
           )}
+
+          <SubmitButton type="submit" disabled={isPending}>
+            {isPending ? t("sending") : t("send")}
+          </SubmitButton>
         </FormStyled>
       )}
     </Formik>
+  );
+};
+
+type ServicePickerProps = {
+  category: string;
+  items: PriceItem[];
+  selected: string;
+  onSelect: (service: string) => void;
+  label: string;
+};
+
+const ServicePicker: FC<ServicePickerProps> = ({
+  category,
+  items,
+  selected,
+  onSelect,
+  label,
+}) => {
+  const selectedRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Bring a preselected service into view inside the scrollable list
+  useEffect(() => {
+    // Scroll only the list itself: scrollIntoView would also move the page
+    // and cancel the smooth scroll that brings the visitor to the form
+    const option = selectedRef.current;
+    const listElement = listRef.current;
+    if (!option || !listElement) return;
+    const optionTop = option.offsetTop - listElement.offsetTop;
+    const optionBottom = optionTop + option.offsetHeight;
+    if (optionTop < listElement.scrollTop) {
+      listElement.scrollTop = optionTop;
+    } else if (
+      optionBottom >
+      listElement.scrollTop + listElement.clientHeight
+    ) {
+      listElement.scrollTop = optionBottom - listElement.clientHeight;
+    }
+  }, [category, selected]);
+
+  if (!category || items.length === 0) return null;
+
+  return (
+    <Fieldset>
+      <Legend>{label}</Legend>
+      <ServiceList ref={listRef} role="radiogroup">
+        {items.map((item) => {
+          const isActive = item.service === selected;
+          return (
+            <ServiceOption
+              key={item.service}
+              ref={isActive ? selectedRef : undefined}
+              type="button"
+              role="radio"
+              aria-checked={isActive}
+              $active={isActive}
+              onClick={() => onSelect(item.service)}
+            >
+              <ServiceName>{item.service}</ServiceName>
+              <ServiceMeta>
+                {item.time && <span>{item.time}</span>}
+                <ServicePrice>{item.price}</ServicePrice>
+              </ServiceMeta>
+            </ServiceOption>
+          );
+        })}
+      </ServiceList>
+    </Fieldset>
   );
 };
 
@@ -271,119 +372,229 @@ const FormStyled = styled(Form)`
   display: flex;
   flex-direction: column;
   width: 100%;
-  box-sizing: border-box;
-  gap: 1rem;
+  gap: var(--space-5);
+`;
+
+const FormTitle = styled.h2<{ theme?: ThemeType }>`
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: ${(props) => props.theme.colors.text};
+`;
+
+const Fieldset = styled.fieldset`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+`;
+
+const Legend = styled.legend<{ theme?: ThemeType }>`
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+  color: ${(props) => props.theme.colors.text};
+`;
+
+const Row = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+
+  @media screen and (min-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+  }
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
 `;
 
-const FormTitle = styled.h2<{ theme?: ThemeType }>`
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  align-self: center;
+const Muted = styled.span`
+  font-weight: 400;
+  opacity: 0.6;
+`;
+
+const ChipGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+`;
+
+const Chip = styled.button<{
+  $active: boolean;
+  $small?: boolean;
+  theme?: ThemeType;
+}>`
+  padding: ${(props) => (props.$small ? "8px 14px" : "10px 18px")};
+  border-radius: var(--radius-full);
+  font-size: ${(props) =>
+    props.$small ? "var(--text-sm)" : "var(--text-base)"};
+  font-weight: 600;
+  color: ${(props) => (props.$active ? "#fff" : props.theme.colors.text)};
+  background-color: ${(props) =>
+    props.$active ? "var(--color-primary)" : "transparent"};
+  border: 1.5px solid
+    ${(props) =>
+      props.$active
+        ? "var(--color-primary)"
+        : `color-mix(in srgb, ${props.theme.colors.text} 20%, transparent)`};
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+  }
+`;
+
+const ServiceList = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 2px 6px 2px 2px;
+  overscroll-behavior: contain;
+`;
+
+const ServiceOption = styled.button<{ $active: boolean; theme?: ThemeType }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  text-align: left;
   color: ${(props) => props.theme.colors.text};
+  background-color: ${(props) =>
+    props.$active
+      ? "color-mix(in srgb, var(--color-primary) 12%, transparent)"
+      : props.theme.colors.cardBg};
+  border: 1.5px solid
+    ${(props) => (props.$active ? "var(--color-primary)" : "transparent")};
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  }
+`;
+
+const ServiceName = styled.span`
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.35;
+`;
+
+const ServiceMeta = styled.span`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  text-align: right;
+
+  span:first-of-type {
+    opacity: 0.7;
+  }
+`;
+
+const ServicePrice = styled.span`
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+  opacity: 1 !important;
 `;
 
 export const Label = styled.label<{ theme?: ThemeType }>`
-  font-size: 18px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: ${(props) => props.theme.colors.text};
+`;
+
+const fieldStyles = (props: { theme: ThemeType; $invalid?: boolean }) => `
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid ${props.$invalid ? "#d64545" : props.theme.colors.border};
+  background-color: transparent;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  color: ${props.theme.colors.text};
+  color-scheme: inherit;
+
+  &::placeholder {
+    color: ${props.theme.colors.text};
+    opacity: 0.5;
+  }
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary-ring);
+  }
+`;
+
+export const Input = styled(Field, {
+  shouldForwardProp: (prop) => prop !== "$invalid",
+})<{ theme?: ThemeType; $invalid?: boolean }>`
+  ${(props) => fieldStyles(props as { theme: ThemeType; $invalid?: boolean })}
+`;
+
+export const Comment = styled(Field)<{ theme?: ThemeType }>`
+  ${(props) => fieldStyles(props as { theme: ThemeType })}
+  resize: vertical;
+  min-height: 96px;
+`;
+
+const FieldError = styled.p`
+  color: #d64545;
+  font-size: var(--text-sm);
   font-weight: 600;
-  margin-bottom: 4px;
+`;
+
+const SuccessBox = styled(motion.div)<{ theme?: ThemeType }>`
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
   color: ${(props) => props.theme.colors.text};
-`;
 
-export const Input = styled(Field)<{ theme?: ThemeType }>`
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  font-size: 16px;
-  outline: none;
-  transition: all 0.3s ease;
-  width: 100%;
-  color: ${(props) => props.theme.colors.text};
-  &::placeholder {
-    color: ${(props) => props.theme.colors.text};
-    opacity: 0.7;
-  }
-  &:focus {
-    border-color: #007586;
-    box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
-    &::placeholder {
-      opacity: 0.3;
-    }
+  svg {
+    flex-shrink: 0;
+    color: var(--color-primary);
   }
 `;
 
-export const Comment = styled(Field)`
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  font-size: 16px;
-  resize: none;
-  outline: none;
-  transition: all 0.3s ease;
-  width: 100%;
-  color: ${(props) => props.theme.colors.text};
-  &::placeholder {
-    color: ${(props) => props.theme.colors.text};
-    opacity: 0.7;
-  }
-  &:focus {
-    border-color: ${(props) => props.theme.colors.primary};
-    box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
-    &::placeholder {
-      opacity: 0.3;
-    }
-  }
-`;
-
-const Option = styled.option`
-  padding: 10px;
-  font-size: 14px;
-  cursor: pointer;
-  overflow: hidden;
-`;
-
-const OptionLable = styled(Field)`
-  padding: 14px 16px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 10px;
-  background-color: ${(props) => props.theme.colors.background};
-  color: ${(props) => props.theme.colors.text};
-  font-size: 14px;
-  width: 100%;
-  appearance: none;
-  margin-top: 5px;
-  font-family: "Comfortaa", sans-serif;
-  cursor: pointer;
-  &:focus {
-    border-color: ${(props) => props.theme.colors.primary};
-    box-shadow: 0 0 0 3px rgba(0, 117, 134, 0.2);
-  }
-`;
-
-const ModalSubmitBtn = styled.button<{ theme?: ThemeType }>`
+const SubmitButton = styled.button`
   padding: 18px 48px;
-  border-radius: 90px;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: ${(props) => props.theme.colors.buttonText};
-  background-color: ${(props) => props.theme.colors.primary};
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-top: 24px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: #fff;
+  background-color: var(--color-primary);
+  box-shadow: 0 12px 28px -10px var(--color-primary-shadow);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s var(--ease-out);
 
-  &:hover {
-    background-color: #005f6e;
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
   }
-`;
 
-const SuccessText = styled.p<{ theme?: ThemeType }>`
-  color: ${(props) => props.theme.colors.text};
-  font-size: 18px;
-  text-align: center;
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
 `;

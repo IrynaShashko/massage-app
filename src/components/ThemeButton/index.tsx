@@ -1,5 +1,5 @@
 import { FC } from "react";
-import styled from "styled-components";
+import styled from "@emotion/styled";
 import { ReactComponent as MoonIcon } from "../../icons/moon.svg";
 import { ReactComponent as SunIcon } from "../../icons/sun.svg";
 import { ThemeButtonPropsType } from "./types";
@@ -11,7 +11,11 @@ export const ThemeButton: FC<ThemeButtonPropsType> = ({
   const Icon = darkMode ? SunIcon : MoonIcon;
 
   return (
-    <Button type="button" onClick={themeToggle}>
+    <Button
+      type="button"
+      onClick={themeToggle}
+      aria-label={darkMode ? "Light theme" : "Dark theme"}
+    >
       <IconStyled as={Icon} />
     </Button>
   );
@@ -26,8 +30,8 @@ const Button = styled.button`
   padding: 0;
   transition: color 0.3s ease-in-out;
 
-  &:hover {
-    color: ${(props) => props.theme.colors.primary};
+  &:hover svg {
+    fill: ${(props) => props.theme.colors.primary};
   }
 `;
 
@@ -36,7 +40,4 @@ export const IconStyled = styled.svg`
   height: 28px;
   transition: fill 0.3s ease-in-out;
   fill: ${(props) => props.theme.colors.buttonBg};
-  ${Button}:hover & {
-    fill: ${(props) => props.theme.colors.primary};
-  }
 `;

@@ -101,76 +101,76 @@ export const Menu: FC<MenuPropsType> = ({
             <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
             {isAuthenticated ? (
               <LogoutButton onClick={onLogout}>
-                <LogOut
-                  color={darkMode ? "rgb(195, 193, 193)" : "rgb(55, 61, 70)"}
-                  size={24}
-                />
+                <LogOut size={26} />
               </LogoutButton>
             ) : (
               <StyledUserLink to="/auth">
-                <UserRound size={30} />
+                <UserRound size={26} />
               </StyledUserLink>
             )}
           </ButtonContainer>
-          <ModalButton onClick={toggleMenu}>
-            <IconStyled as={MenuIcon} color={"#007586"} />
+          <ModalButton
+            type="button"
+            onClick={toggleMenu}
+            aria-label="Menu"
+            aria-expanded={isMenuOpen}
+          >
+            <IconStyled as={MenuIcon} color={"var(--color-primary)"} />
           </ModalButton>
         </ModalButtonContainer>
       </MobileHeaderContainer>
-      {isMenuOpen && (
-        <>
-          <Backdrop isOpen={isMenuOpen} onClick={handleBackdropClick} />
-          <NavLinkContainer isOpen={isMenuOpen}>
-            <ModalContainer>
-              <Link to={"/"}>
-                <Logo src={logo} alt="logo" />
-              </Link>
-              <ModalButtonContainer>
-                <ButtonContainer>
-                  <LanguageButton
-                    languageToggle={languageToggle}
-                    language={language}
-                  />
-                  <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
-                </ButtonContainer>
-                <ModalButton type="button" onClick={toggleMenu}>
-                  {isMenuOpen ? (
-                    <IconStyled as={CloseIcon} color={"#007586"} />
-                  ) : (
-                    <IconStyled as={MenuIcon} color={"#007586"} />
-                  )}
-                </ModalButton>
-              </ModalButtonContainer>
-            </ModalContainer>
-
-            <LinkContainer>
-              <NavLinks to={"/"} onClick={closeMenu}>
-                {t("home_button")}
-              </NavLinks>
-              <NavLinks to={"/about"} onClick={closeMenu}>
-                {t("about_button")}
-              </NavLinks>
-              <NavLinks to={"/article"} onClick={closeMenu}>
-                {t("article_button")}
-              </NavLinks>
-              <NavLinks to={"/reviews"} onClick={closeMenu}>
-                {t("reviews_button")}
-              </NavLinks>
-              <NavLinks to={"/price"} onClick={closeMenu}>
-                {t("price_button")}
-              </NavLinks>
-              <ContactTitle>{`${t("contacts_button")} :`}</ContactTitle>
-              <ConnectionButtonContainer>
-                <ConnectionButtons
-                  background={theme.colors.text}
-                  color={theme.colors.text}
-                  menu
+      <>
+        <Backdrop isOpen={isMenuOpen} onClick={handleBackdropClick} />
+        <NavLinkContainer isOpen={isMenuOpen}>
+          <ModalContainer>
+            <Link to={"/"}>
+              <Logo src={logo} alt="logo" />
+            </Link>
+            <ModalButtonContainer>
+              <ButtonContainer>
+                <LanguageButton
+                  languageToggle={languageToggle}
+                  language={language}
                 />
-              </ConnectionButtonContainer>
-            </LinkContainer>
-          </NavLinkContainer>
-        </>
-      )}
+                <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
+              </ButtonContainer>
+              <ModalButton
+                type="button"
+                onClick={toggleMenu}
+                aria-label="Close menu"
+              >
+                <IconStyled as={CloseIcon} color={"var(--color-primary)"} />
+              </ModalButton>
+            </ModalButtonContainer>
+          </ModalContainer>
+
+          <LinkContainer>
+            <NavLinks to={"/"} onClick={closeMenu}>
+              {t("home_button")}
+            </NavLinks>
+            <NavLinks to={"/about"} onClick={closeMenu}>
+              {t("about_button")}
+            </NavLinks>
+            <NavLinks to={"/price"} onClick={closeMenu}>
+              {t("price_button")}
+            </NavLinks>
+            <NavLinks to={"/reviews"} onClick={closeMenu}>
+              {t("reviews_button")}
+            </NavLinks>
+            <NavLinks to={"/article"} onClick={closeMenu}>
+              {t("article_button")}
+            </NavLinks>
+            <ContactTitle>{`${t("contacts_button")} :`}</ContactTitle>
+            <ConnectionButtonContainer>
+              <ConnectionButtons
+                background={theme.colors.text}
+                color={theme.colors.text}
+                menu
+              />
+            </ConnectionButtonContainer>
+          </LinkContainer>
+        </NavLinkContainer>
+      </>
     </>
   );
 };
@@ -194,22 +194,23 @@ const NavLinkContainer = styled.div<{ isOpen: boolean; theme?: ThemeType }>`
   position: fixed;
   top: 0;
   right: 0;
-  width: 80%;
-  height: 100vh;
+  width: min(85%, 380px);
+  height: 100dvh;
+  overflow-y: auto;
   background-color: ${(props) => props.theme.colors.background};
   display: flex;
   flex-direction: column;
   transform: ${({ isOpen }) => (isOpen ? "translateX(0)" : "translateX(100%)")};
   transition:
-    transform 0.4s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.4s ease,
-    box-shadow 0.4s ease,
-    pointer-events 0.4s ease;
+    visibility 0.4s ease,
+    box-shadow 0.4s ease;
   opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
   visibility: ${({ isOpen }) => (isOpen ? "visible" : "hidden")};
   box-shadow: ${({ isOpen }) =>
     isOpen ? "2px 0px 10px rgba(0, 0, 0, 0.2)" : "none"};
-  z-index: ${({ isOpen }) => (isOpen ? 1000 : -1)};
+  z-index: 1000;
   pointer-events: ${({ isOpen }) => (isOpen ? "auto" : "none")};
 `;
 
@@ -229,9 +230,12 @@ const Backdrop = styled.div<{ isOpen: boolean }>`
   top: 0;
   left: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: ${({ isOpen }) => (isOpen ? 999 : -1)};
+  z-index: 999;
+  visibility: ${({ isOpen }) => (isOpen ? "visible" : "hidden")};
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition:
+    opacity 0.4s ease,
+    visibility 0.4s ease;
   ${({ isOpen }) => isOpen && "opacity: 1;"}
   pointer-events: ${({ isOpen }) => (isOpen ? "auto" : "none")};
 `;
@@ -295,7 +299,8 @@ export const ConnectionButtonContainer = styled.div`
   margin-inline: auto;
 `;
 
-const LogoutButton = styled.button`
+const LogoutButton = styled.button<{ theme?: ThemeType }>`
+  color: ${(props) => props.theme.colors.text};
   background: none;
   border: none;
   cursor: pointer;
@@ -309,8 +314,11 @@ const LogoutButton = styled.button`
   }
 `;
 
-const StyledUserLink = styled(Link)`
+const StyledUserLink = styled(Link)<{ theme?: ThemeType }>`
+  display: flex;
+  align-items: center;
+  color: ${(props) => props.theme.colors.text};
   &:hover {
-    color: #007586;
+    color: var(--color-primary);
   }
 `;

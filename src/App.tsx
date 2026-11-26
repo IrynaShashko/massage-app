@@ -1,6 +1,8 @@
-import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
+import { ThemeProvider } from "@emotion/react";
+import styled from "@emotion/styled";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MotionConfig } from "framer-motion";
 
 import { FC, lazy, Suspense, useEffect, useState } from "react";
 import {
@@ -9,7 +11,6 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
-import styled, { ThemeProvider } from "styled-components";
 import i18n from "./i18n";
 
 import GlobalStyle from "./theme/GlobalStyle";
@@ -19,6 +20,11 @@ import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { Loader } from "./components/Loader";
 
+import {
+  MOBILE_BAR_SPACE,
+  MobileBookingBar,
+} from "./components/MobileBookingBar";
+import { BookingProvider } from "./context/BookingContext";
 import { ModalProvider } from "./context/ModalContext";
 import { ScrollToTop } from "./utils/ScrollToTop";
 
@@ -38,7 +44,11 @@ export const App: FC = () => {
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === null) return true;
+    if (savedTheme === null) {
+      return (
+        window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false
+      );
+    }
     return savedTheme === "dark";
   });
 
@@ -82,71 +92,74 @@ export const App: FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <EmotionThemeProvider theme={theme}>
-          <GlobalStyle />
+        <GlobalStyle />
+        <MotionConfig reducedMotion="user">
           <ContentContainer>
             <Router>
               <ScrollToTop />
               <ModalProvider>
-                <Header
-                  themeToggle={ThemeToggle}
-                  languageToggle={LanguageToggle}
-                  language={language}
-                  darkMode={isDarkMode}
-                />
-                <main style={{ flex: 1 }}>
-                  <Suspense fallback={<Loader />}>
-                    <Routes>
-                      <Route
-                        path="/"
-                        element={<HomePage language={language} />}
-                      />
-                      <Route path="/auth" element={<AuthPage />} />
-                      <Route
-                        path="/api/auth/verify-email/:token"
-                        element={<VerifyEmailPage />}
-                      />
-                      <Route
-                        path="/about"
-                        element={<AboutPage language={language} />}
-                      />
-                      <Route
-                        path="/price"
-                        element={<PricePage language={language} />}
-                      />
-                      <Route
-                        path="/reviews"
-                        element={<ReviewsPage language={language} />}
-                      />
-                      <Route
-                        path="/article/*"
-                        element={<ArticlePage language={language} />}
-                      >
+                <BookingProvider>
+                  <Header
+                    themeToggle={ThemeToggle}
+                    languageToggle={LanguageToggle}
+                    language={language}
+                    darkMode={isDarkMode}
+                  />
+                  <main style={{ flex: 1 }}>
+                    <Suspense fallback={<Loader />}>
+                      <Routes>
                         <Route
-                          index
-                          element={<Navigate to="questions" replace />}
+                          path="/"
+                          element={<HomePage language={language} />}
+                        />
+                        <Route path="/auth" element={<AuthPage />} />
+                        <Route
+                          path="/api/auth/verify-email/:token"
+                          element={<VerifyEmailPage />}
                         />
                         <Route
-                          path="questions"
-                          element={<Questions language={language} />}
+                          path="/about"
+                          element={<AboutPage language={language} />}
                         />
                         <Route
-                          path="health"
-                          element={<Health language={language} />}
+                          path="/price"
+                          element={<PricePage language={language} />}
                         />
                         <Route
-                          path="expectation"
-                          element={<Expectation language={language} />}
+                          path="/reviews"
+                          element={<ReviewsPage language={language} />}
                         />
-                      </Route>
-                    </Routes>
-                  </Suspense>
-                </main>
-                <Footer />
+                        <Route
+                          path="/article/*"
+                          element={<ArticlePage language={language} />}
+                        >
+                          <Route
+                            index
+                            element={<Navigate to="questions" replace />}
+                          />
+                          <Route
+                            path="questions"
+                            element={<Questions language={language} />}
+                          />
+                          <Route
+                            path="health"
+                            element={<Health language={language} />}
+                          />
+                          <Route
+                            path="expectation"
+                            element={<Expectation language={language} />}
+                          />
+                        </Route>
+                      </Routes>
+                    </Suspense>
+                  </main>
+                  <Footer />
+                  <MobileBookingBar />
+                </BookingProvider>
               </ModalProvider>
             </Router>
           </ContentContainer>
-        </EmotionThemeProvider>
+        </MotionConfig>
       </ThemeProvider>
     </QueryClientProvider>
   );
@@ -163,7 +176,11 @@ const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding-top: 80px;
+  padding-top: var(--header-height);
+
+  @media screen and (max-width: 1079px) {
+    padding-bottom: ${MOBILE_BAR_SPACE};
+  }
 
   main {
     flex: 1;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
-import styled from "styled-components";
+import styled from "@emotion/styled";
 
 import { SectionContainer } from "../../App";
 import BookNow from "../../components/BookNow";
@@ -321,9 +321,10 @@ const Pagination = styled.div`
 const PageButton = styled.button<{ $active?: boolean }>`
   padding: 6px 12px;
   border-radius: 6px;
-  border: 1px solid #007586;
-  background-color: ${({ $active }) => ($active ? "#007586" : "#fff")};
-  color: ${({ $active }) => ($active ? "#fff" : "#007586")};
+  border: 1px solid var(--color-primary);
+  background-color: ${({ $active }) =>
+    $active ? "var(--color-primary)" : "transparent"};
+  color: ${({ $active }) => ($active ? "#fff" : "inherit")};
   cursor: pointer;
   font-weight: 600;
 

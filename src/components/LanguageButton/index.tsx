@@ -1,6 +1,6 @@
 import { FC } from "react";
 
-import styled from "styled-components";
+import styled from "@emotion/styled";
 
 import { LanguageButtonPropsType } from "./types";
 import { ThemeType } from "../../theme/theme";

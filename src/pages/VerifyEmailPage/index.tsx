@@ -24,7 +24,13 @@ const VerifyEmailPage = () => {
   }, [token, navigate]);
 
   return (
-    <div style={{ textAlign: "center", padding: "50px", fontFamily: "Arial" }}>
+    <div
+      style={{
+        textAlign: "center",
+        padding: "50px",
+        fontFamily: "var(--font-body)",
+      }}
+    >
       <h1>{message}</h1>
     </div>
   );
