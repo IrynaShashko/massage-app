@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 
 import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { Eye, EyeOff } from "lucide-react";
 
 import styled from "@emotion/styled";
 
+import { AuthLocationState, useBooking } from "../../context/BookingContext";
 import { useModal } from "../../context/ModalContext";
 
 import {
+  isEmailNotConfirmedError,
   useGoogleLogin,
   useLogin,
   useProfile,
   useRegister,
+  useResendConfirmation,
 } from "../../hooks/useAuth";
 import { isGoogleAuthEnabled } from "../../config/google";
 import googleIcon from "../../icons/google.svg";
@@ -26,6 +29,9 @@ const label = (text: string) => text.replace(/:\s*$/, "");
 const AuthPage: React.FC = () => {
   const [t] = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromBooking = !!(location.state as AuthLocationState | null)?.booking;
+  const { startBooking } = useBooking();
   const [isLogin, setIsLogin] = useState(true);
 
   const [email, setEmail] = useState("");
@@ -38,6 +44,7 @@ const AuthPage: React.FC = () => {
   const loginMutation = useLogin();
   const registerMutation = useRegister();
   const googleMutation = useGoogleLogin();
+  const resendMutation = useResendConfirmation();
 
   const { closeModal } = useModal();
 
@@ -50,7 +57,8 @@ const AuthPage: React.FC = () => {
         {
           onSuccess: () => {
             closeModal();
-            navigate("/");
+            if (fromBooking) startBooking();
+            else navigate("/");
           },
         },
       );
@@ -77,6 +85,8 @@ const AuthPage: React.FC = () => {
   const error =
     (isLogin ? loginMutation.error : registerMutation.error) ||
     googleMutation.error;
+
+  const emailNotConfirmed = isLogin && isEmailNotConfirmedError(error);
 
   if (user) return <Navigate to="/profile" replace />;
 
@@ -148,7 +158,28 @@ const AuthPage: React.FC = () => {
                   </PasswordWrapper>
                 </InputGroup>
 
-                {error && <ErrorMessage>{t("auth_error")}</ErrorMessage>}
+                {emailNotConfirmed ? (
+                  <Notice role="alert">
+                    <p>{t("email_not_confirmed")}</p>
+                    <p className="spam-hint">{t("check_spam_folder")}</p>
+                    {resendMutation.isSuccess ? (
+                      <p className="spam-hint">{t("confirmation_resent")}</p>
+                    ) : (
+                      <ResendButton
+                        type="button"
+                        onClick={() => resendMutation.mutate({ email })}
+                        disabled={resendMutation.isPending || !email}
+                      >
+                        {t("resend_confirmation")}
+                      </ResendButton>
+                    )}
+                    {resendMutation.isError && (
+                      <ErrorMessage>{t("auth_error")}</ErrorMessage>
+                    )}
+                  </Notice>
+                ) : (
+                  error && <ErrorMessage>{t("auth_error")}</ErrorMessage>
+                )}
 
                 <SubmitButton type="submit" disabled={isLoading}>
                   {isLoading
@@ -217,6 +248,25 @@ const Message = styled.div<{ theme?: ThemeType }>`
     font-size: var(--text-sm);
     font-weight: 400;
     opacity: 0.75;
+  }
+`;
+
+const Notice = styled(Message)`
+  margin-bottom: var(--space-3);
+`;
+
+const ResendButton = styled.button`
+  margin-top: var(--space-3);
+  padding: 0;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
   }
 `;
 

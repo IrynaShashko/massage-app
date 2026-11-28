@@ -119,6 +119,42 @@ export const useRegister = () =>
     },
   });
 
+/** Supabase refuses a password sign-in until the email is confirmed */
+export const isEmailNotConfirmedError = (error: unknown) =>
+  !!error &&
+  typeof error === "object" &&
+  ((error as { code?: string }).code === "email_not_confirmed" ||
+    /email not confirmed/i.test((error as { message?: string }).message ?? ""));
+
+/** Sends the sign-up confirmation link again */
+export const useResendConfirmation = () =>
+  useMutation<void, Error, { email: string }>({
+    mutationFn: async ({ email }) => {
+      check(
+        await supabase.auth.resend({
+          type: "signup",
+          email,
+          options: { emailRedirectTo: window.location.origin },
+        }),
+      );
+    },
+  });
+
+/**
+ * Reloads the session after the client confirmed their email in another tab:
+ * the stored session still says "not confirmed" until it is refreshed.
+ */
+export const useRecheckVerification = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, void>({
+    mutationFn: async () => {
+      check(await supabase.auth.refreshSession());
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: PROFILE_KEY }),
+  });
+};
+
 export const useGoogleLogin = () =>
   useMutation<void, Error, void>({
     mutationFn: async () => {

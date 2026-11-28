@@ -2,7 +2,14 @@ import { FC, useEffect, useMemo, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarClock, CheckCircle2, Plus, Send } from "lucide-react";
+import {
+  CalendarClock,
+  CheckCircle2,
+  LogIn,
+  MailCheck,
+  Plus,
+  Send,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -23,9 +30,15 @@ import priceDataEn from "../../json/priceEn.json";
 import { cardTitle } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
-import { useBooking } from "../../context/BookingContext";
-import { useProfile } from "../../hooks/useAuth";
+import { AuthLocationState, useBooking } from "../../context/BookingContext";
 import {
+  useProfile,
+  useRecheckVerification,
+  useResendConfirmation,
+} from "../../hooks/useAuth";
+import {
+  AuthRequiredError,
+  EmailNotVerifiedError,
   SlotUnavailableError,
   useCreateBooking,
 } from "../../hooks/useCreateBooking";
@@ -76,7 +89,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   language,
 }) => {
   const [t] = useTranslation();
-  const { data: user } = useProfile();
+  const { data: user, isLoading: isProfileLoading } = useProfile();
   const { mutate, isPending, isError, error } = useCreateBooking();
   const { preset } = useBooking();
   const { data: freeSlots = [] } = useFreeSlots();
@@ -196,6 +209,12 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
       },
     );
   };
+
+  // Booking needs an account with a confirmed email; the booking-telegram
+  // function checks the same on the server
+  if (!isProfileLoading && !user?.isVerified) {
+    return <BookingGate email={user?.email} />;
+  }
 
   return (
     <Formik
@@ -446,7 +465,12 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               {t(
                 error instanceof SlotUnavailableError
                   ? "slot_taken"
-                  : "booking_error",
+                  : error instanceof AuthRequiredError
+                    ? "booking_login_hint"
+                    : error instanceof EmailNotVerifiedError
+                      ? "booking_verify_hint"
+                      : "booking_error",
+                { email: user?.email ?? "" },
               )}
             </FieldError>
           )}
@@ -457,6 +481,66 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
         </FormStyled>
       )}
     </Formik>
+  );
+};
+
+/**
+ * Shown instead of the form to guests (sign in first) and to accounts whose
+ * email is not confirmed yet (resend the link, or recheck once confirmed)
+ */
+const BookingGate: FC<{ email?: string }> = ({ email }) => {
+  const [t] = useTranslation();
+  const resend = useResendConfirmation();
+  const recheck = useRecheckVerification();
+  const authState: AuthLocationState = { booking: true };
+
+  return (
+    <GateWrapper>
+      <FormTitle>{t("formTitle")}</FormTitle>
+      {email ? (
+        <GateBox role="status">
+          <MailCheck size={28} aria-hidden />
+          <div>
+            <p>{t("booking_verify_hint", { email })}</p>
+            <Hint>{t("check_spam_folder")}</Hint>
+            {resend.isSuccess && <Hint>{t("confirmation_resent")}</Hint>}
+            {(resend.isError || recheck.isError) && (
+              <FieldError role="alert">{t("auth_error")}</FieldError>
+            )}
+            <GateActions>
+              <GateButton
+                type="button"
+                onClick={() => recheck.mutate()}
+                disabled={recheck.isPending}
+              >
+                {t("email_confirmed_recheck")}
+              </GateButton>
+              {!resend.isSuccess && (
+                <GateSecondaryButton
+                  type="button"
+                  onClick={() => resend.mutate({ email })}
+                  disabled={resend.isPending}
+                >
+                  {t("resend_confirmation")}
+                </GateSecondaryButton>
+              )}
+            </GateActions>
+          </div>
+        </GateBox>
+      ) : (
+        <GateBox>
+          <LogIn size={28} aria-hidden />
+          <div>
+            <p>{t("booking_login_hint")}</p>
+            <GateActions>
+              <GateLink to="/auth" state={authState}>
+                {t("auth_action")}
+              </GateLink>
+            </GateActions>
+          </div>
+        </GateBox>
+      )}
+    </GateWrapper>
   );
 };
 
@@ -574,6 +658,95 @@ const FormStyled = styled(Form)`
 
   @media screen and (min-width: 600px) {
     gap: var(--space-5);
+  }
+`;
+
+const GateWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--space-4);
+
+  @media screen and (min-width: 600px) {
+    gap: var(--space-5);
+  }
+`;
+
+const GateBox = styled.div<{ theme?: ThemeType }>`
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: ${(props) => props.theme.colors.text};
+  line-height: 1.5;
+
+  & > svg {
+    flex-shrink: 0;
+    color: var(--color-primary);
+  }
+
+  & > div {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  p {
+    overflow-wrap: anywhere;
+  }
+`;
+
+const GateActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+`;
+
+const gateButtonStyles = `
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+`;
+
+const GateButton = styled.button`
+  ${gateButtonStyles}
+`;
+
+const GateLink = styled(Link)`
+  ${gateButtonStyles}
+`;
+
+const GateSecondaryButton = styled.button`
+  padding: 6px 0;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
   }
 `;
 

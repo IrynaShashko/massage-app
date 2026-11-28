@@ -42,12 +42,32 @@ export class SlotUnavailableError extends Error {
   }
 }
 
+/** Booking needs an account: the visitor is not signed in */
+export class AuthRequiredError extends Error {
+  constructor() {
+    super("auth_required");
+    this.name = "AuthRequiredError";
+  }
+}
+
+/** Booking needs a confirmed email; this account has not confirmed it yet */
+export class EmailNotVerifiedError extends Error {
+  constructor() {
+    super("email_not_verified");
+    this.name = "EmailNotVerifiedError";
+  }
+}
+
+const isAccessError = (error: unknown) =>
+  error instanceof AuthRequiredError || error instanceof EmailNotVerifiedError;
+
 /** Must match the hidden form in public/index.html that Netlify detects at deploy time */
 export const NETLIFY_FORM_NAME = "booking";
 
 /**
- * Sends the booking through Netlify Forms (no backend, no login needed).
- * Netlify emails every submission to the site owner.
+ * Sends the booking through Netlify Forms. Netlify emails every submission
+ * to the site owner. It is only a backup channel, used after the function
+ * has accepted the client (signed in, email confirmed).
  */
 const submitToNetlify = async (booking: CreateBookingInput) => {
   const body = new URLSearchParams({
@@ -74,19 +94,32 @@ const submitToTelegram = async (
     "booking-telegram",
     { body: booking },
   );
-  if (error instanceof FunctionsHttpError && error.context.status === 409) {
-    throw new SlotUnavailableError();
+  if (error instanceof FunctionsHttpError) {
+    const status = error.context.status;
+    if (status === 409) throw new SlotUnavailableError();
+    if (status === 401) throw new AuthRequiredError();
+    if (status === 403) throw new EmailNotVerifiedError();
   }
   if (error) throw error;
   return data ?? {};
 };
 
+/** Only signed-in clients with a confirmed email may book */
+const ensureCanBook = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) throw new AuthRequiredError();
+  if (!session.user.email_confirmed_at) throw new EmailNotVerifiedError();
+};
+
 /**
- * Sends every booking both to Telegram and to Netlify Forms (email), so one
- * channel being down never loses a request. Fails only if both fail.
+ * Sends every booking to Telegram and, as a backup, to Netlify Forms
+ * (email), so one channel being down never loses a request.
  *
- * With a slot, the function goes first: it holds the slot, and a taken slot
- * must stop the request instead of emailing a time that is no longer free.
+ * The function goes first: it checks the client's account (signed in, email
+ * confirmed), and with a slot it holds that slot. A refused account or a
+ * taken slot stops the request; any other failure falls back to the email.
  */
 export const useCreateBooking = () => {
   const queryClient = useQueryClient();
@@ -96,37 +129,24 @@ export const useCreateBooking = () => {
     CreateBookingInput & { details?: BookingDetails }
   >({
     mutationFn: async ({ details, ...booking }) => {
-      if (details?.slotId) {
-        let result: BookingResult;
-        try {
-          result = await submitToTelegram({ ...booking, ...details });
-        } catch (error) {
-          if (error instanceof SlotUnavailableError) throw error;
-          // the slot is not held, but the email still delivers the request
-          console.warn("Booking via Telegram failed", error);
-          await submitToNetlify(booking);
-          return {};
-        }
-        submitToNetlify(booking).catch((error) =>
-          console.warn("Booking via Netlify Forms failed", error),
-        );
-        return result;
-      }
+      await ensureCanBook();
 
-      const results = await Promise.allSettled([
-        submitToTelegram({ ...booking, ...details }),
-        submitToNetlify(booking),
-      ]);
-      results.forEach((result, i) => {
-        if (result.status === "rejected") {
-          const channel = i === 0 ? "Telegram" : "Netlify Forms";
-          console.warn(`Booking via ${channel} failed`, result.reason);
+      let result: BookingResult;
+      try {
+        result = await submitToTelegram({ ...booking, ...details });
+      } catch (error) {
+        if (error instanceof SlotUnavailableError || isAccessError(error)) {
+          throw error;
         }
-      });
-      if (results.every((result) => result.status === "rejected")) {
-        throw new Error("Booking could not be sent");
+        // a slot is not held then, but the email still delivers the request
+        console.warn("Booking via Telegram failed", error);
+        await submitToNetlify(booking);
+        return {};
       }
-      return {};
+      submitToNetlify(booking).catch((error) =>
+        console.warn("Booking via Netlify Forms failed", error),
+      );
+      return result;
     },
     onSettled: (_data, _error, variables) => {
       if (variables.details?.slotId) {
@@ -136,6 +156,10 @@ export const useCreateBooking = () => {
     },
     onError: (error) => {
       console.error("Booking failed:", error.message);
+      // the session changed since the form loaded: show the sign-in prompt
+      if (isAccessError(error)) {
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+      }
     },
   });
 };

@@ -14,9 +14,12 @@
 // and the answer carries telegramLink: t.me/<bot>?start=<token>, which the
 // site offers the client to get the confirmation in Telegram.
 //
-// A signed-in client's request carries their session (supabase.functions
-// .invoke adds it); the booking is then linked to their account so it shows
-// in their profile. Guests' requests carry only the publishable key.
+// Only signed-in clients with a confirmed email may book: the request must
+// carry their session (supabase.functions.invoke adds it). Without one it
+// answers 401 { error: "auth_required" }, with an unconfirmed email
+// 403 { error: "email_not_verified" }. The booking is linked to the account
+// so it shows in their profile, and uses the account's (verified) email
+// rather than one typed in the request.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -77,8 +80,10 @@ const serviceClient = () =>
     { auth: { persistSession: false } },
   );
 
-/** The signed-in caller's user id, or null for guests and invalid sessions */
-const callerId = async (req: Request): Promise<string | null> => {
+type Caller = { id: string; email: string; verified: boolean };
+
+/** The signed-in caller, or null for guests and invalid sessions */
+const getCaller = async (req: Request): Promise<Caller | null> => {
   const jwt = (req.headers.get("authorization") ?? "")
     .replace(/^Bearer\s+/i, "")
     .trim();
@@ -86,7 +91,13 @@ const callerId = async (req: Request): Promise<string | null> => {
   if (jwt.split(".").length !== 3) return null;
   try {
     const { data, error } = await serviceClient().auth.getUser(jwt);
-    return error ? null : (data.user?.id ?? null);
+    const user = data.user;
+    if (error || !user) return null;
+    return {
+      id: user.id,
+      email: user.email ?? "",
+      verified: !!user.email_confirmed_at,
+    };
   } catch (error) {
     console.warn("getUser failed", error);
     return null;
@@ -178,13 +189,17 @@ Deno.serve(async (req) => {
   // Answer "ok" so the bot does not learn it was caught.
   if (field(body.website, 200)) return json(200, { ok: true });
 
+  const caller = await getCaller(req);
+  if (!caller) return json(401, { error: "auth_required" });
+  if (!caller.verified) return json(403, { error: "email_not_verified" });
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   if (isRateLimited(ip)) return json(429, { error: "Too many requests" });
 
   const name = field(body.name, MAX.name);
   const phone = field(body.phone, MAX.phone);
-  const email = field(body.email, MAX.email);
+  const email = field(caller.email, MAX.email);
   const service = field(body.service, MAX.service);
   const comment = field(body.comment, MAX.comment);
   let date = formatDate(field(body.date, 10));
@@ -213,7 +228,7 @@ Deno.serve(async (req) => {
       slot = await bookSlot(
         slotId,
         { name, phone, email, service, note, lang },
-        await callerId(req),
+        caller.id,
       );
     } catch (error) {
       console.error("book_slot failed", error);
