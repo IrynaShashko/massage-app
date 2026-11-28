@@ -2,14 +2,7 @@ import { FC, forwardRef, useEffect, useMemo, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  CalendarClock,
-  CheckCircle2,
-  LogIn,
-  MailCheck,
-  Plus,
-  Send,
-} from "lucide-react";
+import { CalendarClock, CheckCircle2, LogIn, Plus, Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -46,6 +39,14 @@ import {
 } from "../../hooks/useCreateBooking";
 import { FreeSlot, useFreeSlots } from "../../hooks/useSlots";
 
+import {
+  NoticeActions,
+  NoticeBox,
+  NoticeButton,
+  NoticeLink,
+  NoticeText,
+  NoticeTextButton,
+} from "../AuthNotice";
 import { DatePicker } from "../DatePicker";
 
 import { ConnectionFormPropsType } from "./types";
@@ -83,6 +84,52 @@ const initialValues: FormValues = {
   slotId: "",
 };
 
+/**
+ * The unsent form survives a trip to sign in (same tab, the confirmation
+ * link's new tab, or the Google redirect). Cleared once the booking is sent.
+ */
+const DRAFT_KEY = "booking_draft";
+const DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+const loadDraft = (): FormValues => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return initialValues;
+    const { values, savedAt } = JSON.parse(raw);
+    if (
+      typeof savedAt !== "number" ||
+      Date.now() - savedAt > DRAFT_MAX_AGE_MS
+    ) {
+      localStorage.removeItem(DRAFT_KEY);
+      return initialValues;
+    }
+    // keep only known string fields, whatever is stored
+    const draft = { ...initialValues };
+    (Object.keys(initialValues) as (keyof FormValues)[]).forEach((key) => {
+      if (typeof values?.[key] === "string") draft[key] = values[key];
+    });
+    return draft;
+  } catch {
+    return initialValues;
+  }
+};
+
+const saveDraft = (values: FormValues) => {
+  try {
+    const isEmpty = (Object.keys(values) as (keyof FormValues)[]).every(
+      (key) => values[key] === initialValues[key],
+    );
+    if (isEmpty) localStorage.removeItem(DRAFT_KEY);
+    else
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ values, savedAt: Date.now() }),
+      );
+  } catch {
+    // storage blocked (private mode): the form just is not restored
+  }
+};
+
 /** Labels in the translations end with ":"; drop it so every label in the form looks the same */
 const label = (text: string) => text.replace(/:\s*$/, "");
 
@@ -99,6 +146,13 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   // the same on the server); until then the form shows a notice above it
   const needsAccount = !isProfileLoading && !user?.isVerified;
   const noticeRef = useRef<HTMLDivElement>(null);
+  // read once: Formik only uses initialValues on mount
+  const [draft] = useState(loadDraft);
+  // a restored draft already holds the visitor's latest choice: the preset
+  // they clicked before going to sign in must not overwrite it
+  const skipPresetNonce = useRef(
+    draft !== initialValues ? preset?.nonce : undefined,
+  );
   const { data: freeSlots = [] } = useFreeSlots();
   // Without published times (or if they fail to load) the form asks for a
   // preferred date and part of the day, as before
@@ -125,6 +179,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   // Preselect a service when the visitor clicks "Book" on a price card
   useEffect(() => {
     if (!preset || !formikRef.current) return;
+    if (preset.nonce === skipPresetNonce.current) return;
     formikRef.current.setValues(
       {
         ...formikRef.current.values,
@@ -232,7 +287,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   return (
     <Formik
       innerRef={formikRef}
-      initialValues={initialValues}
+      initialValues={draft}
       validate={validate}
       // Not on blur: tapping "Send" blurs the last field, and errors appearing
       // or disappearing at that moment shift the button so the tap is lost
@@ -244,6 +299,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
         <FormStyled name="connection-form" noValidate>
           <ScrollToFirstError />
           <DropTakenSlot slots={freeSlots} />
+          <SaveDraft />
           {user?.role === "admin" && (
             <AdminLink to="/admin/schedule" onClick={onClose}>
               <CalendarClock size={18} aria-hidden />
@@ -513,50 +569,48 @@ const AccountNotice = forwardRef<HTMLDivElement, { email?: string }>(
 
     if (!email) {
       return (
-        <GateBox ref={ref}>
-          <LogIn size={28} aria-hidden />
-          <div>
-            <p>{t("booking_login_hint")}</p>
-            <GateActions>
-              <GateLink to="/auth" state={authState}>
-                {t("auth_action")}
-              </GateLink>
-            </GateActions>
-          </div>
-        </GateBox>
+        <NoticeBox ref={ref}>
+          <p>{t("booking_login_hint")}</p>
+          <NoticeLink to="/auth" state={authState}>
+            <LogIn size={16} aria-hidden />
+            {t("login_action")}
+          </NoticeLink>
+        </NoticeBox>
       );
     }
 
     return (
-      <GateBox ref={ref} role="status">
-        <MailCheck size={28} aria-hidden />
-        <div>
-          <p>{t("booking_verify_hint", { email })}</p>
-          <Hint>{t("check_spam_folder")}</Hint>
-          {resend.isSuccess && <Hint>{t("confirmation_resent")}</Hint>}
+      <NoticeBox ref={ref} role="status">
+        <NoticeText>
+          <span>{t("booking_verify_hint", { email })}</span>
+          <small>
+            {resend.isSuccess
+              ? t("confirmation_resent")
+              : t("check_spam_folder")}
+          </small>
           {(resend.isError || recheck.isError) && (
             <FieldError role="alert">{t("auth_error")}</FieldError>
           )}
-          <GateActions>
-            <GateButton
+        </NoticeText>
+        <NoticeActions>
+          {!resend.isSuccess && (
+            <NoticeTextButton
               type="button"
-              onClick={() => recheck.mutate()}
-              disabled={recheck.isPending}
+              onClick={() => resend.mutate({ email })}
+              disabled={resend.isPending}
             >
-              {t("email_confirmed_recheck")}
-            </GateButton>
-            {!resend.isSuccess && (
-              <GateSecondaryButton
-                type="button"
-                onClick={() => resend.mutate({ email })}
-                disabled={resend.isPending}
-              >
-                {t("resend_confirmation")}
-              </GateSecondaryButton>
-            )}
-          </GateActions>
-        </div>
-      </GateBox>
+              {t("resend_confirmation")}
+            </NoticeTextButton>
+          )}
+          <NoticeButton
+            type="button"
+            onClick={() => recheck.mutate()}
+            disabled={recheck.isPending}
+          >
+            {t("email_confirmed_recheck")}
+          </NoticeButton>
+        </NoticeActions>
+      </NoticeBox>
     );
   },
 );
@@ -586,6 +640,13 @@ const ScrollToFirstError: FC = () => {
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [submitCount, isSubmitting, isValid, errors]);
 
+  return null;
+};
+
+/** Keeps the unsent form in storage; an emptied (sent) form removes it */
+const SaveDraft: FC = () => {
+  const { values } = useFormikContext<FormValues>();
+  useEffect(() => saveDraft(values), [values]);
   return null;
 };
 
@@ -676,84 +737,6 @@ const FormStyled = styled(Form)`
 
   @media screen and (min-width: 600px) {
     gap: var(--space-5);
-  }
-`;
-
-const GateBox = styled.div<{ theme?: ThemeType }>`
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: ${(props) => props.theme.colors.text};
-  line-height: 1.5;
-
-  & > svg {
-    flex-shrink: 0;
-    color: var(--color-primary);
-  }
-
-  & > div {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    min-width: 0;
-  }
-
-  p {
-    overflow-wrap: anywhere;
-  }
-`;
-
-const GateActions = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-`;
-
-const gateButtonStyles = `
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 10px 20px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-primary);
-  color: #fff;
-  font-weight: 700;
-  text-decoration: none;
-
-  &:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: wait;
-  }
-`;
-
-const GateButton = styled.button`
-  ${gateButtonStyles}
-`;
-
-const GateLink = styled(Link)`
-  ${gateButtonStyles}
-`;
-
-const GateSecondaryButton = styled.button`
-  padding: 6px 0;
-  color: var(--color-primary);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: wait;
   }
 `;
 

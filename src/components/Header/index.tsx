@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { Link, NavLink } from "react-router-dom";
 
-import { CalendarCheck, UserRound } from "lucide-react";
+import { UserRound } from "lucide-react";
 
 import styled from "@emotion/styled";
 
@@ -15,7 +15,7 @@ import { ThemeButton } from "../ThemeButton";
 
 import { useProfile } from "../../hooks/useAuth";
 import { useAuthLinkState } from "../../hooks/useAuthReturn";
-import { UserAvatar } from "../UserAvatar";
+import { UserMenu } from "./UserMenu";
 import { useBooking } from "../../context/BookingContext";
 
 import { ThemeType } from "../../theme/theme";
@@ -111,13 +111,7 @@ export const Header: React.FC<HeaderPropsType> = ({
               />
             </IconTile>
             {user ? (
-              <IconTileLink
-                to="/profile"
-                aria-label={t("profile_title")}
-                title={t("profile_title")}
-              >
-                <UserAvatar user={user} size={32} />
-              </IconTileLink>
+              <UserMenu user={user} />
             ) : (
               <IconTileLink
                 to="/auth"
@@ -128,7 +122,6 @@ export const Header: React.FC<HeaderPropsType> = ({
               </IconTileLink>
             )}
             <CtaButton type="button" onClick={() => startBooking()}>
-              <CalendarCheck size={18} aria-hidden />
               {t("bookNow")}
             </CtaButton>
           </ButtonContainer>

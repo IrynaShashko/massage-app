@@ -10,6 +10,7 @@ import BookNow from "../../components/BookNow";
 import { SectionHeading } from "../../components/SectionHeading";
 import { Glow, GlowSection } from "../../components/SectionHeading/Glow";
 
+import { NoticeBox, NoticeButton } from "../../components/AuthNotice";
 import { useModal } from "../../context/ModalContext";
 import { cardSurface, cardTitle, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
@@ -304,13 +305,13 @@ const ReviewsPage = ({ language }: { language: string }) => {
               <CardTitle>{t("leave_review")}</CardTitle>
 
               {!isAuthenticated && (
-                <LoginHint>
+                <NoticeBox>
                   <p>{t("review_login_hint")}</p>
-                  <LoginButton type="button" onClick={() => openModal()}>
-                    <LogIn size={18} aria-hidden />
+                  <NoticeButton type="button" onClick={() => openModal()}>
+                    <LogIn size={16} aria-hidden />
                     {t("login_action")}
-                  </LoginButton>
-                </LoginHint>
+                  </NoticeButton>
+                </NoticeBox>
               )}
 
               <Field>
@@ -490,33 +491,6 @@ const ShowMoreCount = styled.span`
   background: color-mix(in srgb, var(--color-primary) 14%, transparent);
   color: var(--color-primary);
   font-size: var(--text-sm);
-`;
-
-const LoginHint = styled.div<{ theme?: ThemeType }>`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: ${(props) => props.theme.colors.text};
-  line-height: 1.5;
-`;
-
-const LoginButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 10px 20px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-primary);
-  color: #fff;
-  font-weight: 700;
-
-  &:hover {
-    background-color: var(--color-primary-hover);
-  }
 `;
 
 const Layout = styled.div`
