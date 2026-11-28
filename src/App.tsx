@@ -1,7 +1,6 @@
 import { ThemeProvider } from "@emotion/react";
 import styled from "@emotion/styled";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MotionConfig } from "framer-motion";
 
 import { FC, lazy, Suspense, useEffect, useState } from "react";
@@ -25,8 +24,6 @@ import { ModalProvider } from "./context/ModalContext";
 import { useAuthListener } from "./hooks/useAuth";
 import { useAuthReturnRedirect } from "./hooks/useAuthReturn";
 import { ScrollToTop } from "./utils/ScrollToTop";
-
-const queryClient = new QueryClient();
 
 export const App: FC = () => {
   const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -104,7 +101,7 @@ export const App: FC = () => {
   }, [isDarkMode]);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <ThemeProvider theme={theme}>
         <GlobalStyle />
         <MotionConfig reducedMotion="user">
@@ -194,7 +191,7 @@ export const App: FC = () => {
           </ContentContainer>
         </MotionConfig>
       </ThemeProvider>
-    </QueryClientProvider>
+    </>
   );
 };
 
