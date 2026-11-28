@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { supabase } from "../lib/supabase";
+import { clearDrafts } from "../utils/draft";
 
 export interface RegisterVariables {
   name: string;
@@ -190,6 +191,7 @@ export const useLogout = () => {
       check(await supabase.auth.signOut());
     },
     onSettled: () => {
+      clearDrafts();
       queryClient.clear();
       window.location.href = "/";
     },

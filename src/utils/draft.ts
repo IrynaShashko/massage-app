@@ -5,6 +5,17 @@
  */
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
+export const BOOKING_DRAFT_KEY = "booking_draft";
+export const REVIEW_DRAFT_KEY = "review_draft";
+
+/**
+ * Removes every form draft. Called on logout, so the next person on a shared
+ * computer does not see someone else's name, phone or review.
+ */
+export const clearDrafts = () => {
+  [BOOKING_DRAFT_KEY, REVIEW_DRAFT_KEY].forEach((key) => saveDraft(key, null));
+};
+
 /** The saved draft, or null when there is none or it is older than a day */
 export const loadDraft = (key: string): Record<string, unknown> | null => {
   try {

@@ -12,7 +12,7 @@ import { Glow, GlowSection } from "../../components/SectionHeading/Glow";
 
 import { NoticeBox, NoticeButton } from "../../components/AuthNotice";
 import { useModal } from "../../context/ModalContext";
-import { loadDraft, saveDraft } from "../../utils/draft";
+import { loadDraft, REVIEW_DRAFT_KEY, saveDraft } from "../../utils/draft";
 import { cardSurface, cardTitle, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
@@ -43,7 +43,7 @@ const pluralForm = (n: number, language: string) => {
   return rule === "one" ? "one" : rule === "few" ? "few" : "many";
 };
 
-const DRAFT_KEY = "review_draft";
+const DRAFT_KEY = REVIEW_DRAFT_KEY;
 
 const loadReviewDraft = () => {
   const stored = loadDraft(DRAFT_KEY);

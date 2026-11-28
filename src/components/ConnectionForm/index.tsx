@@ -48,7 +48,7 @@ import {
   NoticeTextButton,
 } from "../AuthNotice";
 import { DatePicker } from "../DatePicker";
-import { loadDraft, saveDraft } from "../../utils/draft";
+import { BOOKING_DRAFT_KEY, loadDraft, saveDraft } from "../../utils/draft";
 
 import { ConnectionFormPropsType } from "./types";
 
@@ -85,7 +85,7 @@ const initialValues: FormValues = {
   slotId: "",
 };
 
-const DRAFT_KEY = "booking_draft";
+const DRAFT_KEY = BOOKING_DRAFT_KEY;
 
 /** The unsent form, restored after a trip to sign in */
 const loadFormDraft = (): FormValues => {
