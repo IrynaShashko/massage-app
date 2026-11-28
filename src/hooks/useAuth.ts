@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
-import api from "../api/axios";
+import { supabase } from "../lib/supabase";
 
 export interface RegisterVariables {
   name: string;
@@ -17,88 +18,125 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role: "user" | "admin";
   isVerified?: boolean;
   createdAt?: string;
 }
 
-export interface GoogleLoginVariables {
-  idToken: string;
-}
+const PROFILE_KEY = ["profile"];
 
-export const useLogin = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<User, Error, LoginVariables>({
-    mutationFn: async (credentials) => {
-      const { data } = await api.post("/api/auth/login", credentials);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-    },
-    onError: (err: any) => {
-      console.error("Login error:", err.response?.data || err);
-    },
-  });
+/** Throws Supabase errors so react-query puts them in `error` */
+const check = <R extends { error: unknown }>(result: R): R => {
+  if (result.error) throw result.error;
+  return result;
 };
 
-export const useGoogleLoginMutation = () => {
-  const queryClient = useQueryClient();
+/** The signed-in user with their profile row, or null for guests */
+const fetchProfile = async (): Promise<User | null> => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const authUser = session?.user;
+  if (!authUser) return null;
 
-  return useMutation<any, Error, GoogleLoginVariables>({
-    mutationFn: async ({ idToken }) => {
-      const { data } = await api.post("/api/auth/google", { idToken });
-      return data;
-    },
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-    },
-    onError: (err: any) => {
-      console.error("Google login error:", err.response?.data || err);
-    },
-  });
+  const { data: profile } = check(
+    await supabase
+      .from("profiles")
+      .select("name, role, created_at")
+      .eq("id", authUser.id)
+      .maybeSingle(),
+  );
+
+  return {
+    id: authUser.id,
+    email: authUser.email ?? "",
+    name: profile?.name ?? "",
+    role: profile?.role === "admin" ? "admin" : "user",
+    isVerified: !!authUser.email_confirmed_at,
+    createdAt: profile?.created_at,
+  };
 };
 
-export const useRegister = () => {
-  return useMutation<User, Error, RegisterVariables>({
-    mutationFn: async (userData: RegisterVariables) => {
-      const { data } = await api.post("/api/auth/register", userData);
-      return data;
-    },
-    onError: (err: any) => {
-      console.error("Register error:", err.response?.data || err);
-    },
-  });
-};
-
-export const useProfile = () => {
-  return useQuery({
-    queryKey: ["profile"],
-    queryFn: () => api.get("/api/auth/profile").then((res) => res.data),
+export const useProfile = () =>
+  useQuery({
+    queryKey: PROFILE_KEY,
+    queryFn: fetchProfile,
     retry: false,
+    staleTime: 5 * 60 * 1000,
   });
+
+export const useIsAdmin = () => useProfile().data?.role === "admin";
+
+/**
+ * Refetches the profile whenever Supabase signs a user in or out, including
+ * the return from Google and from the email confirmation link.
+ * Mount once, inside QueryClientProvider.
+ */
+export const useAuthListener = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "TOKEN_REFRESHED") return;
+      // run outside the auth callback: calling supabase inside it can deadlock
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: PROFILE_KEY });
+        queryClient.invalidateQueries({ queryKey: ["articles"] });
+      }, 0);
+    });
+    return () => subscription.unsubscribe();
+  }, [queryClient]);
 };
+
+export const useLogin = () =>
+  useMutation<void, Error, LoginVariables>({
+    mutationFn: async ({ email, password }) => {
+      check(await supabase.auth.signInWithPassword({ email, password }));
+    },
+  });
+
+export const useRegister = () =>
+  useMutation<void, Error, RegisterVariables>({
+    mutationFn: async ({ name, email, password }) => {
+      check(
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name },
+            emailRedirectTo: window.location.origin,
+          },
+        }),
+      );
+    },
+  });
+
+export const useGoogleLogin = () =>
+  useMutation<void, Error, void>({
+    mutationFn: async () => {
+      check(
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: window.location.origin },
+        }),
+      );
+    },
+  });
 
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<User, Error, { name: string }>({
-    mutationFn: async (data) => {
-      const res = await api.put("/api/auth/profile", data);
-      return res.data;
+  return useMutation<void, Error, { name: string }>({
+    mutationFn: async ({ name }) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not signed in");
+      check(await supabase.from("profiles").update({ name }).eq("id", user.id));
     },
-    onSuccess: (updatedUser) => {
-      queryClient.setQueryData(["profile"], updatedUser);
-    },
-  });
-};
-
-export const useVerifyEmail = (token: string) => {
-  return useQuery({
-    queryKey: ["verify-email", token],
-    queryFn: () =>
-      api.get(`/api/auth/verify-email/${token}`).then((res) => res.data),
-    enabled: !!token,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: PROFILE_KEY }),
   });
 };
 
@@ -107,35 +145,11 @@ export const useLogout = () => {
 
   return useMutation({
     mutationFn: async () => {
-      return api.post("/api/auth/logout");
+      check(await supabase.auth.signOut());
     },
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.clear();
       window.location.href = "/";
     },
-    onError: (error) => {
-      console.error("Logout failed:", error);
-      queryClient.clear();
-    },
-  });
-};
-
-export const useForgotPassword = () => {
-  return useMutation({
-    mutationFn: (data) => api.post("/api/auth/forgot-password", data),
-  });
-};
-
-export const useBookService = () => {
-  return useMutation({
-    mutationFn: (bookingData) => api.post("/api/book-service", bookingData),
-  });
-};
-
-export const useHealthCheck = () => {
-  return useQuery({
-    queryKey: ["health"],
-    queryFn: () => api.get("/api/auth/health").then((res) => res.data),
-    refetchInterval: 60000,
   });
 };

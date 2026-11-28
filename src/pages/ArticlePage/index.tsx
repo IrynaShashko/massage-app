@@ -1,7 +1,8 @@
 import styled from "@emotion/styled";
-import { HeartPulse, HelpCircle, Sparkles } from "lucide-react";
+import { ChevronDown, Settings2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import lady from "../../images/lady.png";
 
@@ -9,18 +10,32 @@ import { SectionContainer } from "../../App";
 import BookNow from "../../components/BookNow";
 import { SectionHeading } from "../../components/SectionHeading";
 import { Glow, GlowSection } from "../../components/SectionHeading/Glow";
+import { articleIcon } from "../../config/articleIcons";
+import { useIsAdmin } from "../../hooks/useAuth";
+import { localized, useArticles } from "../../hooks/useArticles";
 
 import { cardSurface, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
-const ARTICLES = [
-  { to: "/article/questions", key: "questions", Icon: HelpCircle },
-  { to: "/article/health", key: "health", Icon: HeartPulse },
-  { to: "/article/expectation", key: "expectation", Icon: Sparkles },
-];
-
 const ArticlePage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
+  const isAdmin = useIsAdmin();
+  // articles added in the admin panel; visitors only receive published ones
+  const { data: articles = [] } = useArticles();
+
+  // On phones the list is a collapsed picker showing the open article, so a
+  // long list never pushes the article itself off screen
+  const { pathname } = useLocation();
+  const [isListOpen, setIsListOpen] = useState(false);
+  useEffect(() => setIsListOpen(false), [pathname]);
+
+  const slug = pathname.split("/")[2];
+  const current =
+    articles.find((a) => a.slug === slug) ?? (slug ? undefined : articles[0]);
+  const CurrentIcon = articleIcon(current?.icon);
+  const titleOf = (article: (typeof articles)[number]) =>
+    // some titles end with a full stop
+    localized(article, language).title.replace(/\.$/, "");
 
   return (
     <>
@@ -35,21 +50,59 @@ const ArticlePage = ({ language }: { language: string }) => {
           <Layout>
             <Sidebar>
               <Illustration src={lady} alt="" aria-hidden />
-              <nav aria-label={t("article_button")}>
+              <PickerButton
+                type="button"
+                aria-expanded={isListOpen}
+                aria-controls="article-list"
+                onClick={() => setIsListOpen((open) => !open)}
+              >
+                <LinkIcon aria-hidden>
+                  <CurrentIcon size={20} />
+                </LinkIcon>
+                <PickerText>
+                  <PickerHint>
+                    {t("article_button")} · {articles.length}
+                  </PickerHint>
+                  <span>
+                    {current ? titleOf(current) : t("article_button")}
+                  </span>
+                </PickerText>
+                <Chevron $open={isListOpen} size={22} aria-hidden />
+              </PickerButton>
+              <ListPanel
+                id="article-list"
+                aria-label={t("article_button")}
+                $open={isListOpen}
+              >
                 <ArticleList>
-                  {ARTICLES.map(({ to, key, Icon }) => (
-                    <li key={to}>
-                      <ArticleLink to={to}>
+                  {articles.map((article) => {
+                    const Icon = articleIcon(article.icon);
+                    return (
+                      <li key={article.id}>
+                        <ArticleLink to={`/article/${article.slug}`}>
+                          <LinkIcon aria-hidden>
+                            <Icon size={20} />
+                          </LinkIcon>
+                          <span>
+                            {titleOf(article)}
+                            {!article.published && ` (${t("admin_draft")})`}
+                          </span>
+                        </ArticleLink>
+                      </li>
+                    );
+                  })}
+                  {isAdmin && (
+                    <li>
+                      <ArticleLink to="/admin/articles">
                         <LinkIcon aria-hidden>
-                          <Icon size={20} />
+                          <Settings2 size={20} />
                         </LinkIcon>
-                        {/* titles in the translations end with a full stop */}
-                        <span>{t(key).replace(/\.$/, "")}</span>
+                        <span>{t("admin_articles")}</span>
                       </ArticleLink>
                     </li>
-                  ))}
+                  )}
                 </ArticleList>
-              </nav>
+              </ListPanel>
             </Sidebar>
 
             <Content>
@@ -82,9 +135,71 @@ const Sidebar = styled.aside<{ theme?: ThemeType }>`
   padding: var(--sidebar-pad);
   overflow: hidden;
 
+  @media screen and (max-width: 899px) {
+    --sidebar-pad: var(--space-2);
+  }
+
+  /* a long list scrolls inside the sticky card instead of being cut off */
   @media screen and (min-width: 900px) {
     position: sticky;
     top: calc(var(--header-height) + var(--space-5));
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - var(--header-height) - 2 * var(--space-5));
+  }
+`;
+
+const PickerButton = styled.button<{ theme?: ThemeType }>`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  color: ${(props) => props.theme.colors.text};
+  text-align: left;
+
+  @media screen and (min-width: 900px) {
+    display: none;
+  }
+`;
+
+const PickerText = styled.span`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  line-height: 1.3;
+`;
+
+const PickerHint = styled.span`
+  font-size: var(--text-sm);
+  font-weight: 500;
+  opacity: 0.65;
+`;
+
+const Chevron = styled(ChevronDown, {
+  shouldForwardProp: (prop) => prop !== "$open",
+})<{ $open: boolean }>`
+  flex-shrink: 0;
+  opacity: 0.7;
+  transform: rotate(${(props) => (props.$open ? "180deg" : "0deg")});
+  transition: transform 0.2s ease;
+`;
+
+const ListPanel = styled.nav<{ $open: boolean }>`
+  @media screen and (max-width: 899px) {
+    display: ${(props) => (props.$open ? "block" : "none")};
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--surface-border);
+  }
+
+  @media screen and (min-width: 900px) {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
 `;
 
@@ -92,6 +207,7 @@ const Sidebar = styled.aside<{ theme?: ThemeType }>`
    border: the cut then reads as the card edge rather than a clipped picture */
 const Illustration = styled.img`
   display: block;
+  flex-shrink: 0;
   width: calc(100% + var(--sidebar-pad));
   max-width: none;
   height: auto;

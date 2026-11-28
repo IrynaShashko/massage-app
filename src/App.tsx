@@ -5,12 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MotionConfig } from "framer-motion";
 
 import { FC, lazy, Suspense, useEffect, useState } from "react";
-import {
-  Navigate,
-  Route,
-  BrowserRouter as Router,
-  Routes,
-} from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import i18n from "./i18n";
 
 import GlobalStyle from "./theme/GlobalStyle";
@@ -27,6 +22,7 @@ import {
 } from "./components/MobileBookingBar";
 import { BookingProvider } from "./context/BookingContext";
 import { ModalProvider } from "./context/ModalContext";
+import { useAuthListener } from "./hooks/useAuth";
 import { ScrollToTop } from "./utils/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -37,11 +33,16 @@ export const App: FC = () => {
   const PricePage = lazy(() => import("./pages/PricePage"));
   const ReviewsPage = lazy(() => import("./pages/ReviewsPage"));
   const ArticlePage = lazy(() => import("./pages/ArticlePage"));
-  const Questions = lazy(() => import("./components/Questions"));
-  const Health = lazy(() => import("./components/Health"));
-  const Expectation = lazy(() => import("./components/Expectation"));
   const AuthPage = lazy(() => import("./pages/AuthPage"));
-  const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+  const DynamicArticle = lazy(
+    () => import("./pages/ArticlePage/DynamicArticle"),
+  );
+  const AdminArticlesPage = lazy(() => import("./pages/AdminArticlesPage"));
+  const ArticleEditorPage = lazy(
+    () => import("./pages/AdminArticlesPage/Editor"),
+  );
+
+  useAuthListener();
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -120,10 +121,6 @@ export const App: FC = () => {
                         />
                         <Route path="/auth" element={<AuthPage />} />
                         <Route
-                          path="/api/auth/verify-email/:token"
-                          element={<VerifyEmailPage />}
-                        />
-                        <Route
                           path="/about"
                           element={<AboutPage language={language} />}
                         />
@@ -141,21 +138,25 @@ export const App: FC = () => {
                         >
                           <Route
                             index
-                            element={<Navigate to="questions" replace />}
+                            element={<DynamicArticle language={language} />}
                           />
                           <Route
-                            path="questions"
-                            element={<Questions language={language} />}
-                          />
-                          <Route
-                            path="health"
-                            element={<Health language={language} />}
-                          />
-                          <Route
-                            path="expectation"
-                            element={<Expectation language={language} />}
+                            path=":slug"
+                            element={<DynamicArticle language={language} />}
                           />
                         </Route>
+                        <Route
+                          path="/admin/articles"
+                          element={<AdminArticlesPage />}
+                        />
+                        <Route
+                          path="/admin/articles/new"
+                          element={<ArticleEditorPage />}
+                        />
+                        <Route
+                          path="/admin/articles/:id"
+                          element={<ArticleEditorPage />}
+                        />
                       </Routes>
                     </Suspense>
                   </main>

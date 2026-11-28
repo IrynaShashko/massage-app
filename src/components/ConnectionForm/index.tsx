@@ -69,9 +69,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
 }) => {
   const [t] = useTranslation();
   const { data: user } = useProfile();
-  const { mutate, isPending, isError } = useCreateBooking({
-    isAuthenticated: !!user,
-  });
+  const { mutate, isPending, isError } = useCreateBooking();
   const { preset } = useBooking();
 
   const [isSuccess, setIsSuccess] = useState(false);

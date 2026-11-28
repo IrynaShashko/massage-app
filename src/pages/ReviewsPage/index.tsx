@@ -157,10 +157,8 @@ const ReviewsPage = ({ language }: { language: string }) => {
         await updateProfileMutation.mutateAsync({ name: newReview.name });
       }
       await createReviewMutation.mutateAsync({
-        name: newReview.name,
         comment: newReview.comment,
         rating: newReview.rating,
-        userId: user?.id || "",
       });
       setNewReview({
         name: newReview.name,

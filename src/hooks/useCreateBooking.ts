@@ -1,5 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "../api/axios";
+import { useMutation } from "@tanstack/react-query";
 
 export interface CreateBookingInput {
   name: string;
@@ -33,36 +32,11 @@ const submitToNetlify = async (booking: CreateBookingInput) => {
   }
 };
 
-/**
- * The backend only accepts bookings from signed-in users, so guests go
- * through Netlify Forms. A signed-in booking that the backend rejects
- * (e.g. an expired session) falls back to Netlify too, so no request is lost.
- */
-export const useCreateBooking = ({
-  isAuthenticated,
-}: {
-  isAuthenticated: boolean;
-}) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (booking: CreateBookingInput) => {
-      if (isAuthenticated) {
-        try {
-          const response = await api.post("/api/book-service", booking);
-          return response.data;
-        } catch (error) {
-          console.warn("Backend booking failed, using Netlify Forms", error);
-        }
-      }
-      await submitToNetlify(booking);
-      return null;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-    },
-    onError: (error: any) => {
-      console.error("Booking failed:", error.response?.data || error.message);
+/** Bookings go to Netlify Forms, which emails each one to the site owner */
+export const useCreateBooking = () =>
+  useMutation({
+    mutationFn: submitToNetlify,
+    onError: (error: Error) => {
+      console.error("Booking failed:", error.message);
     },
   });
-};

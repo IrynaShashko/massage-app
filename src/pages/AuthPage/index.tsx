@@ -9,12 +9,7 @@ import styled from "@emotion/styled";
 
 import { useModal } from "../../context/ModalContext";
 
-import { useGoogleLogin } from "@react-oauth/google";
-import {
-  useGoogleLoginMutation,
-  useLogin,
-  useRegister,
-} from "../../hooks/useAuth";
+import { useGoogleLogin, useLogin, useRegister } from "../../hooks/useAuth";
 import { isGoogleAuthEnabled } from "../../config/google";
 import googleIcon from "../../icons/google.svg";
 import { cardSurface } from "../../theme/surfaces";
@@ -37,7 +32,7 @@ const AuthPage: React.FC = () => {
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
-  const googleMutation = useGoogleLoginMutation();
+  const googleMutation = useGoogleLogin();
 
   const { closeModal } = useModal();
 
@@ -72,19 +67,9 @@ const AuthPage: React.FC = () => {
   };
 
   const isLoading = loginMutation.isPending || registerMutation.isPending;
-  const error = isLogin ? loginMutation.error : registerMutation.error;
-
-  const handleGoogleToken = (accessToken: string) => {
-    googleMutation.mutate(
-      { idToken: accessToken },
-      {
-        onSuccess: () => {
-          closeModal();
-          navigate("/");
-        },
-      },
-    );
-  };
+  const error =
+    (isLogin ? loginMutation.error : registerMutation.error) ||
+    googleMutation.error;
 
   return (
     <FullPageSection>
@@ -154,13 +139,7 @@ const AuthPage: React.FC = () => {
                   </PasswordWrapper>
                 </InputGroup>
 
-                {error && (
-                  <ErrorMessage>
-                    {(error as any)?.response?.data?.error ||
-                      (error as any)?.response?.data?.message ||
-                      t("auth_error")}
-                  </ErrorMessage>
-                )}
+                {error && <ErrorMessage>{t("auth_error")}</ErrorMessage>}
 
                 <SubmitButton type="submit" disabled={isLoading}>
                   {isLoading
@@ -176,10 +155,15 @@ const AuthPage: React.FC = () => {
                   <Divider>
                     <span>{t("or") || "або"}</span>
                   </Divider>
-                  <GoogleSignInButton
-                    label={isLogin ? t("signin_with") : t("signup_with")}
-                    onToken={handleGoogleToken}
-                  />
+                  {/* redirects to Google and back; useAuthListener picks up the session */}
+                  <CustomGoogleButton
+                    type="button"
+                    onClick={() => googleMutation.mutate()}
+                    disabled={googleMutation.isPending}
+                  >
+                    <img src={googleIcon} alt="" aria-hidden />
+                    {isLogin ? t("signin_with") : t("signup_with")}
+                  </CustomGoogleButton>
                 </>
               )}
 
@@ -204,27 +188,6 @@ const AuthPage: React.FC = () => {
 };
 
 export default AuthPage;
-
-/**
- * Lives in its own component so useGoogleLogin only runs when Google sign-in
- * is configured (the hook needs GoogleOAuthProvider with a client id).
- */
-const GoogleSignInButton: React.FC<{
-  label: string;
-  onToken: (accessToken: string) => void;
-}> = ({ label, onToken }) => {
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: (tokenResponse) => onToken(tokenResponse.access_token),
-    onError: (error) => console.error("Google Login Failed:", error),
-  });
-
-  return (
-    <CustomGoogleButton type="button" onClick={() => loginWithGoogle()}>
-      <img src={googleIcon} alt="" aria-hidden />
-      {label}
-    </CustomGoogleButton>
-  );
-};
 
 const Message = styled.div<{ theme?: ThemeType }>`
   padding: var(--space-4);

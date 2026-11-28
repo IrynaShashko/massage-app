@@ -1,4 +1,4 @@
-import { User } from "firebase/auth";
+import { User } from "../../hooks/useAuth";
 
 export interface MenuPropsType {
   darkMode: boolean;

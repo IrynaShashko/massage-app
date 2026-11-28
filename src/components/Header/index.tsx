@@ -139,7 +139,7 @@ export const Header: React.FC<HeaderPropsType> = ({
             darkMode={darkMode}
             themeToggle={themeToggle}
             isAuthenticated={isAuthenticated}
-            user={user}
+            user={user ?? null}
           />
         </MenuWrapper>
       </StyledSectionContainer>
