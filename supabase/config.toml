@@ -1,0 +1,5 @@
+# Only the settings this repo relies on; the rest stay at Supabase defaults.
+
+[functions.booking-telegram]
+# Called from the site with the publishable key, which is not a JWT
+verify_jwt = false

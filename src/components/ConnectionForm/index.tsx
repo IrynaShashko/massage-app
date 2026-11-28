@@ -136,6 +136,11 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
         email: user?.email || "",
         comment: details.join("\n"),
         service: `${t(values.service)} - ${values.subService}`,
+        details: {
+          date: values.date || undefined,
+          time: values.time ? t(values.time) : undefined,
+          note: values.text.trim() || undefined,
+        },
       },
       {
         onSuccess: () => {
