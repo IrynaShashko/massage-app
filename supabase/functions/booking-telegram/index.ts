@@ -6,6 +6,15 @@
 //
 // Deploy without JWT verification: the site calls it with the publishable
 // key, which is not a JWT. Abuse is limited by the checks below instead.
+//
+// When the request carries a slotId, the slot is first held in the database
+// (book_slot, migration 0007) with the service role key that Supabase gives
+// every function. A taken slot answers 409 { error: "slot_unavailable" }.
+// Its message gets "Confirm / Decline" buttons, handled by telegram-webhook,
+// and the answer carries telegramLink: t.me/<bot>?start=<token>, which the
+// site offers the client to get the confirmation in Telegram.
+
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const MAX = {
   name: 80,
@@ -47,6 +56,67 @@ const escapeHtml = (text: string) =>
 
 const field = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type HeldSlot = {
+  bookingId: string;
+  telegramToken: string;
+  date: string;
+  time: string;
+};
+
+/** Holds the slot; returns the booking and the slot's date and "HH:MM", or null when it is taken */
+const bookSlot = async (
+  slotId: string,
+  booking: Record<string, string>,
+): Promise<HeldSlot | null> => {
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false } },
+  );
+  const { data, error } = await supabase
+    .rpc("book_slot", {
+      p_slot_id: slotId,
+      p_name: booking.name,
+      p_phone: booking.phone,
+      p_email: booking.email,
+      p_service: booking.service,
+      p_note: booking.note,
+      p_lang: booking.lang,
+    })
+    .single<{
+      booking_id: string;
+      telegram_token: string;
+      day: string;
+      time: string;
+    }>();
+  if (error) {
+    if (error.message.includes("slot_unavailable")) return null;
+    throw error;
+  }
+  return {
+    bookingId: data.booking_id,
+    telegramToken: data.telegram_token,
+    date: data.day,
+    time: data.time.slice(0, 5),
+  };
+};
+
+/** The bot's @username, for t.me links; asked from Telegram once per instance */
+let botUsername: string | null = null;
+const getBotUsername = async (token: string) => {
+  if (botUsername) return botUsername;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+    const body = await res.json();
+    botUsername = body?.result?.username ?? null;
+  } catch (error) {
+    console.warn("getMe failed", error);
+  }
+  return botUsername;
+};
 
 /** "2026-11-30" -> "пн, 30.11.2026"; anything else is dropped */
 const formatDate = (iso: string) => {
@@ -93,9 +163,11 @@ Deno.serve(async (req) => {
   const email = field(body.email, MAX.email);
   const service = field(body.service, MAX.service);
   const comment = field(body.comment, MAX.comment);
-  const date = formatDate(field(body.date, 10));
-  const time = field(body.time, MAX.time);
+  let date = formatDate(field(body.date, 10));
+  let time = field(body.time, MAX.time);
   const note = field(body.note, MAX.note);
+  const slotId = field(body.slotId, 36);
+  const lang = body.lang === "en" ? "en" : "ua";
   // the site sends date/time/note separately; older pages only send comment
   const hasDetails = "date" in body || "time" in body || "note" in body;
 
@@ -104,16 +176,55 @@ Deno.serve(async (req) => {
     return json(400, { error: "Name and a valid phone are required" });
   }
 
+  if (slotId && !UUID.test(slotId)) {
+    return json(400, { error: "Invalid slot" });
+  }
+
+  // With a slot, the date and time come from the database, not the request
+  let bookingId = "";
+  let telegramToken = "";
+  if (slotId) {
+    let slot: HeldSlot | null;
+    try {
+      slot = await bookSlot(slotId, {
+        name,
+        phone,
+        email,
+        service,
+        note,
+        lang,
+      });
+    } catch (error) {
+      console.error("book_slot failed", error);
+      return json(500, { error: "Could not save the booking" });
+    }
+    if (!slot) return json(409, { error: "slot_unavailable" });
+    date = formatDate(slot.date);
+    time = slot.time;
+    bookingId = slot.bookingId;
+    telegramToken = slot.telegramToken;
+  }
+
   // "" is a blank line between blocks; empty fields are simply not added
   const lines = [
-    "🗓 <b>Нова заявка з сайту</b>",
+    slotId ? "🗓 <b>Новий запис на час</b>" : "🗓 <b>Нова заявка з сайту</b>",
     `👤 <b>Ім'я:</b> ${escapeHtml(name)}`,
     `📞 <b>Телефон:</b> ${escapeHtml(phone)}`,
   ];
   if (service) lines.push(`💆 <b>Послуга:</b> ${escapeHtml(service)}`);
   if (email) lines.push(`✉️ <b>Пошта:</b> ${escapeHtml(email)}`);
 
-  if (hasDetails) {
+  if (slotId) {
+    lines.push(
+      "",
+      `📅 <b>Дата:</b> ${escapeHtml(date)}`,
+      `🕐 <b>Час:</b> ${escapeHtml(time)}`,
+    );
+    if (note) lines.push("", "💬 <b>Коментар:</b>", escapeHtml(note));
+    // Keep this the last line, plain text: telegram-webhook swaps it for the
+    // new status after a button press
+    lines.push("", "⏳ Чекає підтвердження");
+  } else if (hasDetails) {
     if (date || time) lines.push("");
     if (date) lines.push(`📅 <b>Бажана дата:</b> ${escapeHtml(date)}`);
     if (time) lines.push(`🕐 <b>Зручний час:</b> ${escapeHtml(time)}`);
@@ -131,11 +242,33 @@ Deno.serve(async (req) => {
           chat_id: chatId,
           text: lines.join("\n"),
           parse_mode: "HTML",
+          ...(bookingId && {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: "✅ Підтвердити", callback_data: `c:${bookingId}` },
+                  { text: "❌ Відхилити", callback_data: `d:${bookingId}` },
+                ],
+              ],
+            },
+          }),
         }),
       }).then((res) => res.ok),
     ),
   );
 
+  // A held slot is already saved and visible on the admin page, so it counts
+  // as success even if no admin got the message
+  if (slotId) {
+    const username = await getBotUsername(token);
+    return json(200, {
+      ok: true,
+      telegram: results.some(Boolean),
+      telegramLink: username
+        ? `https://t.me/${username}?start=${telegramToken}`
+        : null,
+    });
+  }
   // Success if at least one recipient got it
   if (!results.some(Boolean)) {
     return json(502, { error: "Telegram did not accept the message" });

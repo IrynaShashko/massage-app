@@ -79,6 +79,13 @@ type DatePickerProps = {
   allow?: "future" | "past";
   /** Hide the "clear" actions when a date is required */
   clearable?: boolean;
+  /**
+   * When set, only days it accepts (yyyy-mm-dd) can be picked, e.g. days with
+   * free booking slots. Other days stay focusable for the keyboard but dimmed.
+   */
+  isDateEnabled?: (isoDate: string) => boolean;
+  /** yyyy-mm-dd: the day to open on when nothing is selected */
+  defaultDate?: string;
 };
 
 export const DatePicker: FC<DatePickerProps> = ({
@@ -89,12 +96,16 @@ export const DatePicker: FC<DatePickerProps> = ({
   labels,
   allow = "future",
   clearable = true,
+  isDateEnabled,
+  defaultDate,
 }) => {
   const today = useMemo(() => startOfDay(new Date()), []);
   const selected = fromIsoDate(value);
   const isPastMode = allow === "past";
   const isDisabled = (date: Date) => (isPastMode ? date > today : date < today);
   const clamp = (date: Date) => (isDisabled(date) ? today : date);
+  const isUnavailable = (date: Date) =>
+    !!isDateEnabled && !isDateEnabled(toIsoDate(date));
 
   const [isOpen, setIsOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
@@ -167,7 +178,8 @@ export const DatePicker: FC<DatePickerProps> = ({
       const below = window.innerHeight - rect.bottom;
       setOpenUp(below < POPOVER_HEIGHT && rect.top > below);
     }
-    const start = selected ?? today;
+    const start =
+      selected ?? (defaultDate ? fromIsoDate(defaultDate) : null) ?? today;
     setViewMonth(addMonths(start, 0));
     setFocusedDate(start);
     setIsOpen(true);
@@ -179,6 +191,7 @@ export const DatePicker: FC<DatePickerProps> = ({
   };
 
   const select = (date: Date) => {
+    if (isUnavailable(date)) return;
     onChange(toIsoDate(date));
     close();
   };
@@ -345,6 +358,7 @@ export const DatePicker: FC<DatePickerProps> = ({
                 if (!date) return <span key={`empty-${index}`} />;
                 const isSelected = isSameDay(date, selected);
                 const isFocused = isSameDay(date, focusedDate);
+                const unavailable = !isDisabled(date) && isUnavailable(date);
                 return (
                   <Day
                     key={toIsoDate(date)}
@@ -352,6 +366,7 @@ export const DatePicker: FC<DatePickerProps> = ({
                     role="gridcell"
                     data-date={toIsoDate(date)}
                     disabled={isDisabled(date)}
+                    aria-disabled={unavailable || undefined}
                     tabIndex={isFocused ? 0 : -1}
                     aria-selected={isSelected}
                     aria-current={isSameDay(date, today) ? "date" : undefined}
@@ -380,9 +395,11 @@ export const DatePicker: FC<DatePickerProps> = ({
               ) : (
                 <span />
               )}
-              <TextButton type="button" onClick={() => select(today)}>
-                {labels.today}
-              </TextButton>
+              {!isUnavailable(today) && (
+                <TextButton type="button" onClick={() => select(today)}>
+                  {labels.today}
+                </TextButton>
+              )}
             </Footer>
           </Popover>
         )}
@@ -592,9 +609,14 @@ const Day = styled.button<{
     outline-offset: 1px;
   }
 
-  &:disabled {
+  &:disabled,
+  &[aria-disabled="true"] {
     opacity: 0.28;
     cursor: default;
+  }
+
+  &[aria-disabled="true"]:hover {
+    background-color: transparent;
   }
 `;
 

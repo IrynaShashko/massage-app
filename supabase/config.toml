@@ -3,3 +3,11 @@
 [functions.booking-telegram]
 # Called from the site with the publishable key, which is not a JWT
 verify_jwt = false
+
+[functions.telegram-webhook]
+# Called by Telegram, which sends no JWT; checked by TELEGRAM_WEBHOOK_SECRET
+verify_jwt = false
+
+[functions.booking-status]
+# Checks the caller with is_admin() itself; see the function's header
+verify_jwt = false

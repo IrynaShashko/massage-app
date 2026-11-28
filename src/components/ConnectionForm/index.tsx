@@ -1,9 +1,10 @@
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Plus } from "lucide-react";
+import { CalendarClock, CheckCircle2, Plus, Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import {
   ErrorMessage,
@@ -24,7 +25,11 @@ import { ThemeType } from "../../theme/theme";
 
 import { useBooking } from "../../context/BookingContext";
 import { useProfile } from "../../hooks/useAuth";
-import { useCreateBooking } from "../../hooks/useCreateBooking";
+import {
+  SlotUnavailableError,
+  useCreateBooking,
+} from "../../hooks/useCreateBooking";
+import { FreeSlot, useFreeSlots } from "../../hooks/useSlots";
 
 import { DatePicker } from "../DatePicker";
 
@@ -45,6 +50,8 @@ type FormValues = {
   subService: string;
   date: string;
   time: string;
+  /** a free slot's id, when the admin has published free times */
+  slotId: string;
 };
 
 const CATEGORIES = ["women", "men", "children", "body", "else"] as const;
@@ -58,6 +65,7 @@ const initialValues: FormValues = {
   subService: "",
   date: "",
   time: "",
+  slotId: "",
 };
 
 /** Labels in the translations end with ":"; drop it so every label in the form looks the same */
@@ -69,10 +77,21 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
 }) => {
   const [t] = useTranslation();
   const { data: user } = useProfile();
-  const { mutate, isPending, isError } = useCreateBooking();
+  const { mutate, isPending, isError, error } = useCreateBooking();
   const { preset } = useBooking();
+  const { data: freeSlots = [] } = useFreeSlots();
+  // Without published times (or if they fail to load) the form asks for a
+  // preferred date and part of the day, as before
+  const slotMode = freeSlots.length > 0;
+  const slotDays = useMemo(
+    () => new Set(freeSlots.map((slot) => slot.day)),
+    [freeSlots],
+  );
 
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successWithSlot, setSuccessWithSlot] = useState(false);
+  /** bot link to get the confirmation in Telegram, after booking a slot */
+  const [telegramLink, setTelegramLink] = useState<string | null>(null);
   const [showComment, setShowComment] = useState(false);
   const submitRef = useRef<HTMLButtonElement>(null);
   const formikRef = useRef<FormikProps<FormValues>>(null);
@@ -120,12 +139,16 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
 
   const handleSubmit = (
     values: FormValues,
-    { resetForm }: FormikHelpers<FormValues>,
+    { resetForm, setFieldValue }: FormikHelpers<FormValues>,
   ) => {
+    const slot = slotMode
+      ? freeSlots.find((item) => item.id === values.slotId)
+      : undefined;
+    const timeText = slot ? slot.time : values.time ? t(values.time) : "";
     const details = [
       values.date &&
         `${t("preferred_date")}: ${values.date.split("-").reverse().join(".")}`,
-      values.time && `${t("preferred_time")}: ${t(values.time)}`,
+      timeText && `${t("preferred_time")}: ${timeText}`,
       values.text,
     ].filter(Boolean);
 
@@ -138,12 +161,21 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
         service: `${t(values.service)} - ${values.subService}`,
         details: {
           date: values.date || undefined,
-          time: values.time ? t(values.time) : undefined,
+          time: timeText || undefined,
           note: values.text.trim() || undefined,
+          slotId: slot?.id,
+          lang: language === "en" ? "en" : "ua",
         },
       },
       {
-        onSuccess: () => {
+        onError: (bookingError) => {
+          if (bookingError instanceof SlotUnavailableError) {
+            setFieldValue("slotId", "", false);
+          }
+        },
+        onSuccess: (result) => {
+          setSuccessWithSlot(!!slot);
+          setTelegramLink(result.telegramLink ?? null);
           resetForm();
           setShowComment(false);
           setIsSuccess(true);
@@ -155,7 +187,10 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               }),
             50,
           );
-          window.setTimeout(() => setIsSuccess(false), 8000);
+          // keep the Telegram offer on screen until the client is done with it
+          if (!result.telegramLink) {
+            window.setTimeout(() => setIsSuccess(false), 8000);
+          }
           onClose();
         },
       },
@@ -176,6 +211,13 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
       {({ values, setFieldValue, errors, touched, submitCount }) => (
         <FormStyled name="connection-form" noValidate>
           <ScrollToFirstError />
+          <DropTakenSlot slots={freeSlots} />
+          {user?.role === "admin" && (
+            <AdminLink to="/admin/schedule" onClick={onClose}>
+              <CalendarClock size={18} aria-hidden />
+              {t("admin_schedule")}
+            </AdminLink>
+          )}
           <FormTitle>{t("formTitle")}</FormTitle>
 
           <Fieldset data-field="service">
@@ -225,7 +267,14 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               <DatePicker
                 id="date"
                 value={values.date}
-                onChange={(date) => setFieldValue("date", date, false)}
+                onChange={(date) => {
+                  setFieldValue("date", date, false);
+                  setFieldValue("slotId", "", false);
+                }}
+                isDateEnabled={
+                  slotMode ? (date) => slotDays.has(date) : undefined
+                }
+                defaultDate={slotMode ? freeSlots[0].day : undefined}
                 locale={language === "en" ? "en-GB" : "uk-UA"}
                 labels={{
                   placeholder: t("date_placeholder"),
@@ -236,32 +285,68 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                 }}
               />
             </FormGroup>
-            <Fieldset>
-              <Legend>
-                {t("preferred_time")} <Muted>({t("optional")})</Muted>
-              </Legend>
-              <TimeGrid role="radiogroup">
-                {TIME_SLOTS.map((slot) => (
-                  <Chip
-                    key={slot}
-                    type="button"
-                    role="radio"
-                    $small
-                    aria-checked={values.time === slot}
-                    $active={values.time === slot}
-                    onClick={() =>
-                      setFieldValue(
-                        "time",
-                        values.time === slot ? "" : slot,
-                        false,
-                      )
-                    }
-                  >
-                    {t(slot)}
-                  </Chip>
-                ))}
-              </TimeGrid>
-            </Fieldset>
+            {slotMode ? (
+              <Fieldset>
+                <Legend>
+                  {t("slot_time")} <Muted>({t("optional")})</Muted>
+                </Legend>
+                {slotDays.has(values.date) ? (
+                  <ChipGroup role="radiogroup">
+                    {freeSlots
+                      .filter((slot) => slot.day === values.date)
+                      .map((slot) => (
+                        <Chip
+                          key={slot.id}
+                          type="button"
+                          role="radio"
+                          $small
+                          aria-checked={values.slotId === slot.id}
+                          $active={values.slotId === slot.id}
+                          onClick={() =>
+                            setFieldValue(
+                              "slotId",
+                              values.slotId === slot.id ? "" : slot.id,
+                              false,
+                            )
+                          }
+                        >
+                          {slot.time}
+                        </Chip>
+                      ))}
+                  </ChipGroup>
+                ) : (
+                  <Hint>{t("slot_pick_date_first")}</Hint>
+                )}
+                <Hint>{t("slot_other_time_hint")}</Hint>
+              </Fieldset>
+            ) : (
+              <Fieldset>
+                <Legend>
+                  {t("preferred_time")} <Muted>({t("optional")})</Muted>
+                </Legend>
+                <TimeGrid role="radiogroup">
+                  {TIME_SLOTS.map((slot) => (
+                    <Chip
+                      key={slot}
+                      type="button"
+                      role="radio"
+                      $small
+                      aria-checked={values.time === slot}
+                      $active={values.time === slot}
+                      onClick={() =>
+                        setFieldValue(
+                          "time",
+                          values.time === slot ? "" : slot,
+                          false,
+                        )
+                      }
+                    >
+                      {t(slot)}
+                    </Chip>
+                  ))}
+                </TimeGrid>
+              </Fieldset>
+            )}
           </Row>
 
           <Row>
@@ -331,14 +416,39 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                 <CheckCircle2 size={28} aria-hidden />
                 <div>
                   <strong>{t("thanks_title")}</strong>
-                  <p>{t("thanks_message")}</p>
+                  <p>
+                    {t(
+                      successWithSlot
+                        ? "thanks_message_slot"
+                        : "thanks_message",
+                    )}
+                  </p>
+                  {telegramLink && (
+                    <TelegramBox>
+                      <p>{t("telegram_confirm_hint")}</p>
+                      <TelegramLink
+                        href={telegramLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Send size={18} aria-hidden />
+                        {t("telegram_confirm_button")}
+                      </TelegramLink>
+                    </TelegramBox>
+                  )}
                 </div>
               </SuccessBox>
             )}
           </AnimatePresence>
 
           {isError && (
-            <FieldError role="alert">{t("booking_error")}</FieldError>
+            <FieldError role="alert">
+              {t(
+                error instanceof SlotUnavailableError
+                  ? "slot_taken"
+                  : "booking_error",
+              )}
+            </FieldError>
           )}
 
           <SubmitButton ref={submitRef} type="submit" disabled={isPending}>
@@ -374,6 +484,17 @@ const ScrollToFirstError: FC = () => {
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [submitCount, isSubmitting, isValid, errors]);
 
+  return null;
+};
+
+/** Clears the chosen time once it is no longer free (taken by someone else) */
+const DropTakenSlot: FC<{ slots: FreeSlot[] }> = ({ slots }) => {
+  const { values, setFieldValue } = useFormikContext<FormValues>();
+  useEffect(() => {
+    if (values.slotId && !slots.some((slot) => slot.id === values.slotId)) {
+      setFieldValue("slotId", "", false);
+    }
+  }, [slots, values.slotId, setFieldValue]);
   return null;
 };
 
@@ -505,6 +626,53 @@ const TimeGrid = styled.div`
     flex: 1 1 auto;
     padding-inline: 10px;
     white-space: nowrap;
+  }
+`;
+
+const TelegramBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+`;
+
+const TelegramLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  background-color: #229ed9;
+  color: #fff;
+  font-weight: 700;
+  transition: filter 0.2s ease;
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+`;
+
+const Hint = styled.p`
+  font-size: var(--text-sm);
+  opacity: 0.7;
+  line-height: 1.45;
+`;
+
+const AdminLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
   }
 `;
 

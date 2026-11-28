@@ -39,6 +39,7 @@ export const App: FC = () => {
   );
   const AdminArticlesPage = lazy(() => import("./pages/AdminArticlesPage"));
   const AdminReviewsPage = lazy(() => import("./pages/AdminReviewsPage"));
+  const AdminSchedulePage = lazy(() => import("./pages/AdminSchedulePage"));
   const ReviewEditorPage = lazy(
     () => import("./pages/AdminReviewsPage/Editor"),
   );
@@ -160,6 +161,10 @@ export const App: FC = () => {
                         <Route
                           path="/admin/articles/:id"
                           element={<ArticleEditorPage />}
+                        />
+                        <Route
+                          path="/admin/schedule"
+                          element={<AdminSchedulePage />}
                         />
                         <Route
                           path="/admin/reviews"
