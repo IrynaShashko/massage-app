@@ -223,8 +223,10 @@ const ReadMore = styled.button`
   font-weight: 700;
   font-size: var(--text-sm);
 
-  &:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
   }
 `;

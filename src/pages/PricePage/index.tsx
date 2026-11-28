@@ -205,11 +205,13 @@ const TabButton = styled.button<{ $active: boolean; theme?: ThemeType }>`
     background-color 0.2s ease,
     color 0.2s ease;
 
-  &:hover {
-    background: ${(props) =>
-      props.$active
-        ? "var(--color-primary)"
-        : "color-mix(in srgb, var(--color-primary) 10%, transparent)"};
+  @media (hover: hover) {
+    &:hover {
+      background: ${(props) =>
+        props.$active
+          ? "var(--color-primary)"
+          : "color-mix(in srgb, var(--color-primary) 10%, transparent)"};
+    }
   }
 
   ${MOBILE} {
@@ -274,13 +276,22 @@ const ServiceItem = styled.li<{ theme?: ThemeType }>`
     border-radius: var(--radius-md);
     transition: background-color 0.2s ease;
 
-    &:hover,
     &:focus-within {
       background-color: color-mix(
         in srgb,
         var(--color-primary) 8%,
         transparent
       );
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: color-mix(
+          in srgb,
+          var(--color-primary) 8%,
+          transparent
+        );
+      }
     }
   }
 `;
@@ -394,8 +405,10 @@ const BookServiceButton = styled.button`
     background-color 0.2s ease,
     color 0.2s ease;
 
-  &:hover {
-    background-color: var(--color-primary);
-    color: #fff;
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary);
+      color: #fff;
+    }
   }
 `;

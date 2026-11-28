@@ -166,10 +166,12 @@ const SocialLink = styled.a<{ theme?: ThemeType }>`
     fill: currentColor;
   }
 
-  &:hover {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #fff;
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+    }
   }
 `;
 
@@ -197,8 +199,10 @@ const List = styled.ul`
 const FooterLink = styled(Link)`
   transition: color 0.2s ease;
 
-  &:hover {
-    color: var(--color-primary);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-primary);
+    }
   }
 `;
 
@@ -214,8 +218,10 @@ const ContactLink = styled.a`
     color: var(--color-primary);
   }
 
-  &:hover {
-    color: var(--color-primary);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-primary);
+    }
   }
 `;
 

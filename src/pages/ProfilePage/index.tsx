@@ -339,12 +339,23 @@ const IdentityText = styled.div`
   gap: var(--space-2);
   min-width: 0;
   flex: 1;
+
+  @media (max-width: 640px) {
+    align-items: center;
+    width: 100%;
+    text-align: center;
+  }
 `;
 
 const NameRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-2);
+
+  @media (max-width: 640px) {
+    /* Offset the pencil so the name itself sits on the centre line */
+    padding-left: calc(36px + var(--space-2));
+  }
 `;
 
 const IconButton = styled.button<{ theme?: ThemeType }>`
@@ -360,10 +371,16 @@ const IconButton = styled.button<{ theme?: ThemeType }>`
     opacity 0.2s ease,
     background-color 0.2s ease;
 
-  &:hover {
-    opacity: 1;
-    color: var(--color-primary);
-    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+      color: var(--color-primary);
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 12%,
+        transparent
+      );
+    }
   }
 `;
 
@@ -377,6 +394,10 @@ const Badges = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+
+  @media (max-width: 640px) {
+    justify-content: center;
+  }
 `;
 
 const Badge = styled.span<{ $warn?: boolean }>`
@@ -489,10 +510,9 @@ const BookingList = styled.ul<{ theme?: ThemeType }>`
 
 const BookingRow = styled.li<{ $muted: boolean }>`
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
   padding: var(--space-3) 0;
   opacity: ${(p) => (p.$muted ? 0.6 : 1)};
 
@@ -554,7 +574,7 @@ const Hero = styled(Card)`
   gap: var(--space-5);
 
   @media (max-width: 640px) {
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: var(--space-4);
   }
 `;
@@ -565,8 +585,9 @@ const LogoutButton = styled(GhostButton)`
   flex-shrink: 0;
 
   @media (max-width: 640px) {
-    order: -1;
-    margin-left: auto;
+    align-self: stretch;
+    justify-content: center;
+    margin-left: 0;
   }
 `;
 
@@ -583,6 +604,10 @@ const MemberSince = styled.span`
   align-self: center;
   font-size: var(--text-sm);
   opacity: 0.65;
+
+  @media (max-width: 640px) {
+    flex-basis: 100%;
+  }
 `;
 
 const Grid = styled.div`
@@ -673,8 +698,14 @@ const AdminLink = styled(Link)<{ theme?: ThemeType }>`
     opacity: 0.35;
   }
 
-  &:hover {
-    color: var(--color-primary);
-    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-primary);
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 8%,
+        transparent
+      );
+    }
   }
 `;

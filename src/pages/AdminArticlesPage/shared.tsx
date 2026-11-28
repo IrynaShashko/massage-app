@@ -122,8 +122,10 @@ export const PrimaryButton = styled.button`
   font-weight: 700;
   transition: background-color 0.2s ease;
 
-  &:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+    }
   }
 
   &:disabled {
@@ -148,12 +150,14 @@ const ghost = ({ theme, $danger }: GhostProps) => {
     font-weight: 600;
     transition: background-color 0.2s ease;
 
-    &:hover:not(:disabled) {
-      background-color: color-mix(
-        in srgb,
-        ${tone ?? "var(--color-primary)"} 10%,
-        transparent
-      );
+    @media (hover: hover) {
+      &:hover:not(:disabled) {
+        background-color: color-mix(
+          in srgb,
+          ${tone ?? "var(--color-primary)"} 10%,
+          transparent
+        );
+      }
     }
   `;
 };

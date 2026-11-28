@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import {
+  AlertTriangle,
   ArrowLeft,
   Check,
   MessageCircle,
@@ -13,6 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { SectionContainer } from "../../App";
 import { DatePicker, fromIsoDate } from "../../components/DatePicker";
+import { TimePicker } from "../../components/TimePicker";
 import {
   AdminSlot,
   BookingAction,
@@ -37,7 +39,54 @@ import {
 } from "../AdminArticlesPage/shared";
 import { SkeletonRows } from "../../components/Skeleton";
 
-const STEPS = [30, 60, 90, 120];
+const DURATIONS = [30, 60, 90, 120];
+const BREAKS = [0, 10, 15, 30];
+const PREFS_KEY = "schedule-session-prefs";
+
+/** "11:15" -> 675 */
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
+
+/** Last used duration and break, so the form opens the way Maria works */
+const readPrefs = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}");
+    return {
+      duration: DURATIONS.includes(saved.duration) ? saved.duration : 60,
+      pause: BREAKS.includes(saved.pause) ? saved.pause : 15,
+    };
+  } catch {
+    return { duration: 60, pause: 15 };
+  }
+};
+
+/** A row of round option buttons; `format` turns a value into its label */
+const ChipChoice: FC<{
+  label: string;
+  options: number[];
+  value: number;
+  onChange: (value: number) => void;
+  format: (value: number) => string;
+}> = ({ label, options, value, onChange, format }) => (
+  <StepField>
+    <FieldLabel as="legend">{label}</FieldLabel>
+    <StepChips>
+      {options.map((option) => (
+        <StepChip
+          key={option}
+          type="button"
+          $active={value === option}
+          aria-pressed={value === option}
+          onClick={() => onChange(option)}
+        >
+          {format(option)}
+        </StepChip>
+      ))}
+    </StepChips>
+  </StepField>
+);
 
 const useDayFormat = () => {
   const [, i18n] = useTranslation();
@@ -57,14 +106,63 @@ const useDayFormat = () => {
 const AddSlotsForm: FC = () => {
   const [t, i18n] = useTranslation();
   const addSlots = useAddSlots();
+  const { data: slots = [] } = useAdminSlots();
   const [day, setDay] = useState("");
+  const [isRange, setIsRange] = useState(false);
   const [from, setFrom] = useState("10:00");
   const [to, setTo] = useState("");
-  const [step, setStep] = useState(60);
+  const [duration, setDuration] = useState(() => readPrefs().duration);
+  const [pause, setPause] = useState(() => readPrefs().pause);
   const [added, setAdded] = useState<number | null>(null);
 
-  const times = from ? timeRange(from, to, step) : [];
-  const canSubmit = !!day && times.length > 0 && !addSlots.isPending;
+  const savePrefs = (next: { duration: number; pause: number }) => {
+    try {
+      localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+    } catch {
+      /* private mode: just don't remember */
+    }
+  };
+  const changeDuration = (value: number) => {
+    setDuration(value);
+    savePrefs({ duration: value, pause });
+  };
+  const changePause = (value: number) => {
+    setPause(value);
+    savePrefs({ duration, pause: value });
+  };
+  const step = duration + pause;
+
+  const rangeInvalid = isRange && !!from && !!to && to <= from;
+  const times = !from
+    ? []
+    : isRange && to && !rangeInvalid
+      ? timeRange(from, to, step)
+      : [from];
+  const canSubmit =
+    !!day &&
+    times.length > 0 &&
+    !rangeInvalid &&
+    (!isRange || !!to) &&
+    !addSlots.isPending;
+
+  /* New times that fall inside an existing session or its break (or the
+     other way round). Only a warning: Maria may still add them. */
+  const block = duration + pause;
+  const dayTimes = slots
+    .filter((slot) => slot.day === day)
+    .map((slot) => slot.time);
+  const conflicts = new Map<string, string>();
+  if (day) {
+    for (const time of times) {
+      const clash = dayTimes.find(
+        (existing) =>
+          existing !== time &&
+          Math.abs(toMinutes(existing) - toMinutes(time)) < block,
+      );
+      if (clash) conflicts.set(time, clash);
+    }
+  }
+  const duplicates = day ? times.filter((time) => dayTimes.includes(time)) : [];
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -102,63 +200,120 @@ const AddSlotsForm: FC = () => {
             }}
           />
         </Field>
-        <TimeRow>
-          <Field>
-            <FieldLabel htmlFor="slot-from">{t("schedule_from")}</FieldLabel>
-            <TimeInput
-              id="slot-from"
-              type="time"
-              step={300}
-              required
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="slot-to">
-              {t("schedule_to")} <Muted>({t("optional")})</Muted>
-            </FieldLabel>
-            <TimeInput
-              id="slot-to"
-              type="time"
-              step={300}
-              value={to}
-              onChange={(event) => setTo(event.target.value)}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="slot-step">{t("schedule_every")}</FieldLabel>
-            <TimeInput
-              as="select"
-              id="slot-step"
-              value={step}
-              disabled={!to}
-              onChange={(event) => setStep(Number(event.target.value))}
-            >
-              {STEPS.map((minutes) => (
-                <option key={minutes} value={minutes}>
-                  {t("schedule_minutes", { count: minutes })}
-                </option>
-              ))}
-            </TimeInput>
-          </Field>
-        </TimeRow>
+
+        <Field>
+          <FieldLabel as="span">{t("schedule_mode")}</FieldLabel>
+          <Segmented role="group" aria-label={t("schedule_mode")}>
+            {[false, true].map((range) => (
+              <SegmentButton
+                key={String(range)}
+                type="button"
+                $active={isRange === range}
+                aria-pressed={isRange === range}
+                onClick={() => {
+                  setIsRange(range);
+                  setAdded(null);
+                }}
+              >
+                {t(range ? "schedule_mode_range" : "schedule_mode_single")}
+              </SegmentButton>
+            ))}
+          </Segmented>
+        </Field>
       </AddGrid>
 
-      {times.length > 0 && (
-        <Preview aria-live="polite">
-          {times.map((time) => (
-            <TimeChip key={time}>{time}</TimeChip>
-          ))}
-        </Preview>
+      <TimeRow>
+        <Field>
+          <FieldLabel htmlFor="slot-from">
+            {t(isRange ? "schedule_range_from" : "schedule_time")}
+          </FieldLabel>
+          <TimePicker id="slot-from" value={from} onChange={setFrom} />
+        </Field>
+        {isRange && (
+          <Field>
+            <FieldLabel htmlFor="slot-to">{t("schedule_to")}</FieldLabel>
+            <TimePicker
+              id="slot-to"
+              value={to}
+              onChange={setTo}
+              invalid={rangeInvalid}
+              defaultHour={Math.min(23, Number((from || "10").slice(0, 2)) + 1)}
+            />
+          </Field>
+        )}
+      </TimeRow>
+
+      <ChipRow>
+        <ChipChoice
+          label={t("schedule_duration")}
+          options={DURATIONS}
+          value={duration}
+          onChange={changeDuration}
+          format={(minutes) => t("schedule_minutes", { count: minutes })}
+        />
+        <ChipChoice
+          label={t("schedule_break")}
+          options={BREAKS}
+          value={pause}
+          onChange={changePause}
+          format={(minutes) =>
+            minutes
+              ? t("schedule_minutes", { count: minutes })
+              : t("schedule_no_break")
+          }
+        />
+      </ChipRow>
+
+      {rangeInvalid && <ErrorText>{t("schedule_range_invalid")}</ErrorText>}
+
+      {day && times.length > 0 && !rangeInvalid && (!isRange || to) && (
+        <PreviewBox aria-live="polite">
+          <Muted>{t("schedule_preview", { count: times.length })}</Muted>
+          <Preview>
+            {times.map((time) => (
+              <TimeChip
+                key={time}
+                $warn={conflicts.has(time) || duplicates.includes(time)}
+              >
+                {time}
+              </TimeChip>
+            ))}
+          </Preview>
+          {conflicts.size > 0 && (
+            <Warning role="status">
+              <AlertTriangle size={18} aria-hidden />
+              <span>
+                {t("schedule_overlap", {
+                  list: Array.from(conflicts)
+                    .map(([time, clash]) =>
+                      t("schedule_overlap_item", { time, clash }),
+                    )
+                    .join(", "),
+                })}
+              </span>
+            </Warning>
+          )}
+          {duplicates.length > 0 && (
+            <Warning role="status">
+              <AlertTriangle size={18} aria-hidden />
+              <span>
+                {t("schedule_duplicate", { list: duplicates.join(", ") })}
+              </span>
+            </Warning>
+          )}
+        </PreviewBox>
       )}
 
       <AddActions>
         <PrimaryButton type="submit" disabled={!canSubmit}>
           <Plus size={18} aria-hidden />
-          {t("schedule_add_button", { count: times.length })}
+          {t("schedule_add_button")}
         </PrimaryButton>
-        {!day && <Muted>{t("schedule_pick_day")}</Muted>}
+        {!day ? (
+          <Muted>{t("schedule_pick_day")}</Muted>
+        ) : (
+          isRange && !to && <Muted>{t("schedule_pick_last")}</Muted>
+        )}
         {added !== null && (
           <Success role="status">
             {t("schedule_added", { count: added })}
@@ -429,15 +584,20 @@ const AddGrid = styled.div`
   gap: var(--space-4);
 
   @media screen and (min-width: 800px) {
-    grid-template-columns: minmax(240px, 1fr) 2fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: end;
   }
 `;
 
 const TimeRow = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
+  margin-top: var(--space-4);
+
+  @media screen and (min-width: 800px) {
+    max-width: calc(50% - var(--space-2));
+  }
 `;
 
 const Field = styled.div`
@@ -447,52 +607,125 @@ const Field = styled.div`
   min-width: 0;
 `;
 
+const StepField = styled.fieldset`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  border: 0;
+`;
+
 const FieldLabel = styled.label`
+  padding: 0;
+  margin-bottom: 0;
   font-size: var(--text-sm);
   font-weight: 700;
 `;
 
-const TimeInput = styled.input<{ theme?: ThemeType }>`
-  width: 100%;
+const Segmented = styled.div<{ theme?: ThemeType }>`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
   min-height: 48px;
-  padding: 10px 12px;
+  padding: 4px;
   border-radius: var(--radius-md);
   border: 1.5px solid ${(props) => props.theme.colors.border};
-  background-color: transparent;
-  color: ${(props) => props.theme.colors.text};
-  font-size: 16px;
+`;
+
+const SegmentButton = styled.button<{ $active: boolean; theme?: ThemeType }>`
+  padding: 0 var(--space-2);
+  border-radius: calc(var(--radius-md) - 4px);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: ${(props) => (props.$active ? "#fff" : props.theme.colors.text)};
+  background-color: ${(props) =>
+    props.$active ? "var(--color-primary)" : "transparent"};
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+`;
+
+const StepChips = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+`;
+
+const StepChip = styled.button<{ $active: boolean; theme?: ThemeType }>`
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color-scheme: inherit;
+  border: 1.5px solid
+    ${(props) =>
+      props.$active ? "var(--color-primary)" : props.theme.colors.border};
+  color: ${(props) =>
+    props.$active ? "var(--color-primary)" : props.theme.colors.text};
+  background-color: ${(props) =>
+    props.$active
+      ? "color-mix(in srgb, var(--color-primary) 12%, transparent)"
+      : "transparent"};
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+`;
 
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px var(--color-primary-ring);
-  }
-
-  &:disabled {
-    opacity: 0.45;
-  }
-
-  option {
-    color: initial;
-  }
+const PreviewBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
 `;
 
 const Preview = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-4);
 `;
 
-const TimeChip = styled.span`
+const TimeChip = styled.span<{ $warn?: boolean }>`
   padding: 4px 12px;
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  background: color-mix(
+    in srgb,
+    ${(p) => (p.$warn ? "#e0a100" : "var(--color-primary)")} 18%,
+    transparent
+  );
+  box-shadow: ${(p) => (p.$warn ? "inset 0 0 0 1.5px #e0a100" : "none")};
+`;
+
+const Warning = styled.p`
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  background: color-mix(in srgb, #e0a100 14%, transparent);
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #e0a100;
+  }
+`;
+
+const ChipRow = styled.div`
+  display: grid;
+  gap: 0 var(--space-5);
+
+  @media screen and (min-width: 800px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 `;
 
 const AddActions = styled.div`
@@ -659,5 +892,7 @@ const WhatsAppLink = styled.a`
 const Actions = styled.div`
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--space-2);
+  margin-left: auto;
 `;

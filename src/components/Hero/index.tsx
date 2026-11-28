@@ -219,8 +219,10 @@ const StyledButton = styled(motion.button)`
     background-color 0.2s ease,
     box-shadow 0.2s ease;
 
-  &:hover {
-    background-color: var(--color-primary-hover);
-    box-shadow: 0 16px 32px -8px var(--color-primary-shadow);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary-hover);
+      box-shadow: 0 16px 32px -8px var(--color-primary-shadow);
+    }
   }
 `;

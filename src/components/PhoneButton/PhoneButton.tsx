@@ -107,11 +107,18 @@ const ContactLink = styled.a`
     height: 26px;
   }
 
-  &:hover,
   &:focus-visible {
     background-color: var(--color-primary-hover);
     transform: scale(1.08);
     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary-hover);
+      transform: scale(1.08);
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+    }
   }
 
   &:focus-visible {
@@ -119,10 +126,16 @@ const ContactLink = styled.a`
     border-radius: 50%;
   }
 
-  &:hover + span,
   &:focus-visible + span {
     opacity: 1;
     transform: translate(0, -50%);
+  }
+
+  @media (hover: hover) {
+    &:hover + span {
+      opacity: 1;
+      transform: translate(0, -50%);
+    }
   }
 `;
 
@@ -168,9 +181,11 @@ const MainButton = styled.button<{ $open: boolean }>`
     transform 0.3s ${EASE_OUT},
     box-shadow 0.3s ease;
 
-  &:hover {
-    transform: scale(1.06);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+  @media (hover: hover) {
+    &:hover {
+      transform: scale(1.06);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+    }
   }
 
   &:active {

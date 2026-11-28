@@ -145,6 +145,8 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   /** bot link to get the confirmation in Telegram, after booking a slot */
   const [telegramLink, setTelegramLink] = useState<string | null>(null);
   const [showComment, setShowComment] = useState(false);
+  /** the visitor asked for the confirmation in Telegram */
+  const [wantsTelegram, setWantsTelegram] = useState(false);
   const submitRef = useRef<HTMLButtonElement>(null);
   const formikRef = useRef<FormikProps<FormValues>>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -240,8 +242,17 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
         },
         onSuccess: (result) => {
           setSuccessWithSlot(!!slot);
-          setTelegramLink(result.telegramLink ?? null);
-          resetForm();
+          // Open the bot right away when asked for. The browser may block a
+          // window opened after the request; then the button below stays.
+          const link = wantsTelegram ? (result.telegramLink ?? null) : null;
+          // without "noopener": with it window.open always returns null
+          const tab = link ? window.open(link, "_blank") : null;
+          if (tab) tab.opener = null;
+          setTelegramLink(link && !tab ? link : null);
+          setWantsTelegram(false);
+          // to the empty form, not to the draft it was opened with
+          resetForm({ values: initialValues });
+          saveFormDraft(initialValues);
           setShowComment(false);
           setIsSuccess(true);
           window.setTimeout(
@@ -526,6 +537,23 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             </FieldError>
           )}
 
+          {slotMode && values.slotId && (
+            <TelegramCheck>
+              <input
+                type="checkbox"
+                checked={wantsTelegram}
+                onChange={(event) => setWantsTelegram(event.target.checked)}
+              />
+              <span>
+                <strong>
+                  <Send size={16} aria-hidden />
+                  {t("telegram_opt_in")}
+                </strong>
+                <small>{t("telegram_opt_in_hint")}</small>
+              </span>
+            </TelegramCheck>
+          )}
+
           <SubmitButton ref={submitRef} type="submit" disabled={isPending}>
             {isPending ? t("sending") : t("send")}
           </SubmitButton>
@@ -623,6 +651,54 @@ const ScrollToFirstError: FC = () => {
 };
 
 /** Keeps the unsent form in storage; an emptied (sent) form removes it */
+const TelegramCheck = styled.label<{ theme?: ThemeType }>`
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px solid ${(props) => props.theme.colors.border};
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+
+  &:has(input:checked) {
+    border-color: var(--color-primary);
+  }
+
+  input {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-sm);
+    font-weight: 700;
+
+    svg {
+      color: #2aabee;
+    }
+  }
+
+  small {
+    font-size: var(--text-xs, 0.8125rem);
+    line-height: 1.4;
+    opacity: 0.7;
+  }
+`;
+
 const SaveDraft: FC = () => {
   const { values } = useFormikContext<FormValues>();
   useEffect(() => saveFormDraft(values), [values]);
@@ -804,8 +880,10 @@ const TelegramLink = styled.a`
   font-weight: 700;
   transition: filter 0.2s ease;
 
-  &:hover {
-    filter: brightness(1.08);
+  @media (hover: hover) {
+    &:hover {
+      filter: brightness(1.08);
+    }
   }
 `;
 
@@ -827,8 +905,10 @@ const AdminLink = styled(Link)`
   font-size: var(--text-sm);
   font-weight: 700;
 
-  &:hover {
-    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
   }
 `;
 
@@ -873,8 +953,10 @@ const Chip = styled.button<{
     border-color 0.2s ease,
     color 0.2s ease;
 
-  &:hover {
-    border-color: var(--color-primary);
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-primary);
+    }
   }
 `;
 
@@ -914,8 +996,10 @@ const ServiceOption = styled.button<{ $active: boolean; theme?: ThemeType }>`
     background-color 0.2s ease,
     border-color 0.2s ease;
 
-  &:hover {
-    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+    }
   }
 `;
 
@@ -1022,9 +1106,11 @@ const SubmitButton = styled.button`
     background-color 0.2s ease,
     transform 0.2s var(--ease-out);
 
-  &:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-1px);
+    }
   }
 
   &:disabled {

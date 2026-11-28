@@ -63,8 +63,10 @@ const noticeButtonStyles = `
   white-space: nowrap;
   text-decoration: none;
 
-  &:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+    }
   }
 
   &:disabled {

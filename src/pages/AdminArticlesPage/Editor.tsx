@@ -363,8 +363,10 @@ const IconOption = styled.button<{ theme?: ThemeType; $selected: boolean }>`
     background-color 0.2s ease,
     transform 0.2s ease;
 
-  &:hover {
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-1px);
+    }
   }
 
   &:focus-visible {

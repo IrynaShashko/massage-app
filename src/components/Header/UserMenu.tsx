@@ -117,20 +117,27 @@ const Trigger = styled.button<{ theme?: ThemeType }>`
   height: 40px;
   padding: 0 10px 0 4px;
   border-radius: var(--radius-full);
-  color: ${(props) => props.theme.colors.text};
-  background-color: color-mix(
-    in srgb,
-    ${(props) => props.theme.colors.text} 5%,
-    transparent
-  );
+  color: var(--color-primary);
+  border: 1.5px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background-color: transparent;
   transition:
     background-color 0.2s ease,
-    color 0.2s ease;
+    border-color 0.2s ease;
 
-  &:hover,
   &[aria-expanded="true"] {
-    color: var(--color-primary);
-    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    border-color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-primary);
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 8%,
+        transparent
+      );
+    }
   }
 `;
 
@@ -149,7 +156,7 @@ const GuestIcon = styled.span`
 const Chevron = styled(ChevronDown, {
   shouldForwardProp: (prop) => prop !== "$open",
 })<{ $open: boolean }>`
-  opacity: 0.7;
+  stroke-width: 2.5;
   transform: rotate(${(props) => (props.$open ? "180deg" : "0deg")});
   transition: transform 0.2s ease;
 `;
@@ -202,9 +209,11 @@ const itemStyles = (theme: ThemeType) => `
     background-color 0.2s ease,
     color 0.2s ease;
 
-  &:hover:not(:disabled) {
-    color: var(--color-primary);
-    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      color: var(--color-primary);
+      background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    }
   }
 
   &:disabled {

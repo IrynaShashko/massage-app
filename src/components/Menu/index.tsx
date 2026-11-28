@@ -10,14 +10,11 @@ import { useTranslation } from "react-i18next";
 import {
   CalendarCheck,
   ChevronRight,
-  LogOut,
   Menu as MenuIcon,
   Phone,
-  UserRound,
   X,
 } from "lucide-react";
 
-import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import logo from "../../images/logo.png";
 
 import { ThemeButton } from "../ThemeButton";
@@ -30,8 +27,7 @@ import {
 } from "../../config/contacts";
 
 import { useBooking } from "../../context/BookingContext";
-import { useLogout } from "../../hooks/useAuth";
-import { UserAvatar } from "../UserAvatar";
+import { UserMenu } from "../Header/UserMenu";
 
 import { ThemeType } from "../../theme/theme";
 
@@ -53,15 +49,12 @@ export const Menu: FC<MenuPropsType> = ({
   language,
   darkMode,
   themeToggle,
-  isAuthenticated,
   user,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
-  const authState = useAuthLinkState();
   const [t] = useTranslation();
   const { startBooking } = useBooking();
-  const logoutMutation = useLogout();
 
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
 
@@ -108,11 +101,6 @@ export const Menu: FC<MenuPropsType> = ({
         window.location.href = "/#contacts";
       }
     });
-  };
-
-  const onLogout = () => {
-    logoutMutation.mutate();
-    closeMenu();
   };
 
   const drawer = (
@@ -181,42 +169,9 @@ export const Menu: FC<MenuPropsType> = ({
                 </SegmentButton>
               ))}
             </Segmented>
-
-            <SettingsIcons>
-              <RoundTile>
-                <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
-              </RoundTile>
-              {isAuthenticated && user ? (
-                <>
-                  <RoundTileLink
-                    to="/profile"
-                    onClick={closeMenu}
-                    aria-label={t("profile_title")}
-                    tabIndex={isMenuOpen ? 0 : -1}
-                  >
-                    <UserAvatar user={user} size={42} />
-                  </RoundTileLink>
-                  <RoundTileButton
-                    type="button"
-                    onClick={onLogout}
-                    aria-label={t("profile_logout")}
-                    tabIndex={isMenuOpen ? 0 : -1}
-                  >
-                    <LogOut size={22} />
-                  </RoundTileButton>
-                </>
-              ) : (
-                <RoundTileLink
-                  to="/auth"
-                  state={authState}
-                  onClick={closeMenu}
-                  aria-label={t("login_button")}
-                  tabIndex={isMenuOpen ? 0 : -1}
-                >
-                  <UserRound size={22} />
-                </RoundTileLink>
-              )}
-            </SettingsIcons>
+            <RoundTile>
+              <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
+            </RoundTile>
           </Settings>
 
           <Actions>
@@ -265,6 +220,7 @@ export const Menu: FC<MenuPropsType> = ({
             themeToggle={themeToggle}
             size={26}
           />
+          <UserMenu user={user} />
           <IconButton
             type="button"
             onClick={() => setIsMenuOpen(true)}
@@ -384,6 +340,8 @@ const DrawerBody = styled.div`
 const NavList = styled.ul`
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 `;
 
 const navItemStyles = (theme: ThemeType) => `
@@ -391,15 +349,23 @@ const navItemStyles = (theme: ThemeType) => `
   align-items: center;
   justify-content: space-between;
   min-height: 54px;
-  font-size: 1.125rem;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 1.0625rem;
   font-weight: 600;
   color: ${theme.colors.text};
-  border-bottom: 1px solid ${theme.colors.border};
-  transition: color 0.2s ease;
+  background: var(--surface-glass);
+  border: 1px solid ${theme.colors.border};
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, transform 0.15s ease;
 
   svg {
-    opacity: 0.35;
+    opacity: 0.4;
     transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 
   &:active svg {
@@ -412,6 +378,9 @@ const NavItem = styled(NavLink)<{ theme?: ThemeType }>`
 
   &.active {
     color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+
     svg {
       opacity: 1;
     }
@@ -454,15 +423,11 @@ const SegmentButton = styled.button<{ $active: boolean; theme?: ThemeType }>`
     color 0.2s ease;
 `;
 
-const SettingsIcons = styled.div`
-  display: flex;
-  gap: var(--space-2);
-`;
-
 const roundTile = (theme: ThemeType) => `
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 44px;
   height: 44px;
   border-radius: var(--radius-full);
@@ -477,14 +442,6 @@ const roundTile = (theme: ThemeType) => `
 `;
 
 const RoundTile = styled.div<{ theme?: ThemeType }>`
-  ${(props) => roundTile(props.theme as ThemeType)}
-`;
-
-const RoundTileButton = styled.button<{ theme?: ThemeType }>`
-  ${(props) => roundTile(props.theme as ThemeType)}
-`;
-
-const RoundTileLink = styled(Link)<{ theme?: ThemeType }>`
   ${(props) => roundTile(props.theme as ThemeType)}
 `;
 
@@ -553,10 +510,16 @@ const SocialLink = styled.a<{ theme?: ThemeType }>`
     fill: currentColor;
   }
 
-  &:hover,
   &:active {
     background-color: var(--color-primary);
     color: #fff;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary);
+      color: #fff;
+    }
   }
 
   &:active {

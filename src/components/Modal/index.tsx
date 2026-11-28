@@ -229,9 +229,15 @@ const CloseButton = styled.button<{ theme?: ThemeType }>`
     opacity 0.2s ease,
     background-color 0.2s ease;
 
-  &:hover {
-    opacity: 1;
-    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 12%,
+        transparent
+      );
+    }
   }
 `;
 
@@ -291,8 +297,10 @@ const PrimaryLink = styled(Link)`
   color: #fff;
   box-shadow: 0 10px 24px -12px var(--color-primary-shadow);
 
-  &:hover {
-    background-color: var(--color-primary-hover);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
   }
 `;
 
@@ -301,8 +309,14 @@ const SecondaryLink = styled(Link)`
   border: 1.5px solid var(--color-primary);
   color: var(--color-primary);
 
-  &:hover {
-    background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 10%,
+        transparent
+      );
+    }
   }
 `;
 
@@ -336,9 +350,15 @@ const GoogleButton = styled.button<{ theme?: ThemeType }>`
     height: 20px;
   }
 
-  &:hover:not(:disabled) {
-    border-color: var(--color-primary);
-    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 8%,
+        transparent
+      );
+    }
   }
 
   &:disabled {

@@ -391,9 +391,15 @@ const ToggleButton = styled.button<{ theme?: ThemeType }>`
     opacity 0.2s ease,
     background-color 0.2s ease;
 
-  &:hover {
-    opacity: 1;
-    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 12%,
+        transparent
+      );
+    }
   }
 `;
 
@@ -411,9 +417,11 @@ const SubmitButton = styled.button`
     background-color 0.2s ease,
     transform 0.2s var(--ease-out);
 
-  &:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-1px);
+    }
   }
 
   &:disabled {
@@ -483,8 +491,14 @@ const CustomGoogleButton = styled.button<{ theme?: ThemeType }>`
     height: 20px;
   }
 
-  &:hover {
-    border-color: var(--color-primary);
-    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-primary);
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 8%,
+        transparent
+      );
+    }
   }
 `;

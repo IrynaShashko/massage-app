@@ -440,8 +440,10 @@ const Trigger = styled.button<{ $open: boolean; theme?: ThemeType }>`
     color: var(--color-primary);
   }
 
-  &:hover {
-    border-color: var(--color-primary);
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-primary);
+    }
   }
 
   &:focus-visible {
@@ -479,9 +481,15 @@ const ClearInline = styled.button<{ theme?: ThemeType }>`
     opacity 0.2s ease,
     background-color 0.2s ease;
 
-  &:hover {
-    opacity: 1;
-    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 12%,
+        transparent
+      );
+    }
   }
 `;
 
@@ -541,9 +549,15 @@ const NavButton = styled.button<{ theme?: ThemeType }>`
   color: ${(props) => props.theme.colors.text};
   transition: background-color 0.2s ease;
 
-  &:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
-    color: var(--color-primary);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 14%,
+        transparent
+      );
+      color: var(--color-primary);
+    }
   }
 
   &:disabled {
@@ -597,11 +611,13 @@ const Day = styled.button<{
     background-color 0.15s ease,
     color 0.15s ease;
 
-  &:hover:not(:disabled) {
-    background-color: ${(props) =>
-      props.$selected
-        ? "var(--color-primary-hover)"
-        : "color-mix(in srgb, var(--color-primary) 14%, transparent)"};
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: ${(props) =>
+        props.$selected
+          ? "var(--color-primary-hover)"
+          : "color-mix(in srgb, var(--color-primary) 14%, transparent)"};
+    }
   }
 
   &:focus-visible {
@@ -615,8 +631,10 @@ const Day = styled.button<{
     cursor: default;
   }
 
-  &[aria-disabled="true"]:hover {
-    background-color: transparent;
+  @media (hover: hover) {
+    &[aria-disabled="true"]:hover {
+      background-color: transparent;
+    }
   }
 `;
 
@@ -636,7 +654,13 @@ const TextButton = styled.button`
   font-size: var(--text-sm);
   transition: background-color 0.2s ease;
 
-  &:hover {
-    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 12%,
+        transparent
+      );
+    }
   }
 `;

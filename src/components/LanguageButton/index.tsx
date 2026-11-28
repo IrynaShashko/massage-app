@@ -25,8 +25,10 @@ const Button = styled.button<{ theme?: ThemeType }>`
   font-size: 14px;
   height: 30px;
 
-  &:hover {
-    background-color: ${(props) => props.theme.colors.primary};
-    color: #f6f1ea;
+  @media (hover: hover) {
+    &:hover {
+      background-color: ${(props) => props.theme.colors.primary};
+      color: #f6f1ea;
+    }
   }
 `;

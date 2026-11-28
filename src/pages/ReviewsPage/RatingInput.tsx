@@ -85,7 +85,7 @@ export const RatingInput = ({
         aria-labelledby={labelId}
         aria-invalid={invalid || undefined}
         aria-describedby={invalid ? errorId : undefined}
-        onMouseLeave={() => setHover(0)}
+        onPointerLeave={() => setHover(0)}
       >
         {Array.from({ length: MAX }, (_, i) => {
           const n = i + 1;
@@ -106,7 +106,8 @@ export const RatingInput = ({
               tabIndex={isTabStop ? 0 : -1}
               $on={isOn}
               $invalid={!!invalid}
-              onMouseEnter={() => setHover(n)}
+              // mouse only: a tap would leave the preview stuck on touch screens
+              onPointerEnter={(e) => e.pointerType === "mouse" && setHover(n)}
               onFocus={() => setHover(0)}
               onClick={() => pick(n)}
               onKeyDown={onKeyDown}
@@ -186,8 +187,10 @@ const StarButton = styled.button<{
         : "none"};
   }
 
-  &:hover svg {
-    transform: scale(1.12);
+  @media (hover: hover) {
+    &:hover svg {
+      transform: scale(1.12);
+    }
   }
 
   &:active svg {

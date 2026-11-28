@@ -87,6 +87,7 @@ const ReviewsPage = ({ language }: { language: string }) => {
     stars: false,
   });
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const commentRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: reviews = [], isLoading, isError, refetch } = useReviews();
   const createReviewMutation = useCreateReview();
@@ -186,11 +187,14 @@ const ReviewsPage = ({ language }: { language: string }) => {
         rating: newReview.rating,
       });
       setNewReview({
-        name: newReview.name,
+        name: user?.name || newReview.name,
         comment: "",
         rating: 0,
         userId: user?.id || "",
       });
+      setErrors({ name: false, comment: false, stars: false });
+      // the textarea grew with the text; back to its normal height
+      if (commentRef.current) commentRef.current.style.height = "";
       showInfo("success", t("review_added"));
     } catch (error) {
       console.error(error);
@@ -375,6 +379,7 @@ const ReviewsPage = ({ language }: { language: string }) => {
                   {label(t("your_review_label"))}
                 </FieldLabel>
                 <TextArea
+                  ref={commentRef}
                   id="review-comment"
                   value={newReview.comment}
                   placeholder={t("your_review_placeholder")}
@@ -483,9 +488,11 @@ const JumpToForm = styled.button`
     background-color 0.2s ease,
     color 0.2s ease;
 
-  &:hover {
-    background-color: var(--color-primary);
-    color: #fff;
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary);
+      color: #fff;
+    }
   }
 
   @media screen and (min-width: 960px) {
@@ -506,8 +513,10 @@ const ShowMore = styled.button<{ theme?: ThemeType }>`
   font-weight: 700;
   transition: border-color 0.2s ease;
 
-  &:hover {
-    border-color: var(--color-primary);
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-primary);
+    }
   }
 `;
 
@@ -563,8 +572,10 @@ const RetryButton = styled.button`
   color: #fff;
   font-weight: 700;
 
-  &:hover {
-    background-color: var(--color-primary-hover);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
   }
 `;
 
@@ -674,9 +685,11 @@ const SubmitButton = styled.button`
     background-color 0.2s ease,
     transform 0.2s var(--ease-out);
 
-  &:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-1px);
+    }
   }
 
   &:disabled {
@@ -697,7 +710,9 @@ const AdminLink = styled(Link)`
   font-weight: 700;
   transition: background-color 0.2s ease;
 
-  &:hover {
-    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
   }
 `;

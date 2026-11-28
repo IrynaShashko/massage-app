@@ -122,9 +122,11 @@ const Card = styled(motion.li)<{ theme?: ThemeType }>`
     box-shadow 0.4s ease,
     border-color 0.4s ease;
 
-  &:hover {
-    box-shadow: var(--shadow-md);
-    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: var(--shadow-md);
+      border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+    }
   }
 `;
 

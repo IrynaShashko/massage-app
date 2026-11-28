@@ -254,9 +254,11 @@ const BookButton = styled.button`
     background-color 0.2s ease,
     transform 0.2s var(--ease-out);
 
-  &:hover {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-1px);
+    }
   }
 `;
 

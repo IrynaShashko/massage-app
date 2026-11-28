@@ -46,8 +46,10 @@ const Button = styled.button<{ $size: number; theme?: ThemeType }>`
   color: ${(props) => props.theme.colors.text};
   transition: color 0.25s ease;
 
-  &:hover {
-    color: var(--color-primary);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-primary);
+    }
   }
 `;
 

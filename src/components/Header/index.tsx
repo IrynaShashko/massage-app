@@ -29,8 +29,6 @@ export const Header: React.FC<HeaderPropsType> = ({
 
   const { data: user } = useProfile();
 
-  const isAuthenticated = !!user;
-
   const { startBooking } = useBooking();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -118,7 +116,6 @@ export const Header: React.FC<HeaderPropsType> = ({
             language={language}
             darkMode={darkMode}
             themeToggle={themeToggle}
-            isAuthenticated={isAuthenticated}
             user={user ?? null}
           />
         </MenuWrapper>
@@ -232,9 +229,11 @@ const navLinkStyles = (theme: ThemeType) => `
     background-color 0.2s ease,
     color 0.2s ease;
 
-  &:hover {
-    color: var(--color-primary);
-    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-primary);
+      background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    }
   }
 
   &.active {
@@ -274,9 +273,11 @@ const CtaButton = styled.button`
     background-color 0.2s ease,
     transform 0.2s var(--ease-out);
 
-  &:hover {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px);
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-1px);
+    }
   }
 
   @media screen and (min-width: 1200px) {
@@ -318,8 +319,10 @@ const LangOption = styled.button<{ $active: boolean; theme?: ThemeType }>`
     color 0.2s ease,
     opacity 0.2s ease;
 
-  &:hover {
-    opacity: 1;
+  @media (hover: hover) {
+    &:hover {
+      opacity: 1;
+    }
   }
 `;
 
@@ -342,9 +345,11 @@ const iconTileStyles = (theme: ThemeType) => `
     height: 100%;
   }
 
-  &:hover {
-    color: var(--color-primary);
-    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--color-primary);
+      background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    }
   }
 `;
 

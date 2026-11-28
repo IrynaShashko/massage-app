@@ -203,14 +203,18 @@ const InfoLink = styled.a<{ menu?: boolean }>`
 
   /* Fill the tile and turn the icon white; set both explicitly so no
      inherited fill or gradient can leave a dark icon on the teal tile */
-  &:hover > div:first-of-type {
-    background: var(--color-primary);
-    color: #fff;
+  @media (hover: hover) {
+    &:hover > div:first-of-type {
+      background: var(--color-primary);
+      color: #fff;
+    }
   }
 
-  &:hover > div:first-of-type svg,
-  &:hover > div:first-of-type svg * {
-    fill: #fff;
+  @media (hover: hover) {
+    &:hover > div:first-of-type svg,
+    &:hover > div:first-of-type svg * {
+      fill: #fff;
+    }
   }
 `;
 
@@ -242,8 +246,10 @@ export const IconStyled = styled.svg<{ theme?: ThemeType; color?: string }>`
   transition: fill 0.3s ease-in-out;
   fill: ${(props) =>
     props.color ? props.color : props.theme.colors.iconColor};
-  &:hover & {
-    fill: ${(props) => props.theme.colors.text};
+  @media (hover: hover) {
+    &:hover & {
+      fill: ${(props) => props.theme.colors.text};
+    }
   }
 `;
 

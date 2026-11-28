@@ -267,8 +267,10 @@ const ArticleLink = styled(NavLink)<{ theme?: ThemeType }>`
     background-color 0.2s ease,
     color 0.2s ease;
 
-  &:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  @media (hover: hover) {
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    }
   }
 
   &.active {
