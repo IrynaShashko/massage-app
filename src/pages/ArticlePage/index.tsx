@@ -68,7 +68,7 @@ export default ArticlePage;
 const Layout = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-6);
+  gap: var(--space-5);
   align-items: start;
 
   @media screen and (min-width: 900px) {
@@ -78,7 +78,9 @@ const Layout = styled.div`
 
 const Sidebar = styled.aside<{ theme?: ThemeType }>`
   ${(props) => cardSurface(props.theme as ThemeType)}
-  padding: var(--space-5);
+  --sidebar-pad: var(--space-4);
+  padding: var(--sidebar-pad);
+  overflow: hidden;
 
   @media screen and (min-width: 900px) {
     position: sticky;
@@ -86,12 +88,14 @@ const Sidebar = styled.aside<{ theme?: ThemeType }>`
   }
 `;
 
+/* The drawing is cropped on its right side, so it runs into the card's right
+   border: the cut then reads as the card edge rather than a clipped picture */
 const Illustration = styled.img`
   display: block;
-  width: 100%;
-  max-width: 280px;
+  width: calc(100% + var(--sidebar-pad));
+  max-width: none;
   height: auto;
-  margin: 0 auto var(--space-5);
+  margin: var(--space-2) calc(-1 * var(--sidebar-pad)) var(--space-4) 0;
 
   /* the drawing is black ink on transparent: lighten it at night */
   [data-theme="dark"] & {
@@ -146,10 +150,14 @@ const ArticleLink = styled(NavLink)<{ theme?: ThemeType }>`
 
 const Content = styled.article<{ theme?: ThemeType }>`
   ${(props) => cardSurface(props.theme as ThemeType)}
-  padding: var(--space-6);
+  padding: var(--space-5);
+
+  @media screen and (min-width: 600px) {
+    padding: var(--space-6);
+  }
 
   @media screen and (min-width: 1100px) {
-    padding: var(--space-7) var(--space-8);
+    padding: var(--space-6) var(--space-7);
   }
 
   /* lists inside the articles */

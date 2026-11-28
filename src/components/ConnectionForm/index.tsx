@@ -2,7 +2,7 @@ import { FC, useEffect, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -13,6 +13,7 @@ import {
   FormikErrors,
   FormikHelpers,
   FormikProps,
+  useFormikContext,
 } from "formik";
 
 import priceData from "../../json/price.json";
@@ -68,10 +69,14 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
 }) => {
   const [t] = useTranslation();
   const { data: user } = useProfile();
-  const { mutate, isPending, isError } = useCreateBooking();
+  const { mutate, isPending, isError } = useCreateBooking({
+    isAuthenticated: !!user,
+  });
   const { preset } = useBooking();
 
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showComment, setShowComment] = useState(false);
+  const submitRef = useRef<HTMLButtonElement>(null);
   const formikRef = useRef<FormikProps<FormValues>>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -137,8 +142,17 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
       {
         onSuccess: () => {
           resetForm();
+          setShowComment(false);
           setIsSuccess(true);
-          window.setTimeout(() => setIsSuccess(false), 6000);
+          window.setTimeout(
+            () =>
+              submitRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              }),
+            50,
+          );
+          window.setTimeout(() => setIsSuccess(false), 8000);
           onClose();
         },
       },
@@ -150,15 +164,18 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
       innerRef={formikRef}
       initialValues={initialValues}
       validate={validate}
-      validateOnBlur
-      validateOnChange={false}
+      // Not on blur: tapping "Send" blurs the last field, and errors appearing
+      // or disappearing at that moment shift the button so the tap is lost
+      validateOnBlur={false}
+      validateOnChange
       onSubmit={handleSubmit}
     >
       {({ values, setFieldValue, errors, touched, submitCount }) => (
         <FormStyled name="connection-form" noValidate>
+          <ScrollToFirstError />
           <FormTitle>{t("formTitle")}</FormTitle>
 
-          <Fieldset>
+          <Fieldset data-field="service">
             <Legend>{label(t("for_whom"))}</Legend>
             <ChipGroup role="radiogroup">
               {CATEGORIES.map((category) => (
@@ -166,6 +183,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                   key={category}
                   type="button"
                   role="radio"
+                  $small
                   aria-checked={values.service === category}
                   $active={values.service === category}
                   onClick={() => {
@@ -191,7 +209,9 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             label={label(t("select_service"))}
           />
           {submitCount > 0 && errors.subService && (
-            <FieldError role="alert">{errors.subService}</FieldError>
+            <FieldError role="alert" data-field="subService">
+              {errors.subService}
+            </FieldError>
           )}
 
           <Row>
@@ -217,7 +237,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               <Legend>
                 {t("preferred_time")} <Muted>({t("optional")})</Muted>
               </Legend>
-              <ChipGroup role="radiogroup">
+              <TimeGrid role="radiogroup">
                 {TIME_SLOTS.map((slot) => (
                   <Chip
                     key={slot}
@@ -237,12 +257,12 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
                     {t(slot)}
                   </Chip>
                 ))}
-              </ChipGroup>
+              </TimeGrid>
             </Fieldset>
           </Row>
 
           <Row>
-            <FormGroup>
+            <FormGroup data-field="name">
               <Label htmlFor="name">{label(t("name"))}</Label>
               <Input
                 innerRef={nameInputRef}
@@ -256,7 +276,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
               />
               <ErrorMessage name="name" component={FieldError} />
             </FormGroup>
-            <FormGroup>
+            <FormGroup data-field="tel">
               <Label htmlFor="tel">{label(t("phone"))}</Label>
               <Input
                 type="tel"
@@ -272,19 +292,30 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             </FormGroup>
           </Row>
 
-          <FormGroup>
-            <Label htmlFor="text">
-              {label(t("comment").replace("*", ""))}{" "}
-              <Muted>({t("optional")})</Muted>
-            </Label>
-            <Comment
-              as="textarea"
-              id="text"
-              name="text"
-              rows={3}
-              placeholder={t("write_a_comment")}
-            />
-          </FormGroup>
+          {showComment || values.text ? (
+            <FormGroup>
+              <Label htmlFor="text">
+                {label(t("comment").replace("*", ""))}{" "}
+                <Muted>({t("optional")})</Muted>
+              </Label>
+              <Comment
+                as="textarea"
+                id="text"
+                name="text"
+                rows={3}
+                autoFocus={showComment}
+                placeholder={t("write_a_comment")}
+              />
+            </FormGroup>
+          ) : (
+            <AddCommentButton
+              type="button"
+              onClick={() => setShowComment(true)}
+            >
+              <Plus size={18} aria-hidden />
+              {t("add_comment")}
+            </AddCommentButton>
+          )}
 
           <AnimatePresence>
             {isSuccess && (
@@ -307,13 +338,40 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             <FieldError role="alert">{t("booking_error")}</FieldError>
           )}
 
-          <SubmitButton type="submit" disabled={isPending}>
+          <SubmitButton ref={submitRef} type="submit" disabled={isPending}>
             {isPending ? t("sending") : t("send")}
           </SubmitButton>
         </FormStyled>
       )}
     </Formik>
   );
+};
+
+/** On a failed submit, bring the first invalid field into view (it may be above the fold on mobile) */
+const ScrollToFirstError: FC = () => {
+  const { submitCount, isSubmitting, isValid, errors } =
+    useFormikContext<FormValues>();
+  const handledSubmit = useRef(0);
+
+  // Formik bumps submitCount before validation finishes, so wait until the
+  // attempt is over and the errors are known, then scroll once per attempt
+  useEffect(() => {
+    if (submitCount === handledSubmit.current || isSubmitting || isValid) {
+      return;
+    }
+    handledSubmit.current = submitCount;
+    const order: (keyof FormValues)[] = ["subService", "name", "tel"];
+    const first = order.find((key) => errors[key]);
+    if (!first) return;
+    const target =
+      document.querySelector(`[data-field="${first}"]`) ??
+      (first === "subService"
+        ? document.querySelector('[data-field="service"]')
+        : null);
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [submitCount, isSubmitting, isValid, errors]);
+
+  return null;
 };
 
 type ServicePickerProps = {
@@ -388,7 +446,11 @@ const FormStyled = styled(Form)`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: var(--space-5);
+  gap: var(--space-4);
+
+  @media screen and (min-width: 600px) {
+    gap: var(--space-5);
+  }
 `;
 
 const FormTitle = styled.h3<{ theme?: ThemeType }>`
@@ -403,16 +465,16 @@ const Fieldset = styled.fieldset`
 `;
 
 const Legend = styled.legend<{ theme?: ThemeType }>`
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 700;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   color: ${(props) => props.theme.colors.text};
 `;
 
 const Row = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-5);
+  gap: var(--space-4);
 
   @media screen and (min-width: 600px) {
     grid-template-columns: 1fr 1fr;
@@ -422,13 +484,36 @@ const Row = styled.div`
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 6px;
   min-width: 0;
 `;
 
 const Muted = styled.span`
   font-weight: 400;
   opacity: 0.6;
+`;
+
+/* Four equal slots in one row, so the time picker takes a single line */
+const TimeGrid = styled.div`
+  display: flex;
+  gap: 6px;
+
+  & > button {
+    flex: 1 1 auto;
+    padding-inline: 10px;
+    white-space: nowrap;
+  }
+`;
+
+const AddCommentButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  padding: 6px 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-primary);
 `;
 
 const ChipGroup = styled.div`
@@ -442,6 +527,7 @@ const Chip = styled.button<{
   $small?: boolean;
   theme?: ThemeType;
 }>`
+  min-height: 40px;
   padding: ${(props) => (props.$small ? "8px 14px" : "10px 18px")};
   border-radius: var(--radius-full);
   font-size: ${(props) =>
@@ -470,7 +556,7 @@ const ServiceList = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-height: 320px;
+  max-height: 264px;
   overflow-y: auto;
   padding: 2px 6px 2px 2px;
   overscroll-behavior: contain;
@@ -480,9 +566,9 @@ const ServiceOption = styled.button<{ $active: boolean; theme?: ThemeType }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-3);
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-radius: var(--radius-md);
   text-align: left;
   color: ${(props) => props.theme.colors.text};
@@ -502,9 +588,9 @@ const ServiceOption = styled.button<{ $active: boolean; theme?: ThemeType }>`
 `;
 
 const ServiceName = styled.span`
-  font-size: var(--text-base);
+  font-size: 0.9375rem;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.3;
 `;
 
 const ServiceMeta = styled.span`
@@ -528,13 +614,13 @@ const ServicePrice = styled.span`
 `;
 
 export const Label = styled.label<{ theme?: ThemeType }>`
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 700;
   color: ${(props) => props.theme.colors.text};
 `;
 
 const fieldStyles = (props: { theme: ThemeType; $invalid?: boolean }) => `
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
   border: 1.5px solid ${props.$invalid ? "#d64545" : props.theme.colors.border};
   background-color: transparent;
@@ -565,7 +651,7 @@ export const Input = styled(Field, {
 export const Comment = styled(Field)<{ theme?: ThemeType }>`
   ${(props) => fieldStyles(props as { theme: ThemeType })}
   resize: vertical;
-  min-height: 96px;
+  min-height: 84px;
 `;
 
 const FieldError = styled.p`
@@ -591,7 +677,9 @@ const SuccessBox = styled(motion.div)<{ theme?: ThemeType }>`
 `;
 
 const SubmitButton = styled.button`
-  padding: 18px 48px;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 32px;
   border-radius: var(--radius-full);
   font-size: var(--text-lg);
   font-weight: 700;
@@ -610,5 +698,11 @@ const SubmitButton = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: wait;
+  }
+
+  @media screen and (min-width: 600px) {
+    width: auto;
+    align-self: flex-start;
+    padding: 16px 48px;
   }
 `;

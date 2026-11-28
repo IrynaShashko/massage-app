@@ -356,16 +356,26 @@ const TimelineText = styled.p<{ theme?: ThemeType }>`
 const Skills = styled.ul`
   list-style: none;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-3);
 `;
 
 const Skill = styled.li<{ theme?: ThemeType }>`
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-  border: 1px solid ${(props) => props.theme.colors.border};
-  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  position: relative;
+  padding-left: var(--space-5);
+  line-height: 1.6;
   color: ${(props) => props.theme.colors.text};
-  font-weight: 600;
-  line-height: 1.4;
+  opacity: 0.85;
+
+  /* small accent dot, same as the timeline markers */
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-accent);
+  }
 `;

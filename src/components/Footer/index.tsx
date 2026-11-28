@@ -9,25 +9,13 @@ import { ThemeType } from "../../theme/theme";
 
 import logo from "../../images/logo.png";
 
-import { ReactComponent as Instagram } from "../../icons/instagram.svg";
-import { ReactComponent as Telegram } from "../../icons/telegram.svg";
-import { ReactComponent as Viber } from "../../icons/viber.svg";
-import { ReactComponent as Whatsapp } from "../../icons/whatsapp.svg";
-
-const SOCIALS = [
-  {
-    label: "Instagram",
-    href: "https://instagram.com/maria.glushenko",
-    Icon: Instagram,
-  },
-  { label: "Telegram", href: "https://t.me/MashaHlushenko", Icon: Telegram },
-  { label: "Viber", href: "viber://chat?number=+380936193616", Icon: Viber },
-  {
-    label: "WhatsApp",
-    href: "https://api.whatsapp.com/send?phone=380936193616",
-    Icon: Whatsapp,
-  },
-];
+import {
+  linkTarget,
+  MAPS_URL,
+  PHONE_DISPLAY,
+  PHONE_HREF,
+  SOCIALS,
+} from "../../config/contacts";
 
 const NAV = [
   { to: "/", key: "home_button" },
@@ -54,8 +42,7 @@ export const Footer: FC = () => {
               <li key={label}>
                 <SocialLink
                   href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...linkTarget(href)}
                   aria-label={label}
                 >
                   <Icon aria-hidden />
@@ -80,14 +67,14 @@ export const Footer: FC = () => {
           <ColumnTitle>{t("footer_contacts")}</ColumnTitle>
           <List>
             <li>
-              <ContactLink href="tel:+380936193616">
+              <ContactLink href={PHONE_HREF}>
                 <Phone size={18} aria-hidden />
-                +38 093 619 36 16
+                {PHONE_DISPLAY}
               </ContactLink>
             </li>
             <li>
               <ContactLink
-                href="https://goo.gl/maps/o3qvsXRkfv8h3hdw5"
+                href={MAPS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >

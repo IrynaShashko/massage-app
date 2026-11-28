@@ -13,6 +13,18 @@ import { ReactComponent as Whatsapp } from "../../icons/whatsapp.svg";
 
 import { ConnectionButtonContainer } from "../Menu";
 
+import {
+  INSTAGRAM_HANDLE,
+  INSTAGRAM_URL,
+  MAPS_URL,
+  PHONE_DISPLAY,
+  PHONE_HREF,
+  TELEGRAM_HANDLE,
+  TELEGRAM_URL,
+  VIBER_URL,
+  WHATSAPP_URL,
+} from "../../config/contacts";
+
 import { iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
@@ -31,7 +43,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
         <InfoItem>
           <InfoLink
             aria-label="Location"
-            href="https://goo.gl/maps/o3qvsXRkfv8h3hdw5"
+            href={MAPS_URL}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -48,14 +60,14 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
         </InfoItem>
 
         <InfoItem>
-          <InfoLink aria-label="Phone number" href="tel:+380936193616">
+          <InfoLink aria-label="Phone number" href={PHONE_HREF}>
             <ButtonsItem iconColor={background} color={color}>
               <IconStyled as={Phone} color={color} />
             </ButtonsItem>
             {!menu && (
               <InfoText>
                 <InfoTitle>{t("phone_title")}</InfoTitle>
-                <InfoDescription>+38 093 619 36 16</InfoDescription>
+                <InfoDescription>{PHONE_DISPLAY}</InfoDescription>
               </InfoText>
             )}
           </InfoLink>
@@ -64,7 +76,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
         <InfoItem>
           <InfoLink
             aria-label="Open instagram"
-            href="https://instagram.com/maria.glushenko?igshid=MzRlODBiNWFlZA=="
+            href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -74,7 +86,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             {!menu && (
               <InfoText>
                 <InfoTitle>{t("instagram_title")}</InfoTitle>
-                <InfoDescription>@mariia.hlushenko</InfoDescription>
+                <InfoDescription>@{INSTAGRAM_HANDLE}</InfoDescription>
               </InfoText>
             )}
           </InfoLink>
@@ -83,7 +95,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
         <InfoItem>
           <InfoLink
             aria-label="Open telegram"
-            href="https://t.me/MashaHlushenko"
+            href={TELEGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -93,24 +105,21 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             {!menu && (
               <InfoText>
                 <InfoTitle>{t("telegram_title")}</InfoTitle>
-                <InfoDescription>@MashaHlushenko</InfoDescription>
+                <InfoDescription>@{TELEGRAM_HANDLE}</InfoDescription>
               </InfoText>
             )}
           </InfoLink>
         </InfoItem>
 
         <InfoItem>
-          <InfoLink
-            aria-label="Open viber"
-            href="viber://chat?number=+380936193616"
-          >
+          <InfoLink aria-label="Open viber" href={VIBER_URL}>
             <ButtonsItem iconColor={background} color={color}>
               <IconStyled as={Viber} color={color} />
             </ButtonsItem>
             {!menu && (
               <InfoText>
                 <InfoTitle>{t("viber_title")}</InfoTitle>
-                <InfoDescription>+38 093 619 36 16</InfoDescription>
+                <InfoDescription>{PHONE_DISPLAY}</InfoDescription>
               </InfoText>
             )}
           </InfoLink>
@@ -119,7 +128,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
         <InfoItem>
           <InfoLink
             aria-label="Open whatsapp"
-            href="https://api.whatsapp.com/send?phone=380936193616"
+            href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -129,7 +138,7 @@ export const ConnectionButtons: FC<ConnectionButtonsPropsType> = ({
             {!menu && (
               <InfoText>
                 <InfoTitle>{t("whatsapp_title")}</InfoTitle>
-                <InfoDescription>+38 093 619 36 16</InfoDescription>
+                <InfoDescription>{PHONE_DISPLAY}</InfoDescription>
               </InfoText>
             )}
           </InfoLink>

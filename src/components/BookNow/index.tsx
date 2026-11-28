@@ -10,7 +10,10 @@ import { SectionHeading } from "../SectionHeading";
 import { Glow } from "../SectionHeading/Glow";
 import { ConnectionButtons } from "../ConnectionButton";
 import { ConnectionForm } from "../ConnectionForm";
-import { BOOKING_SECTION_ID } from "../../context/BookingContext";
+import {
+  BOOKING_HEADING_ID,
+  BOOKING_SECTION_ID,
+} from "../../context/BookingContext";
 
 export default function BookNow({ language }: { language: string }) {
   const [t] = useTranslation();
@@ -20,7 +23,7 @@ export default function BookNow({ language }: { language: string }) {
       <Glow $flip />
       <SectionContainer>
         <SectionHeading
-          id="contacts"
+          id={BOOKING_HEADING_ID}
           lead={t("contacts_lead")}
           accent={t("contacts_accent")}
         />
@@ -99,7 +102,6 @@ const CardHeading = styled.h3<{ theme?: ThemeType }>`
 
 const RightColumn = styled.div<{ theme?: ThemeType }>`
   ${(props) => cardBox(props.theme as ThemeType)}
-  scroll-margin-top: calc(var(--header-height) + var(--space-5));
 `;
 
 /* Full-bleed map closing the section, edge to edge */

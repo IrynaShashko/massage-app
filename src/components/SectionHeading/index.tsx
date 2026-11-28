@@ -36,7 +36,6 @@ const Header = styled.div<{ $align: "center" | "left" }>`
   gap: var(--space-4);
   margin-bottom: var(--space-7);
   text-align: ${(props) => props.$align};
-  scroll-margin-top: calc(var(--header-height) + var(--space-4));
 `;
 
 const Heading = styled.h2<{ theme?: ThemeType }>`

@@ -338,7 +338,7 @@ const Trigger = styled.button<{ $open: boolean; theme?: ThemeType }>`
   justify-content: space-between;
   gap: var(--space-3);
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
   border: 1.5px solid
     ${(props) =>

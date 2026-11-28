@@ -30,7 +30,7 @@ const globalStyles = (theme: Theme) => css`
     --text-2xl: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
     --text-3xl: clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
 
-    --header-height: 80px;
+    --header-height: 64px;
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
     --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -43,7 +43,9 @@ const globalStyles = (theme: Theme) => css`
     --color-primary: #007586;
     --color-primary-hover: #005f6e;
     --color-primary-light: rgb(156, 202, 209);
-    --color-header-bg: rgba(246, 241, 234, 0.85);
+    /* Opaque on purpose: a translucent fixed header lets the page show
+       through on iOS Safari, where backdrop-filter is unreliable */
+    --color-header-bg: #f6f1ea;
     /* Opaque so the dotted page background never shows through cards */
     --color-card-bg-light: #efe7e0;
 
@@ -52,7 +54,7 @@ const globalStyles = (theme: Theme) => css`
     --color-card-bg: #2b2622;
     --color-text-dark: #ede6dc;
     --color-primary-dark: rgb(95, 157, 168);
-    --color-header-bg-dark: rgba(31, 27, 24, 0.85);
+    --color-header-bg-dark: #1f1b18;
     --color-box-shadow-light: rgba(0, 0, 0, 0.1);
     --color-box-shadow-dark: rgba(0, 0, 0, 0.4);
     --color-shadow: var(--color-box-shadow-light);
@@ -99,6 +101,12 @@ const globalStyles = (theme: Theme) => css`
     --transition-duration: 0.3s;
   }
 
+  @media screen and (min-width: 1080px) {
+    :root {
+      --header-height: 80px;
+    }
+  }
+
   /* In dark mode the brand teal is lifted so text in it passes WCAG AA on the dark background */
   :root[data-theme="dark"] {
     --color-primary: #23919f;
@@ -143,6 +151,16 @@ const globalStyles = (theme: Theme) => css`
 
   html {
     scroll-behavior: smooth;
+    /* Every scroll target (anchors, scrollIntoView) stops below the fixed
+       header with some air, so nothing ends up hidden under it */
+    scroll-padding-top: calc(var(--header-height) + var(--space-4));
+  }
+
+  /* Keep targets clear of the fixed bottom booking bar on mobile/tablet */
+  @media screen and (max-width: 1079px) {
+    html {
+      scroll-padding-bottom: 88px;
+    }
   }
 
   h1,
@@ -169,7 +187,9 @@ const globalStyles = (theme: Theme) => css`
   }
 
   body {
-    overflow-x: hidden;
+    /* clip (not hidden) so body never becomes a scroll container,
+       which breaks position: fixed on iOS Safari */
+    overflow-x: clip;
     /* Subtle dotted texture over the page colour */
     background-image: radial-gradient(
       circle at 1px 1px,

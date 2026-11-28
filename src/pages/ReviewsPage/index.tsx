@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
-import { MessageSquareHeart, Star } from "lucide-react";
+import { LogIn, MessageSquareHeart, PenLine } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { SectionContainer } from "../../App";
 import BookNow from "../../components/BookNow";
-import { Loader } from "../../components/Loader";
 import { SectionHeading } from "../../components/SectionHeading";
 import { Glow, GlowSection } from "../../components/SectionHeading/Glow";
 
@@ -17,12 +17,28 @@ import { ThemeType } from "../../theme/theme";
 import { useProfile, useUpdateProfile } from "../../hooks/useAuth";
 import { useCreateReview, useReviews } from "../../hooks/useReviews";
 
+import {
+  Card as ReviewCard,
+  Header as ReviewHeader,
+  RatingStars,
+  ReviewItem,
+} from "./ReviewItem";
+import { RatingInput } from "./RatingInput";
 import { Review } from "./types";
 
 const REVIEWS_PER_PAGE = 4;
+const FORM_ID = "leave-review";
 
 /** Labels in the translations end with ":"; drop it to match other forms */
 const label = (text: string) => text.replace(/:\s*$/, "");
+
+const toLocale = (language: string) => (language === "ua" ? "uk" : language);
+
+/** "1 відгук / 3 відгуки / 5 відгуків": the app's "ua" code has no i18next plural rules */
+const pluralForm = (n: number, language: string) => {
+  const rule = new Intl.PluralRules(toLocale(language)).select(n);
+  return rule === "one" ? "one" : rule === "few" ? "few" : "many";
+};
 
 const ReviewsPage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
@@ -45,18 +61,78 @@ const ReviewsPage = ({ language }: { language: string }) => {
     comment: false,
     stars: false,
   });
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const { data: reviews = [], isLoading, isError, refetch } = useReviews();
   const createReviewMutation = useCreateReview();
   const updateProfileMutation = useUpdateProfile();
   const { openModal } = useModal();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE);
+  const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
+
+  // Newest first by date; reviews without a date keep the API order at the end
+  const sortedReviews = useMemo(
+    () =>
+      reviews
+        .map((review, index) => ({ review, index }))
+        .sort((a, b) => {
+          const ta = Date.parse(a.review.createdAt) || 0;
+          const tb = Date.parse(b.review.createdAt) || 0;
+          return tb - ta || b.index - a.index;
+        })
+        .map(({ review }) => review),
+    [reviews],
+  );
+
+  const visibleReviews = sortedReviews.slice(0, visibleCount);
+  const remaining = sortedReviews.length - visibleReviews.length;
+
+  const average = useMemo(() => {
+    const rated = reviews.filter((r) => r.rating > 0);
+    if (!rated.length) return 0;
+    return rated.reduce((sum, r) => sum + r.rating, 0) / rated.length;
+  }, [reviews]);
+
+  const averageText = new Intl.NumberFormat(toLocale(language), {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(average);
+
+  const countText = t(`reviews_count_${pluralForm(reviews.length, language)}`, {
+    n: reviews.length,
+  });
 
   const showInfo = (kind: "success" | "error", text: string) => {
     setInfo({ kind, text });
     setTimeout(() => setInfo(null), 4000);
+  };
+
+  const scrollToForm = () => {
+    const form = document.getElementById(FORM_ID);
+    if (!form) return;
+
+    // Land the form's top just below the sticky header
+    const headerHeight =
+      parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--header-height",
+        ),
+      ) || 0;
+    const top =
+      form.getBoundingClientRect().top + window.scrollY - headerHeight - 16;
+    window.scrollTo({ top, behavior: "smooth" });
+
+    // Focus only after the scroll has finished, and not on touch screens:
+    // the on-screen keyboard would resize the page and stop the scroll halfway
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    let done = false;
+    const focusName = () => {
+      if (done) return;
+      done = true;
+      nameInputRef.current?.focus({ preventScroll: true });
+    };
+    window.addEventListener("scrollend", focusName, { once: true });
+    window.setTimeout(focusName, 900);
   };
 
   const handleAddReview = async () => {
@@ -93,7 +169,6 @@ const ReviewsPage = ({ language }: { language: string }) => {
         userId: user?.id || "",
       });
       showInfo("success", t("review_added"));
-      setCurrentPage(1);
     } catch (error) {
       console.error(error);
       showInfo("error", t("review_error"));
@@ -104,19 +179,9 @@ const ReviewsPage = ({ language }: { language: string }) => {
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewReview({ ...newReview, comment: e.target.value });
+    if (errors.comment) setErrors((prev) => ({ ...prev, comment: false }));
     e.target.style.height = "auto";
     e.target.style.height = `${e.target.scrollHeight}px`;
-  };
-
-  const sortedReviews = [...reviews].reverse();
-  const currentReviews = sortedReviews.slice(
-    (currentPage - 1) * REVIEWS_PER_PAGE,
-    currentPage * REVIEWS_PER_PAGE,
-  );
-
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
   };
 
   useEffect(() => {
@@ -143,8 +208,47 @@ const ReviewsPage = ({ language }: { language: string }) => {
 
           <Layout>
             <ListColumn>
+              {!isLoading && !isError && reviews.length > 0 && (
+                <Summary>
+                  <SummaryScore>
+                    <AverageValue>{averageText}</AverageValue>
+                    <div>
+                      <RatingStars
+                        value={Math.round(average * 10) / 10}
+                        size={20}
+                        label={`${averageText} / 5`}
+                      />
+                      <SummaryCount>{countText}</SummaryCount>
+                    </div>
+                  </SummaryScore>
+                  <JumpToForm type="button" onClick={scrollToForm}>
+                    <PenLine size={18} aria-hidden />
+                    {t("leave_review_short")}
+                  </JumpToForm>
+                </Summary>
+              )}
+
               {isLoading ? (
-                <Loader />
+                <ReviewList aria-busy="true" aria-label={t("loading")}>
+                  {Array.from({ length: REVIEWS_PER_PAGE }, (_, i) => (
+                    <ReviewCard key={i} aria-hidden>
+                      <ReviewHeader>
+                        <SkeletonBlock $w="44px" $h="44px" $round />
+                        <SkeletonStack>
+                          <SkeletonBlock
+                            $w={i % 2 ? "96px" : "140px"}
+                            $h="16px"
+                          />
+                          <SkeletonBlock $w="88px" $h="12px" />
+                        </SkeletonStack>
+                      </ReviewHeader>
+                      <SkeletonStack $gap="10px">
+                        <SkeletonBlock $w="100%" $h="14px" />
+                        <SkeletonBlock $w={i % 2 ? "55%" : "72%"} $h="14px" />
+                      </SkeletonStack>
+                    </ReviewCard>
+                  ))}
+                </ReviewList>
               ) : isError ? (
                 <EmptyCard role="alert">
                   <CardTitle>{t("reviews_load_error")}</CardTitle>
@@ -152,7 +256,7 @@ const ReviewsPage = ({ language }: { language: string }) => {
                     {t("retry")}
                   </RetryButton>
                 </EmptyCard>
-              ) : currentReviews.length === 0 ? (
+              ) : visibleReviews.length === 0 ? (
                 <EmptyCard>
                   <EmptyIcon aria-hidden>
                     <MessageSquareHeart size={28} />
@@ -162,69 +266,29 @@ const ReviewsPage = ({ language }: { language: string }) => {
                 </EmptyCard>
               ) : (
                 <ReviewList>
-                  {currentReviews.map((review, index) => (
-                    <ReviewCard key={review.id ?? index}>
-                      <ReviewHeader>
-                        <Avatar aria-hidden>
-                          {(review.user?.name || "?").trim().charAt(0)}
-                        </Avatar>
-                        <div>
-                          <UserName>{review.user?.name}</UserName>
-                          <Stars aria-label={`${review.rating} / 5`}>
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <Star
-                                key={i}
-                                size={16}
-                                aria-hidden
-                                fill={
-                                  i < review.rating ? "currentColor" : "none"
-                                }
-                                strokeWidth={i < review.rating ? 0 : 1.6}
-                              />
-                            ))}
-                          </Stars>
-                        </div>
-                      </ReviewHeader>
-                      <ReviewText>{review.comment}</ReviewText>
-                    </ReviewCard>
+                  {visibleReviews.map((review, index) => (
+                    <ReviewItem
+                      key={review.id ?? index}
+                      review={review}
+                      language={language}
+                    />
                   ))}
                 </ReviewList>
               )}
 
-              {totalPages > 1 && (
-                <Pagination aria-label="Pagination">
-                  <PageButton
-                    type="button"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    aria-label="Previous page"
-                  >
-                    ‹
-                  </PageButton>
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <PageButton
-                      type="button"
-                      key={i}
-                      $active={currentPage === i + 1}
-                      aria-current={currentPage === i + 1 ? "page" : undefined}
-                      onClick={() => handlePageChange(i + 1)}
-                    >
-                      {i + 1}
-                    </PageButton>
-                  ))}
-                  <PageButton
-                    type="button"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    aria-label="Next page"
-                  >
-                    ›
-                  </PageButton>
-                </Pagination>
+              {!isLoading && remaining > 0 && (
+                <ShowMore
+                  type="button"
+                  onClick={() => setVisibleCount((c) => c + REVIEWS_PER_PAGE)}
+                >
+                  {t("show_more")}
+                  <ShowMoreCount>{remaining}</ShowMoreCount>
+                </ShowMore>
               )}
             </ListColumn>
 
             <FormCard
+              id={FORM_ID}
               onSubmit={(e) => {
                 e.preventDefault();
                 handleAddReview();
@@ -233,22 +297,43 @@ const ReviewsPage = ({ language }: { language: string }) => {
             >
               <CardTitle>{t("leave_review")}</CardTitle>
 
+              {!isAuthenticated && (
+                <LoginHint>
+                  <p>{t("review_login_hint")}</p>
+                  <LoginButton type="button" onClick={openModal}>
+                    <LogIn size={18} aria-hidden />
+                    {t("login_action")}
+                  </LoginButton>
+                </LoginHint>
+              )}
+
               <Field>
                 <FieldLabel htmlFor="review-name">
                   {label(t("your_name_label"))}
                 </FieldLabel>
                 <TextInput
+                  ref={nameInputRef}
                   type="text"
                   id="review-name"
                   autoComplete="name"
                   value={newReview.name}
-                  onChange={(e) =>
-                    setNewReview({ ...newReview, name: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setNewReview({ ...newReview, name: e.target.value });
+                    if (errors.name)
+                      setErrors((prev) => ({ ...prev, name: false }));
+                  }}
                   placeholder={t("your_name_placeholder")}
                   $invalid={errors.name}
                   aria-invalid={errors.name}
+                  aria-describedby={
+                    errors.name ? "review-name-error" : undefined
+                  }
                 />
+                {errors.name && (
+                  <ErrorText id="review-name-error" role="alert">
+                    {t("name_required")}
+                  </ErrorText>
+                )}
               </Field>
 
               <Field>
@@ -263,34 +348,36 @@ const ReviewsPage = ({ language }: { language: string }) => {
                   rows={3}
                   $invalid={errors.comment}
                   aria-invalid={errors.comment}
+                  aria-describedby={
+                    errors.comment ? "review-comment-error" : undefined
+                  }
                 />
+                {errors.comment && (
+                  <ErrorText id="review-comment-error" role="alert">
+                    {t("comment_required")}
+                  </ErrorText>
+                )}
               </Field>
 
               <Field>
-                <FieldLabel as="span">{label(t("rating_label"))}</FieldLabel>
-                <RatingRow role="radiogroup" aria-label={t("rating_label")}>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <RatingStar
-                      key={i}
-                      type="button"
-                      role="radio"
-                      aria-checked={newReview.rating === i + 1}
-                      aria-label={`${i + 1} / 5`}
-                      $on={i < newReview.rating}
-                      onClick={() =>
-                        setNewReview((prev) => ({ ...prev, rating: i + 1 }))
-                      }
-                    >
-                      <Star
-                        size={30}
-                        aria-hidden
-                        fill={i < newReview.rating ? "currentColor" : "none"}
-                      />
-                    </RatingStar>
-                  ))}
-                </RatingRow>
+                <FieldLabel as="span" id="review-rating-label">
+                  {label(t("rating_label"))}
+                </FieldLabel>
+                <RatingInput
+                  value={newReview.rating}
+                  labelId="review-rating-label"
+                  errorId="review-rating-error"
+                  invalid={errors.stars}
+                  onChange={(rating) => {
+                    setNewReview((prev) => ({ ...prev, rating }));
+                    if (errors.stars)
+                      setErrors((prev) => ({ ...prev, stars: false }));
+                  }}
+                />
                 {errors.stars && (
-                  <ErrorText role="alert">{t("rating_required")}</ErrorText>
+                  <ErrorText id="review-rating-error" role="alert">
+                    {t("rating_required")}
+                  </ErrorText>
                 )}
               </Field>
 
@@ -314,7 +401,117 @@ const ReviewsPage = ({ language }: { language: string }) => {
 
 export default ReviewsPage;
 
-const STAR_GOLD = "#e9b949";
+/* ---------- summary & list controls ---------- */
+
+const Summary = styled.div<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+`;
+
+const SummaryScore = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+`;
+
+const AverageValue = styled.span<{ theme?: ThemeType }>`
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 2rem + 2vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: ${(props) => props.theme.colors.text};
+`;
+
+const SummaryCount = styled.p<{ theme?: ThemeType }>`
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  color: ${(props) => props.theme.colors.text};
+  opacity: 0.7;
+`;
+
+/* Only on narrow screens, where the form sits below the whole list */
+const JumpToForm = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 12px 20px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 700;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    background-color: var(--color-primary);
+    color: #fff;
+  }
+
+  @media screen and (min-width: 960px) {
+    display: none;
+  }
+`;
+
+const ShowMore = styled.button<{ theme?: ThemeType }>`
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-glass);
+  color: ${(props) => props.theme.colors.text};
+  font-weight: 700;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+  }
+`;
+
+const ShowMoreCount = styled.span`
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+`;
+
+const LoginHint = styled.div<{ theme?: ThemeType }>`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: ${(props) => props.theme.colors.text};
+  line-height: 1.5;
+`;
+
+const LoginButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+
+  &:hover {
+    background-color: var(--color-primary-hover);
+  }
+`;
 
 const Layout = styled.div`
   display: grid;
@@ -340,50 +537,46 @@ const ReviewList = styled.ul`
   gap: var(--space-4);
 `;
 
-const ReviewCard = styled.li<{ theme?: ThemeType }>`
-  ${(props) => cardSurface(props.theme as ThemeType)}
-  padding: var(--space-5) var(--space-6);
+/* ---------- loading skeleton ---------- */
+
+const shimmer = keyframes`
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
 `;
 
-const ReviewHeader = styled.div`
+const SkeletonStack = styled.div<{ $gap?: string }>`
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  flex-direction: column;
+  flex: 1;
+  gap: ${(props) => props.$gap ?? "8px"};
 `;
 
-const Avatar = styled.span`
-  display: grid;
-  place-items: center;
+const SkeletonBlock = styled.span<{
+  $w: string;
+  $h: string;
+  $round?: boolean;
+  theme?: ThemeType;
+}>`
+  display: block;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
-  background: var(--gradient-accent);
-  color: #fff;
-  font-weight: 800;
-  font-size: var(--text-lg);
-  text-transform: uppercase;
-`;
-
-const UserName = styled.p<{ theme?: ThemeType }>`
-  font-weight: 700;
-  color: ${(props) => props.theme.colors.text};
-`;
-
-const Stars = styled.div`
-  display: flex;
-  gap: 2px;
-  margin-top: 2px;
-  color: ${STAR_GOLD};
-`;
-
-const ReviewText = styled.p<{ theme?: ThemeType }>`
-  line-height: 1.7;
-  color: ${(props) => props.theme.colors.text};
-  opacity: 0.85;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
+  width: ${(props) => props.$w};
+  height: ${(props) => props.$h};
+  border-radius: ${(props) => (props.$round ? "var(--radius-full)" : "6px")};
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, ${(props) => props.theme.colors.text} 8%, transparent)
+      25%,
+    color-mix(in srgb, ${(props) => props.theme.colors.text} 16%, transparent)
+      50%,
+    color-mix(in srgb, ${(props) => props.theme.colors.text} 8%, transparent)
+      75%
+  );
+  background-size: 200% 100%;
+  animation: ${shimmer} 1.4s ease-in-out infinite;
 `;
 
 const EmptyCard = styled.div<{ theme?: ThemeType }>`
@@ -422,36 +615,6 @@ const CardTitle = styled.h2<{ theme?: ThemeType }>`
   ${(props) => cardTitle(props.theme as ThemeType)}
 `;
 
-const Pagination = styled.nav`
-  display: flex;
-  justify-content: center;
-  gap: var(--space-2);
-`;
-
-const PageButton = styled.button<{ $active?: boolean; theme?: ThemeType }>`
-  min-width: 40px;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: var(--radius-full);
-  border: 1px solid
-    ${(props) =>
-      props.$active ? "var(--color-primary)" : "var(--surface-border)"};
-  background: ${(props) =>
-    props.$active ? "var(--color-primary)" : "var(--surface-glass)"};
-  color: ${(props) => (props.$active ? "#fff" : props.theme.colors.text)};
-  font-weight: 700;
-  transition: background-color 0.2s ease;
-
-  &:hover:not(:disabled) {
-    border-color: var(--color-primary);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-`;
-
 /* ---------- form ---------- */
 
 const FormCard = styled.form<{ theme?: ThemeType }>`
@@ -460,6 +623,7 @@ const FormCard = styled.form<{ theme?: ThemeType }>`
   flex-direction: column;
   gap: var(--space-5);
   padding: var(--space-6);
+  scroll-margin-top: calc(var(--header-height) + var(--space-4));
 
   @media screen and (min-width: 960px) {
     position: sticky;
@@ -511,31 +675,6 @@ const TextArea = styled("textarea", {
   ${(props) => fieldStyles(props.theme as ThemeType, props.$invalid)}
   min-height: 110px;
   resize: vertical;
-`;
-
-const RatingRow = styled.div`
-  display: flex;
-  gap: var(--space-1);
-`;
-
-const RatingStar = styled.button<{ $on: boolean; theme?: ThemeType }>`
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
-  color: ${(props) => (props.$on ? STAR_GOLD : props.theme.colors.text)};
-  opacity: ${(props) => (props.$on ? 1 : 0.35)};
-  transition:
-    transform 0.15s ease,
-    opacity 0.15s ease,
-    color 0.15s ease;
-
-  &:hover {
-    transform: scale(1.12);
-    opacity: 1;
-    color: ${STAR_GOLD};
-  }
 `;
 
 const ErrorText = styled.p`

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { Link, NavLink } from "react-router-dom";
 
-import { LogOut, UserRound } from "lucide-react";
+import { CalendarCheck, LogOut, UserRound } from "lucide-react";
 
 import styled from "@emotion/styled";
 
@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 
 import logo from "../../images/logo.png";
 
-import { LanguageButton } from "../LanguageButton";
 import { Menu } from "../Menu";
 import { ThemeButton } from "../ThemeButton";
 
@@ -66,8 +65,8 @@ export const Header: React.FC<HeaderPropsType> = ({
     <HeaderContainer $darkMode={darkMode} $scrolled={isScrolled}>
       <StyledSectionContainer>
         <Wrapper>
-          <Logo to="/">
-            <img src={logo} alt="Logo" />
+          <Logo to="/" aria-label={t("home_button")}>
+            <img src={logo} alt="Maria Glushenko" />
           </Logo>
           <NavLinks>
             <li>
@@ -94,21 +93,41 @@ export const Header: React.FC<HeaderPropsType> = ({
             </li>
           </NavLinks>
           <ButtonContainer>
-            <LanguageButton
-              languageToggle={languageToggle}
-              language={language}
-            />
-            <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
+            <LangSwitch role="group" aria-label="Language">
+              {(["ua", "en"] as const).map((lng) => (
+                <LangOption
+                  key={lng}
+                  type="button"
+                  $active={language === lng}
+                  aria-pressed={language === lng}
+                  onClick={() => language !== lng && languageToggle()}
+                >
+                  {lng.toUpperCase()}
+                </LangOption>
+              ))}
+            </LangSwitch>
+            <IconTile>
+              <ThemeButton
+                darkMode={darkMode}
+                themeToggle={themeToggle}
+                size={20}
+              />
+            </IconTile>
             {isAuthenticated ? (
-              <LogoutButton onClick={onLogout} aria-label="Log out">
-                <LogOut size={28} />
-              </LogoutButton>
+              <IconTileButton
+                type="button"
+                onClick={onLogout}
+                aria-label="Log out"
+              >
+                <LogOut size={20} />
+              </IconTileButton>
             ) : (
-              <StyledUserLink to="/auth" aria-label="Log in">
-                <UserRound size={28} />
-              </StyledUserLink>
+              <IconTileLink to="/auth" aria-label={t("login_button")}>
+                <UserRound size={20} />
+              </IconTileLink>
             )}
             <CtaButton type="button" onClick={() => startBooking()}>
+              <CalendarCheck size={18} aria-hidden />
               {t("bookNow")}
             </CtaButton>
           </ButtonContainer>
@@ -128,30 +147,16 @@ export const Header: React.FC<HeaderPropsType> = ({
   );
 };
 
-const StyledSectionContainer = styled.header`
+const StyledSectionContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 20px;
+  padding: 0 16px;
   @media screen and (min-width: 900px) {
-    padding: 20px 40px;
-  }
-`;
-
-const LogoutButton = styled.button`
-  color: ${(props) => props.theme.colors.text};
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0;
-  transition: opacity 0.3s;
-
-  &:hover {
-    svg {
-      stroke: ${(props) => props.theme.colors.primary};
-      transition: stroke 0.3s ease;
-    }
+    padding: 0 40px;
   }
 `;
 
@@ -166,10 +171,13 @@ const HeaderContainer = styled.header<{
   right: 0;
   width: 100%;
   height: var(--header-height);
+  /* Solid, no backdrop-filter: on iOS a blurred/translucent fixed header lets
+     the page show through, and backdrop-filter also traps fixed children */
   background: ${(props) => props.theme.colors.headerBg};
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   z-index: 1000;
+  /* Hairline so the header reads as its own layer even at the top of the page */
+  border-bottom: 1px solid
+    color-mix(in srgb, ${(props) => props.theme.colors.border} 60%, transparent);
   box-shadow: ${(props) =>
     props.$scrolled ? `0 4px 16px ${props.theme.colors.boxShadow}` : "none"};
   transition:
@@ -203,79 +211,66 @@ const Logo = styled(Link)`
   img {
     width: 150px;
     height: auto;
+    transition: filter 0.3s ease;
+  }
+
+  /* The logo is a dark-teal PNG: lift it so it stays readable on the dark header */
+  [data-theme="dark"] & img {
+    filter: brightness(1.9) saturate(0.85);
   }
 `;
 
 const NavLinks = styled.ul`
   display: flex;
-  gap: 24px;
-  margin: 0 24px;
+  gap: 2px;
+  margin: 0 16px;
+  align-items: center;
   justify-content: center;
   flex-grow: 1;
 `;
 
-const StyledUserLink = styled(Link)`
-  display: flex;
+/* Pill links: tinted background on hover, filled tint for the current page */
+const navLinkStyles = (theme: ThemeType) => `
+  display: inline-flex;
   align-items: center;
-  color: ${(props) => props.theme.colors.text};
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  color: ${theme.colors.text};
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
   &:hover {
-    svg {
-      stroke: ${(props) => props.theme.colors.primary};
-      transition: stroke 0.3s ease;
-    }
+    color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  }
+
+  &.active {
+    color: var(--color-primary);
+    font-weight: 700;
+    background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
   }
 `;
 
 const StyledNavLink = styled(NavLink)<{ theme?: ThemeType }>`
-  text-decoration: none;
-  color: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  white-space: nowrap;
-  position: relative;
-  transition: color 0.3s;
-  font-family: var(--font-body);
-  &::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 0;
-    height: 2px;
-    background-color: ${(props) => props.theme.colors.primary};
-    transition: width 0.3s ease-in-out;
-  }
-  &:hover::after,
-  &.active::after {
-    width: 100%;
-  }
-  &:hover {
-    color: ${(props) => props.theme.colors.primary};
-  }
-  &.active {
-    color: ${(props) => props.theme.colors.primary};
-  }
+  ${(props) => navLinkStyles(props.theme as ThemeType)}
 `;
 
 const StyledLink = styled.a<{ theme?: ThemeType }>`
-  text-decoration: none;
-  color: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: color 0.3s;
-  font-family: var(--font-body);
-  &:hover {
-    color: ${(props) => props.theme.colors.primary};
-  }
-  &.active {
-    color: ${(props) => props.theme.colors.primary};
-  }
+  ${(props) => navLinkStyles(props.theme as ThemeType)}
 `;
 
 const CtaButton = styled.button`
   display: none;
-  padding: 10px 22px;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: var(--space-2);
+  padding: 10px 20px;
   border-radius: var(--radius-full);
   background-color: var(--color-primary);
   color: #fff;
@@ -297,8 +292,78 @@ const CtaButton = styled.button`
   }
 `;
 
-const ButtonContainer = styled.div`
+/* Utilities sit apart from the page links, behind a thin divider */
+const ButtonContainer = styled.div<{ theme?: ThemeType }>`
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  border-left: 1px solid ${(props) => props.theme.colors.border};
+`;
+
+const LangSwitch = styled.div<{ theme?: ThemeType }>`
+  display: inline-flex;
+  padding: 3px;
+  margin-right: var(--space-1);
+  border-radius: var(--radius-full);
+  border: 1px solid ${(props) => props.theme.colors.border};
+`;
+
+const LangOption = styled.button<{ $active: boolean; theme?: ThemeType }>`
+  min-width: 36px;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: ${(props) => (props.$active ? "#fff" : props.theme.colors.text)};
+  background-color: ${(props) =>
+    props.$active ? "var(--color-primary)" : "transparent"};
+  opacity: ${(props) => (props.$active ? 1 : 0.7)};
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+/* One shape for every header icon: 40px round tile, tint on hover */
+const iconTileStyles = (theme: ThemeType) => `
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  color: ${theme.colors.text};
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  & > button {
+    width: 100%;
+    height: 100%;
+  }
+
+  &:hover {
+    color: var(--color-primary);
+    background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+`;
+
+const IconTile = styled.span<{ theme?: ThemeType }>`
+  ${(props) => iconTileStyles(props.theme as ThemeType)}
+`;
+
+const IconTileButton = styled.button<{ theme?: ThemeType }>`
+  ${(props) => iconTileStyles(props.theme as ThemeType)}
+`;
+
+const IconTileLink = styled(Link)<{ theme?: ThemeType }>`
+  ${(props) => iconTileStyles(props.theme as ThemeType)}
 `;

@@ -12,7 +12,7 @@ import bg from "../../images/10.jpg";
 
 import { useBooking } from "../../context/BookingContext";
 
-import { PhoneButton } from "../PhoneButton/PhoneButton";
+import { HERO_CTA_ID } from "../MobileBookingBar";
 
 import { HeroPropsType } from "./types";
 
@@ -50,7 +50,6 @@ export const Hero: FC<HeroPropsType> = () => {
 
   return (
     <>
-      <PhoneButton />
       <PageContainer>
         <Background
           initial={{ opacity: 0, scale: 1.08 }}
@@ -75,6 +74,7 @@ export const Hero: FC<HeroPropsType> = () => {
           </BenefitList>
 
           <StyledButton
+            id={HERO_CTA_ID}
             type="button"
             variants={item}
             onClick={() => startBooking()}

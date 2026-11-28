@@ -2,7 +2,3 @@ body.modal-open {
   overflow: hidden;
   height: 100vh;
 }
-
-#booking-section {
-  scroll-margin-top: 80px;
-}

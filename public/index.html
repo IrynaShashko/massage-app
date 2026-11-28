@@ -30,6 +30,17 @@
 
   <div id="root"></div>
   <div id="modal"></div>
+
+  <!-- Netlify Forms detects this static form at deploy time; the React booking
+       form posts the same fields to it (see src/hooks/useCreateBooking.ts) -->
+  <form name="booking" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="text" name="bot-field" />
+    <input type="text" name="name" />
+    <input type="tel" name="phone" />
+    <input type="email" name="email" />
+    <input type="text" name="service" />
+    <textarea name="comment"></textarea>
+  </form>
 </body>
 
 </html>

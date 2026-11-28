@@ -1,50 +1,44 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { css, keyframes } from "@emotion/react";
+import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
 
+import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
+
 import { ReactComponent as Phone } from "../../icons/phone.svg";
-import { ReactComponent as Telegram } from "../../icons/telegram.svg";
-import { ReactComponent as Viber } from "../../icons/viber.svg";
-import { ReactComponent as Whatsapp } from "../../icons/whatsapp.svg";
 
 import { IconStyled } from "../ConnectionButton";
+
+import { CONTACTS, linkTarget } from "../../config/contacts";
+
+const EASE_OUT = "cubic-bezier(0.22, 1, 0.36, 1)";
+const EASE_SPRING = "cubic-bezier(0.34, 1.56, 0.64, 1)";
+const STAGGER_MS = 45;
 
 const waterRipple = keyframes`
   0% {
     transform: scale(1);
-    opacity: 0.8;
+    opacity: 0.45;
   }
   100% {
-    transform: scale(2.2);
+    transform: scale(1.9);
     opacity: 0;
-  }
-`;
-
-const slideInFromRight = keyframes`
-  from {
-    opacity: 0;
-    transform: translate(200px, 0px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(0px, 0px);
   }
 `;
 
 const PhoneContainer = styled.div`
   position: fixed;
-  /* sits above the mobile booking bar */
-  bottom: calc(96px + env(safe-area-inset-bottom));
-  right: 16px;
-  display: flex;
+  bottom: 30px;
+  right: 30px;
+  /* On mobile the bottom booking bar already has a call button */
+  display: none;
   flex-direction: column;
   align-items: center;
   z-index: 50;
 
   @media screen and (min-width: 1080px) {
-    bottom: 30px;
-    right: 30px;
+    display: flex;
   }
   @media screen and (min-width: 1440px) {
     bottom: 70px;
@@ -52,7 +46,87 @@ const PhoneContainer = styled.div`
   }
 `;
 
-const RippleWrapper = styled.div<{ $active: boolean }>`
+const ContactList = styled.ul<{ $open: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  pointer-events: ${({ $open }) => ($open ? "auto" : "none")};
+`;
+
+const ContactItem = styled.li<{ $open: boolean; $delay: number }>`
+  position: relative;
+  opacity: ${({ $open }) => ($open ? 1 : 0)};
+  transform: ${({ $open }) =>
+    $open ? "translateY(0) scale(1)" : "translateY(24px) scale(0.6)"};
+  transition:
+    opacity 0.25s ease,
+    transform 0.4s ${EASE_SPRING};
+  transition-delay: ${({ $delay }) => `${$delay}ms`};
+`;
+
+const Tooltip = styled.span`
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transform: translate(6px, -50%);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s ${EASE_OUT};
+  pointer-events: none;
+`;
+
+const ContactLink = styled.a`
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ${EASE_OUT},
+    box-shadow 0.25s ease;
+
+  svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--color-primary-hover);
+    transform: scale(1.08);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  }
+
+  &:focus-visible {
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+
+  &:hover + span,
+  &:focus-visible + span {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+`;
+
+const MainWrapper = styled.div<{ $open: boolean }>`
   position: relative;
   display: flex;
   justify-content: center;
@@ -62,148 +136,169 @@ const RippleWrapper = styled.div<{ $active: boolean }>`
   &::after {
     content: "";
     position: absolute;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     border-radius: 50%;
     background-color: var(--color-primary);
-    opacity: 0;
     z-index: -1;
-    animation: ${({ $active }) =>
-      $active
-        ? "none"
-        : css`
-            ${waterRipple} 2.5s infinite
-          `};
+    opacity: 0;
+    animation: ${waterRipple} 2.6s ${EASE_OUT} infinite;
+    animation-play-state: ${({ $open }) => ($open ? "paused" : "running")};
+    visibility: ${({ $open }) => ($open ? "hidden" : "visible")};
   }
 
   &::after {
-    animation-delay: 1.25s;
+    animation-delay: 1.3s;
   }
 `;
 
-const MainButton = styled.button`
+const MainButton = styled.button<{ $open: boolean }>`
   position: relative;
-  z-index: 2;
-  padding: 16px 18px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background-color: var(--color-primary);
+  background-color: ${({ $open }) =>
+    $open ? "var(--color-primary-hover)" : "var(--color-primary)"};
   cursor: pointer;
-  transition: all 0.3s ease;
   display: flex;
   justify-content: center;
   align-items: center;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  transition:
+    background-color 0.3s ease,
+    transform 0.3s ${EASE_OUT},
+    box-shadow 0.3s ease;
 
   &:hover {
-    background-color: #015b69;
-    transform: scale(1.05);
+    transform: scale(1.06);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
   }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:focus-visible {
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+`;
+
+const MainIcon = styled.span<{ $visible: boolean; $rotate: number }>`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  transform: ${({ $visible, $rotate }) =>
+    $visible ? "rotate(0deg) scale(1)" : `rotate(${$rotate}deg) scale(0.5)`};
+  transition:
+    opacity 0.25s ease,
+    transform 0.4s ${EASE_SPRING};
 
   svg {
-    width: 24px;
-    height: 24px;
-    color: white;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 28px;
+    height: 28px;
   }
 `;
 
-const ButtonContainer = styled.div<{ $animationShow: boolean }>`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-  pointer-events: ${({ $animationShow }) => ($animationShow ? "all" : "none")};
+const CloseIcon = () => (
+  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+    <path
+      d="M6 6l12 12M18 6L6 18"
+      stroke="#fff"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      fill="none"
+    />
+  </svg>
+);
 
-  button {
-    opacity: 0;
-    animation: ${({ $animationShow }) =>
-      $animationShow
-        ? css`
-            ${slideInFromRight} 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards
-          `
-        : "none"};
-  }
-
-  button:nth-of-type(4) {
-    animation-delay: 0.6s;
-  }
-
-  button:nth-of-type(3) {
-    animation-delay: 0.8s;
-  }
-
-  button:nth-of-type(2) {
-    animation-delay: 1s;
-  }
-
-  button:nth-of-type(1) {
-    animation-delay: 1.2s;
-  }
-`;
-
-const ContactButton = styled.button`
-  padding: 12px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background-color: var(--color-primary);
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-
-  &:hover {
-    background-color: #01606e;
-    transform: scale(1.1);
-  }
-`;
+/** Pages without the floating button (the sign-in page has its own focused layout) */
+const HIDDEN_ON = ["/auth"];
 
 export const PhoneButton = () => {
+  const [t] = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
 
-  const toggleButtons = () => {
-    setIsExpanded(!isExpanded);
-  };
+  // Collapse when navigating to another page
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [pathname]);
 
-  const contactButtons = [
-    { icon: Phone, onClick: () => window.open("tel:+380936193616") },
-    {
-      icon: Telegram,
-      onClick: () => window.open("https://t.me/MashaHlushenko"),
-    },
-    {
-      icon: Whatsapp,
-      onClick: () =>
-        window.open("https://api.whatsapp.com/send?phone=380936193616"),
-    },
-    {
-      icon: Viber,
-      onClick: () => window.open("viber://chat?number=+380936193616"),
-    },
-  ];
+  // Close on Escape or on click outside
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsExpanded(false);
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) {
+        setIsExpanded(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [isExpanded]);
+
+  const contactButtons = CONTACTS.map((c) => ({
+    ...c,
+    label: c.id === "phone" ? t(c.label) : c.label,
+  }));
+
+  const count = contactButtons.length;
+
+  if (HIDDEN_ON.includes(pathname)) return null;
 
   return (
-    <PhoneContainer>
-      <ButtonContainer $animationShow={isExpanded}>
-        {contactButtons.map((button, index) => (
-          <ContactButton key={index} onClick={button.onClick}>
-            <IconStyled as={button.icon} color={"#fff"} />
-          </ContactButton>
-        ))}
-      </ButtonContainer>
+    <PhoneContainer ref={containerRef}>
+      <ContactList id="phone-button-contacts" $open={isExpanded}>
+        {contactButtons.map(({ icon, label, href }, index) => {
+          // Opening: bottom item first. Closing: top item first.
+          const fromBottom = count - 1 - index;
+          const delay = (isExpanded ? fromBottom : index) * STAGGER_MS;
 
-      <RippleWrapper $active={isExpanded}>
-        <MainButton type="button" onClick={toggleButtons}>
-          <IconStyled
-            as={Phone}
-            color={"#fff"}
-            style={{
-              transform: isExpanded ? "rotate(-45deg)" : "rotate(0deg)",
-            }}
-          />
+          return (
+            <ContactItem key={label} $open={isExpanded} $delay={delay}>
+              <ContactLink
+                href={href}
+                aria-label={label}
+                tabIndex={isExpanded ? 0 : -1}
+                {...linkTarget(href)}
+              >
+                <IconStyled as={icon} color="#fff" />
+              </ContactLink>
+              <Tooltip aria-hidden="true">{label}</Tooltip>
+            </ContactItem>
+          );
+        })}
+      </ContactList>
+
+      <MainWrapper $open={isExpanded}>
+        <MainButton
+          type="button"
+          $open={isExpanded}
+          aria-expanded={isExpanded}
+          aria-controls="phone-button-contacts"
+          aria-label={isExpanded ? t("close_alt") : t("contacts_button")}
+          onClick={() => setIsExpanded((prev) => !prev)}
+        >
+          <MainIcon $visible={!isExpanded} $rotate={90}>
+            <IconStyled as={Phone} color="#fff" />
+          </MainIcon>
+          <MainIcon $visible={isExpanded} $rotate={-90}>
+            <CloseIcon />
+          </MainIcon>
         </MainButton>
-      </RippleWrapper>
+      </MainWrapper>
     </PhoneContainer>
   );
 };

@@ -9,6 +9,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export const BOOKING_SECTION_ID = "booking-section";
+/** Heading above the booking form ("Contacts & booking"), also the #contacts anchor */
+export const BOOKING_HEADING_ID = "contacts";
 
 export interface BookingPreset {
   /** Category key from price.json: women | men | children | body | else */
@@ -30,7 +32,9 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 const scrollToBookingForm = (attemptsLeft = 40) => {
   const section = document.getElementById(BOOKING_SECTION_ID);
   if (section) {
-    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Land on the section heading so the title is visible above the form
+    const target = document.getElementById(BOOKING_HEADING_ID) ?? section;
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
   // The target page is lazy-loaded, so wait for the form to mount

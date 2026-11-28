@@ -19,6 +19,7 @@ import { darkTheme, lightTheme } from "./theme/theme";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { Loader } from "./components/Loader";
+import { PhoneButton } from "./components/PhoneButton/PhoneButton";
 
 import {
   MOBILE_BAR_SPACE,
@@ -87,6 +88,11 @@ export const App: FC = () => {
       "data-theme",
       isDarkMode ? "dark" : "light",
     );
+    // Match the browser UI (iOS status bar / Android toolbar) to the chosen theme
+    const themeColor = isDarkMode ? "#1F1B18" : "#F6F1EA";
+    document
+      .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+      .forEach((meta) => meta.setAttribute("content", themeColor));
   }, [isDarkMode]);
 
   return (
@@ -155,6 +161,7 @@ export const App: FC = () => {
                   </main>
                   <Footer />
                   <MobileBookingBar />
+                  <PhoneButton />
                 </BookingProvider>
               </ModalProvider>
             </Router>
