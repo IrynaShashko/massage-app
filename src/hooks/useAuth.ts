@@ -28,6 +28,14 @@ export interface User {
 
 const PROFILE_KEY = ["profile"];
 
+/**
+ * Where Supabase sends people back after Google or the email link: the home
+ * page, with the trailing slash so it matches the "https://site/**" patterns
+ * in Supabase -> Authentication -> URL Configuration -> Redirect URLs.
+ * useAuthReturnRedirect then takes them on to the page they came from.
+ */
+const AUTH_REDIRECT_URL = () => `${window.location.origin}/`;
+
 /** Throws Supabase errors so react-query puts them in `error` */
 const check = <R extends { error: unknown }>(result: R): R => {
   if (result.error) throw result.error;
@@ -113,7 +121,7 @@ export const useRegister = () =>
           password,
           options: {
             data: { name },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: AUTH_REDIRECT_URL(),
           },
         }),
       );
@@ -135,7 +143,7 @@ export const useResendConfirmation = () =>
         await supabase.auth.resend({
           type: "signup",
           email,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: AUTH_REDIRECT_URL() },
         }),
       );
     },
@@ -162,7 +170,7 @@ export const useGoogleLogin = () =>
       check(
         await supabase.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: window.location.origin },
+          options: { redirectTo: AUTH_REDIRECT_URL() },
         }),
       );
     },
