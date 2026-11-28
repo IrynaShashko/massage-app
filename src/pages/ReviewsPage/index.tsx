@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
-import { LogIn, MessageSquareHeart, PenLine } from "lucide-react";
+import { LogIn, MessageSquareHeart, PenLine, Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import { SectionContainer } from "../../App";
 import BookNow from "../../components/BookNow";
@@ -44,6 +45,7 @@ const ReviewsPage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
   const { data: user } = useProfile();
   const isAuthenticated = !!user;
+  const isAdmin = user?.role === "admin";
   const [info, setInfo] = useState<{
     kind: "success" | "error";
     text: string;
@@ -206,6 +208,12 @@ const ReviewsPage = ({ language }: { language: string }) => {
 
           <Layout>
             <ListColumn>
+              {isAdmin && (
+                <AdminLink to="/admin/reviews">
+                  <Settings2 size={18} aria-hidden />
+                  {t("admin_reviews")}
+                </AdminLink>
+              )}
               {!isLoading && !isError && reviews.length > 0 && (
                 <Summary>
                   <SummaryScore>
@@ -713,5 +721,22 @@ const SubmitButton = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: wait;
+  }
+`;
+
+const AdminLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: 700;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
   }
 `;

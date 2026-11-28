@@ -10,7 +10,14 @@ import {
 
 import styled from "@emotion/styled";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  X,
+} from "lucide-react";
 
 import { ThemeType } from "../../theme/theme";
 
@@ -60,7 +67,18 @@ type DatePickerProps = {
     today: string;
     previousMonth: string;
     nextMonth: string;
+    /** shown only in "past" mode */
+    previousYear?: string;
+    nextYear?: string;
   };
+  /**
+   * "future" (booking): days before today are disabled.
+   * "past" (e.g. review dates): days after today are disabled, and year
+   * buttons make it quick to go back a long way.
+   */
+  allow?: "future" | "past";
+  /** Hide the "clear" actions when a date is required */
+  clearable?: boolean;
 };
 
 export const DatePicker: FC<DatePickerProps> = ({
@@ -69,11 +87,17 @@ export const DatePicker: FC<DatePickerProps> = ({
   onChange,
   locale,
   labels,
+  allow = "future",
+  clearable = true,
 }) => {
   const today = useMemo(() => startOfDay(new Date()), []);
   const selected = fromIsoDate(value);
+  const isPastMode = allow === "past";
+  const isDisabled = (date: Date) => (isPastMode ? date > today : date < today);
+  const clamp = (date: Date) => (isDisabled(date) ? today : date);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const [viewMonth, setViewMonth] = useState(() =>
     addMonths(selected ?? today, 0),
   );
@@ -122,12 +146,27 @@ export const DatePicker: FC<DatePickerProps> = ({
       }).format(selected)
     : "";
 
-  const canGoBack =
-    viewMonth.getFullYear() > today.getFullYear() ||
-    (viewMonth.getFullYear() === today.getFullYear() &&
-      viewMonth.getMonth() > today.getMonth());
+  const monthIndex = (date: Date) => date.getFullYear() * 12 + date.getMonth();
+  const todayMonth = monthIndex(today);
+  const canGoBack = isPastMode || monthIndex(viewMonth) > todayMonth;
+  const canGoForward = !isPastMode || monthIndex(viewMonth) < todayMonth;
+  /** jumps a year, stopping at the current month instead of passing it */
+  const jumpYear = (delta: number) => {
+    const target = addMonths(viewMonth, delta * 12);
+    setViewMonth(
+      isPastMode && monthIndex(target) > todayMonth
+        ? addMonths(today, 0)
+        : target,
+    );
+  };
 
   const open = () => {
+    // open upwards when the calendar would not fit below the field
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) {
+      const below = window.innerHeight - rect.bottom;
+      setOpenUp(below < POPOVER_HEIGHT && rect.top > below);
+    }
     const start = selected ?? today;
     setViewMonth(addMonths(start, 0));
     setFocusedDate(start);
@@ -165,7 +204,7 @@ export const DatePicker: FC<DatePickerProps> = ({
   }, [isOpen, focusedDate, viewMonth]);
 
   const moveFocus = (date: Date) => {
-    const target = date < today ? today : date;
+    const target = clamp(date);
     setFocusedDate(target);
     if (
       target.getMonth() !== viewMonth.getMonth() ||
@@ -230,7 +269,7 @@ export const DatePicker: FC<DatePickerProps> = ({
         <CalendarDays size={20} aria-hidden />
       </Trigger>
 
-      {selected && !isOpen && (
+      {clearable && selected && !isOpen && (
         <ClearInline
           type="button"
           aria-label={labels.clear}
@@ -246,14 +285,25 @@ export const DatePicker: FC<DatePickerProps> = ({
             role="dialog"
             aria-modal="false"
             aria-label={monthTitle}
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            $up={openUp}
+            initial={{ opacity: 0, y: openUp ? 6 : -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            exit={{ opacity: 0, y: openUp ? 6 : -6, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
           >
             <Header>
               <MonthTitle aria-live="polite">{monthTitle}</MonthTitle>
               <NavGroup>
+                {isPastMode && (
+                  <NavButton
+                    type="button"
+                    aria-label={labels.previousYear}
+                    title={labels.previousYear}
+                    onClick={() => jumpYear(-1)}
+                  >
+                    <ChevronsLeft size={18} aria-hidden />
+                  </NavButton>
+                )}
                 <NavButton
                   type="button"
                   aria-label={labels.previousMonth}
@@ -265,10 +315,22 @@ export const DatePicker: FC<DatePickerProps> = ({
                 <NavButton
                   type="button"
                   aria-label={labels.nextMonth}
+                  disabled={!canGoForward}
                   onClick={() => setViewMonth(addMonths(viewMonth, 1))}
                 >
                   <ChevronRight size={18} aria-hidden />
                 </NavButton>
+                {isPastMode && (
+                  <NavButton
+                    type="button"
+                    aria-label={labels.nextYear}
+                    title={labels.nextYear}
+                    disabled={!canGoForward}
+                    onClick={() => jumpYear(1)}
+                  >
+                    <ChevronsRight size={18} aria-hidden />
+                  </NavButton>
+                )}
               </NavGroup>
             </Header>
 
@@ -281,7 +343,6 @@ export const DatePicker: FC<DatePickerProps> = ({
             <DaysGrid ref={gridRef} role="grid" onKeyDown={onGridKeyDown}>
               {days.map((date, index) => {
                 if (!date) return <span key={`empty-${index}`} />;
-                const isPast = date < today;
                 const isSelected = isSameDay(date, selected);
                 const isFocused = isSameDay(date, focusedDate);
                 return (
@@ -290,7 +351,7 @@ export const DatePicker: FC<DatePickerProps> = ({
                     type="button"
                     role="gridcell"
                     data-date={toIsoDate(date)}
-                    disabled={isPast}
+                    disabled={isDisabled(date)}
                     tabIndex={isFocused ? 0 : -1}
                     aria-selected={isSelected}
                     aria-current={isSameDay(date, today) ? "date" : undefined}
@@ -306,15 +367,19 @@ export const DatePicker: FC<DatePickerProps> = ({
             </DaysGrid>
 
             <Footer>
-              <TextButton
-                type="button"
-                onClick={() => {
-                  onChange("");
-                  close();
-                }}
-              >
-                {labels.clear}
-              </TextButton>
+              {clearable ? (
+                <TextButton
+                  type="button"
+                  onClick={() => {
+                    onChange("");
+                    close();
+                  }}
+                >
+                  {labels.clear}
+                </TextButton>
+              ) : (
+                <span />
+              )}
               <TextButton type="button" onClick={() => select(today)}>
                 {labels.today}
               </TextButton>
@@ -403,25 +468,32 @@ const ClearInline = styled.button<{ theme?: ThemeType }>`
   }
 `;
 
-const Popover = styled(motion.div)<{ theme?: ThemeType }>`
+/** Rough height of the open calendar, to decide whether it fits below */
+const POPOVER_HEIGHT = 420;
+
+const Popover = styled(motion.div, {
+  shouldForwardProp: (prop) => prop !== "$up",
+})<{ theme?: ThemeType; $up: boolean }>`
   position: absolute;
-  top: calc(100% + 8px);
+  ${(props) =>
+    props.$up ? "bottom: calc(100% + 8px);" : "top: calc(100% + 8px);"}
   left: 0;
   z-index: 30;
-  width: min(320px, calc(100vw - 40px));
+  width: min(340px, calc(100vw - 40px));
   padding: var(--space-4);
   border-radius: var(--radius-lg);
   background-color: ${(props) => props.theme.colors.background};
   border: 1px solid ${(props) => props.theme.colors.border};
   box-shadow: var(--shadow-lg);
   color: ${(props) => props.theme.colors.text};
-  transform-origin: top left;
+  transform-origin: ${(props) => (props.$up ? "bottom left" : "top left")};
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-2);
   margin-bottom: var(--space-3);
 `;
 
@@ -429,6 +501,7 @@ const MonthTitle = styled.span`
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: 700;
+  white-space: nowrap;
 
   &::first-letter {
     text-transform: uppercase;
@@ -437,15 +510,16 @@ const MonthTitle = styled.span`
 
 const NavGroup = styled.div`
   display: flex;
-  gap: var(--space-1);
+  flex-shrink: 0;
+  gap: 2px;
 `;
 
 const NavButton = styled.button<{ theme?: ThemeType }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-full);
   color: ${(props) => props.theme.colors.text};
   transition: background-color 0.2s ease;

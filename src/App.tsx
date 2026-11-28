@@ -38,6 +38,10 @@ export const App: FC = () => {
     () => import("./pages/ArticlePage/DynamicArticle"),
   );
   const AdminArticlesPage = lazy(() => import("./pages/AdminArticlesPage"));
+  const AdminReviewsPage = lazy(() => import("./pages/AdminReviewsPage"));
+  const ReviewEditorPage = lazy(
+    () => import("./pages/AdminReviewsPage/Editor"),
+  );
   const ArticleEditorPage = lazy(
     () => import("./pages/AdminArticlesPage/Editor"),
   );
@@ -156,6 +160,18 @@ export const App: FC = () => {
                         <Route
                           path="/admin/articles/:id"
                           element={<ArticleEditorPage />}
+                        />
+                        <Route
+                          path="/admin/reviews"
+                          element={<AdminReviewsPage />}
+                        />
+                        <Route
+                          path="/admin/reviews/new"
+                          element={<ReviewEditorPage />}
+                        />
+                        <Route
+                          path="/admin/reviews/:id"
+                          element={<ReviewEditorPage />}
                         />
                       </Routes>
                     </Suspense>
