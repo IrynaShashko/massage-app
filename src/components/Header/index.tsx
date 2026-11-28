@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 
 import { Link, NavLink } from "react-router-dom";
 
-import { UserRound } from "lucide-react";
-
 import styled from "@emotion/styled";
 
 import { useTranslation } from "react-i18next";
@@ -14,7 +12,6 @@ import { Menu } from "../Menu";
 import { ThemeButton } from "../ThemeButton";
 
 import { useProfile } from "../../hooks/useAuth";
-import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import { UserMenu } from "./UserMenu";
 import { useBooking } from "../../context/BookingContext";
 
@@ -31,7 +28,6 @@ export const Header: React.FC<HeaderPropsType> = ({
   const [t] = useTranslation();
 
   const { data: user } = useProfile();
-  const authState = useAuthLinkState();
 
   const isAuthenticated = !!user;
 
@@ -110,17 +106,7 @@ export const Header: React.FC<HeaderPropsType> = ({
                 size={20}
               />
             </IconTile>
-            {user ? (
-              <UserMenu user={user} />
-            ) : (
-              <IconTileLink
-                to="/auth"
-                state={authState}
-                aria-label={t("login_button")}
-              >
-                <UserRound size={20} />
-              </IconTileLink>
-            )}
+            <UserMenu user={user ?? null} />
             <CtaButton type="button" onClick={() => startBooking()}>
               {t("bookNow")}
             </CtaButton>
@@ -363,9 +349,5 @@ const iconTileStyles = (theme: ThemeType) => `
 `;
 
 const IconTile = styled.span<{ theme?: ThemeType }>`
-  ${(props) => iconTileStyles(props.theme as ThemeType)}
-`;
-
-const IconTileLink = styled(Link)<{ theme?: ThemeType }>`
   ${(props) => iconTileStyles(props.theme as ThemeType)}
 `;

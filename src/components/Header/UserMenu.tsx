@@ -1,22 +1,28 @@
 import { FC, useEffect, useId, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
-import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import { ChevronDown, LogIn, LogOut, UserPlus, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 
 import { useLogout, User } from "../../hooks/useAuth";
+import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import { ThemeType } from "../../theme/theme";
 import { UserAvatar } from "../UserAvatar";
 
-/** Avatar pill in the header that opens "Profile" and "Log out" */
-export const UserMenu: FC<{ user: User }> = ({ user }) => {
+/**
+ * Account pill in the header: for a signed-in user their avatar, opening
+ * "Profile" and "Log out"; for a guest a person icon, opening "Log in" and
+ * "Create account"
+ */
+export const UserMenu: FC<{ user: User | null }> = ({ user }) => {
   const [t] = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
   const { pathname } = useLocation();
   const logoutMutation = useLogout();
+  const authState = useAuthLinkState();
 
   // close on navigation, outside click and Escape
   useEffect(() => setIsOpen(false), [pathname]);
@@ -44,15 +50,38 @@ export const UserMenu: FC<{ user: User }> = ({ user }) => {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls={menuId}
-        aria-label={t("profile_title")}
-        title={user.name || user.email}
+        aria-label={user ? t("profile_title") : t("login_button")}
+        title={user ? user.name || user.email : undefined}
         onClick={() => setIsOpen((open) => !open)}
       >
-        <UserAvatar user={user} size={32} />
+        {user ? (
+          <UserAvatar user={user} size={32} />
+        ) : (
+          <GuestIcon aria-hidden>
+            <UserRound size={18} />
+          </GuestIcon>
+        )}
         <Chevron size={18} aria-hidden $open={isOpen} />
       </Trigger>
 
-      {isOpen && (
+      {isOpen && !user && (
+        <Dropdown id={menuId} role="menu">
+          <ItemLink to="/auth" state={authState} role="menuitem">
+            <LogIn size={18} aria-hidden />
+            {t("login_action")}
+          </ItemLink>
+          <ItemLink
+            to="/auth"
+            state={{ ...authState, register: true }}
+            role="menuitem"
+          >
+            <UserPlus size={18} aria-hidden />
+            {t("create_account")}
+          </ItemLink>
+        </Dropdown>
+      )}
+
+      {isOpen && user && (
         <Dropdown id={menuId} role="menu">
           <Identity>
             <strong>{user.name || user.email}</strong>
@@ -103,6 +132,18 @@ const Trigger = styled.button<{ theme?: ThemeType }>`
     color: var(--color-primary);
     background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
   }
+`;
+
+/** Same 32px circle as the avatar, so both states have one shape */
+const GuestIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
 `;
 
 const Chevron = styled(ChevronDown, {

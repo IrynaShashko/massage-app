@@ -44,7 +44,13 @@ const AuthPage: React.FC = () => {
     const state = location.state as AuthReturnState | null;
     saveAuthReturn({ from: state?.from ?? "/", booking: !!state?.booking });
   }, [isGuest, location.state]);
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(
+    () => !(location.state as AuthReturnState | null)?.register,
+  );
+  // the header's "Log in" / "Create account" can switch the form while on it
+  useEffect(() => {
+    setIsLogin(!(location.state as AuthReturnState | null)?.register);
+  }, [location.state]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

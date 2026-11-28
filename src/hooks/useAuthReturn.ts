@@ -13,6 +13,8 @@ export interface AuthReturnState {
   from?: string;
   /** they came to book: scroll to the booking form on return */
   booking?: boolean;
+  /** open the auth page on the sign-up form (not saved for the return) */
+  register?: boolean;
 }
 
 /**
@@ -70,9 +72,12 @@ const takeAuthReturn = () => {
 export const useAuthLinkState = (
   extra?: Omit<AuthReturnState, "from">,
 ): AuthReturnState => {
-  const { pathname, search, hash } = useLocation();
-  // never return to the auth page itself
-  const from = pathname === "/auth" ? "/" : `${pathname}${search}${hash}`;
+  const { pathname, search, hash, state } = useLocation();
+  // never return to the auth page itself: on it, keep where it was opened from
+  const from =
+    pathname === "/auth"
+      ? ((state as AuthReturnState | null)?.from ?? "/")
+      : `${pathname}${search}${hash}`;
   return { from, ...extra };
 };
 
