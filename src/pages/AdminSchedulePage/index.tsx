@@ -2,6 +2,7 @@ import styled from "@emotion/styled";
 import {
   AlertTriangle,
   ArrowLeft,
+  CalendarDays,
   Check,
   MessageCircle,
   Plus,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { FC, FormEvent, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 import { SectionContainer } from "../../App";
 import { DatePicker, fromIsoDate } from "../../components/DatePicker";
@@ -113,7 +115,20 @@ const AddSlotsForm: FC = () => {
   const [to, setTo] = useState("");
   const [duration, setDuration] = useState(() => readPrefs().duration);
   const [pause, setPause] = useState(() => readPrefs().pause);
-  const [added, setAdded] = useState<number | null>(null);
+  /** result of the last add; while set, the preview is hidden (the times
+      are now in the schedule and would all read as duplicates) */
+  const [added, setAdded] = useState<{
+    count: number;
+    skipped: number;
+  } | null>(null);
+  const changeFrom = (value: string) => {
+    setFrom(value);
+    setAdded(null);
+  };
+  const changeTo = (value: string) => {
+    setTo(value);
+    setAdded(null);
+  };
 
   const savePrefs = (next: { duration: number; pause: number }) => {
     try {
@@ -123,10 +138,12 @@ const AddSlotsForm: FC = () => {
     }
   };
   const changeDuration = (value: number) => {
+    setAdded(null);
     setDuration(value);
     savePrefs({ duration: value, pause });
   };
   const changePause = (value: number) => {
+    setAdded(null);
     setPause(value);
     savePrefs({ duration, pause: value });
   };
@@ -163,14 +180,19 @@ const AddSlotsForm: FC = () => {
     }
   }
   const duplicates = day ? times.filter((time) => dayTimes.includes(time)) : [];
+  // nothing new to add when every time is already in the schedule
+  const allDuplicates = times.length > 0 && duplicates.length === times.length;
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || allDuplicates) return;
     setAdded(null);
+    const skipped = duplicates.length;
     addSlots.mutate(
       { day, times },
-      { onSuccess: () => setAdded(times.length) },
+      {
+        onSuccess: () => setAdded({ count: times.length - skipped, skipped }),
+      },
     );
   };
 
@@ -227,7 +249,7 @@ const AddSlotsForm: FC = () => {
           <FieldLabel htmlFor="slot-from">
             {t(isRange ? "schedule_range_from" : "schedule_time")}
           </FieldLabel>
-          <TimePicker id="slot-from" value={from} onChange={setFrom} />
+          <TimePicker id="slot-from" value={from} onChange={changeFrom} />
         </Field>
         {isRange && (
           <Field>
@@ -235,7 +257,7 @@ const AddSlotsForm: FC = () => {
             <TimePicker
               id="slot-to"
               value={to}
-              onChange={setTo}
+              onChange={changeTo}
               invalid={rangeInvalid}
               defaultHour={Math.min(23, Number((from || "10").slice(0, 2)) + 1)}
             />
@@ -266,46 +288,50 @@ const AddSlotsForm: FC = () => {
 
       {rangeInvalid && <ErrorText>{t("schedule_range_invalid")}</ErrorText>}
 
-      {day && times.length > 0 && !rangeInvalid && (!isRange || to) && (
-        <PreviewBox aria-live="polite">
-          <Muted>{t("schedule_preview", { count: times.length })}</Muted>
-          <Preview>
-            {times.map((time) => (
-              <TimeChip
-                key={time}
-                $warn={conflicts.has(time) || duplicates.includes(time)}
-              >
-                {time}
-              </TimeChip>
-            ))}
-          </Preview>
-          {conflicts.size > 0 && (
-            <Warning role="status">
-              <AlertTriangle size={18} aria-hidden />
-              <span>
-                {t("schedule_overlap", {
-                  list: Array.from(conflicts)
-                    .map(([time, clash]) =>
-                      t("schedule_overlap_item", { time, clash }),
-                    )
-                    .join(", "),
-                })}
-              </span>
-            </Warning>
-          )}
-          {duplicates.length > 0 && (
-            <Warning role="status">
-              <AlertTriangle size={18} aria-hidden />
-              <span>
-                {t("schedule_duplicate", { list: duplicates.join(", ") })}
-              </span>
-            </Warning>
-          )}
-        </PreviewBox>
-      )}
+      {added === null &&
+        day &&
+        times.length > 0 &&
+        !rangeInvalid &&
+        (!isRange || to) && (
+          <PreviewBox aria-live="polite">
+            <Muted>{t("schedule_preview", { count: times.length })}</Muted>
+            <Preview>
+              {times.map((time) => (
+                <TimeChip
+                  key={time}
+                  $warn={conflicts.has(time) || duplicates.includes(time)}
+                >
+                  {time}
+                </TimeChip>
+              ))}
+            </Preview>
+            {conflicts.size > 0 && (
+              <Warning role="status">
+                <AlertTriangle size={18} aria-hidden />
+                <span>
+                  {t("schedule_overlap", {
+                    list: Array.from(conflicts)
+                      .map(([time, clash]) =>
+                        t("schedule_overlap_item", { time, clash }),
+                      )
+                      .join(", "),
+                  })}
+                </span>
+              </Warning>
+            )}
+            {duplicates.length > 0 && (
+              <Warning role="status">
+                <AlertTriangle size={18} aria-hidden />
+                <span>
+                  {t("schedule_duplicate", { list: duplicates.join(", ") })}
+                </span>
+              </Warning>
+            )}
+          </PreviewBox>
+        )}
 
       <AddActions>
-        <PrimaryButton type="submit" disabled={!canSubmit}>
+        <PrimaryButton type="submit" disabled={!canSubmit || allDuplicates}>
           <Plus size={18} aria-hidden />
           {t("schedule_add_button")}
         </PrimaryButton>
@@ -316,7 +342,9 @@ const AddSlotsForm: FC = () => {
         )}
         {added !== null && (
           <Success role="status">
-            {t("schedule_added", { count: added })}
+            {t("schedule_added", { count: added.count })}
+            {added.skipped > 0 &&
+              ` ${t("schedule_added_skipped", { count: added.skipped })}`}
           </Success>
         )}
         {addSlots.isError && <ErrorText>{t("schedule_add_error")}</ErrorText>}
@@ -465,6 +493,13 @@ const Schedule: FC = () => {
 
   const pending = slots.filter((s) => s.booking?.status === "pending").length;
 
+  // Opens on the form; ?tab=list shows the bookings (kept in the URL so the
+  // back button and shared links land on the same tab)
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") === "list" ? "list" : "add";
+  const showTab = (next: "add" | "list") =>
+    setParams(next === "list" ? { tab: "list" } : {}, { replace: true });
+
   return (
     <SectionContainer>
       <TopBar>
@@ -475,68 +510,94 @@ const Schedule: FC = () => {
         </GhostLink>
       </TopBar>
 
+      <Tabs role="tablist" aria-label={t("admin_schedule")}>
+        <Tab
+          type="button"
+          role="tab"
+          aria-selected={tab === "add"}
+          $active={tab === "add"}
+          onClick={() => showTab("add")}
+        >
+          <Plus size={18} aria-hidden />
+          {t("schedule_tab_add")}
+        </Tab>
+        <Tab
+          type="button"
+          role="tab"
+          aria-selected={tab === "list"}
+          $active={tab === "list"}
+          onClick={() => showTab("list")}
+        >
+          <CalendarDays size={18} aria-hidden />
+          {t("schedule_tab_list")}
+          {pending > 0 && <TabCount>{pending}</TabCount>}
+        </Tab>
+      </Tabs>
+
       <Stack>
-        <AddSlotsForm />
+        {tab === "add" && <AddSlotsForm />}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("schedule_list_title")}</CardTitle>
-            {pending > 0 && (
-              <PendingBadge>
-                {t("schedule_pending_count", { count: pending })}
-              </PendingBadge>
+        {tab === "list" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("schedule_list_title")}</CardTitle>
+              {pending > 0 && (
+                <PendingBadge>
+                  {t("schedule_pending_count", { count: pending })}
+                </PendingBadge>
+              )}
+            </CardHeader>
+
+            {notice && (
+              <Notice role="status">
+                <p>
+                  {notice.notified
+                    ? t("schedule_client_notified", { name: notice.name })
+                    : t("schedule_client_not_notified", { name: notice.name })}
+                </p>
+                <NoticeActions>
+                  {notice.whatsappUrl && (
+                    <WhatsAppLink
+                      href={notice.whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle size={16} aria-hidden />
+                      {t("schedule_whatsapp")}
+                    </WhatsAppLink>
+                  )}
+                  <GhostButton type="button" onClick={() => setNotice(null)}>
+                    {t("schedule_notice_close")}
+                  </GhostButton>
+                </NoticeActions>
+              </Notice>
             )}
-          </CardHeader>
 
-          {notice && (
-            <Notice role="status">
-              <p>
-                {notice.notified
-                  ? t("schedule_client_notified", { name: notice.name })
-                  : t("schedule_client_not_notified", { name: notice.name })}
-              </p>
-              <NoticeActions>
-                {notice.whatsappUrl && (
-                  <WhatsAppLink
-                    href={notice.whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <MessageCircle size={16} aria-hidden />
-                    {t("schedule_whatsapp")}
-                  </WhatsAppLink>
-                )}
-                <GhostButton type="button" onClick={() => setNotice(null)}>
-                  {t("schedule_notice_close")}
-                </GhostButton>
-              </NoticeActions>
-            </Notice>
-          )}
+            {isLoading && <SkeletonRows count={5} actions={1} />}
+            {isError && <ErrorText>{t("schedule_load_error")}</ErrorText>}
+            {!isLoading && !isError && slots.length === 0 && (
+              <p>{t("schedule_empty")}</p>
+            )}
 
-          {isLoading && <SkeletonRows count={5} actions={1} />}
-          {isError && <ErrorText>{t("schedule_load_error")}</ErrorText>}
-          {!isLoading && !isError && slots.length === 0 && (
-            <p>{t("schedule_empty")}</p>
-          )}
-
-          {days.map(([day, daySlots]) => {
-            const date = fromIsoDate(day);
-            return (
-              <DayGroup key={day}>
-                <DayTitle>{date ? dayFormat.format(date) : day}</DayTitle>
-                <Rows>
-                  {daySlots.map((slot) => (
-                    <SlotRow
-                      key={slot.id}
-                      slot={slot}
-                      onStatusChanged={setNotice}
-                    />
-                  ))}
-                </Rows>
-              </DayGroup>
-            );
-          })}
-        </Card>
+            {days.map(([day, daySlots]) => {
+              const date = fromIsoDate(day);
+              return (
+                <DayGroup key={day}>
+                  <DayTitle>{date ? dayFormat.format(date) : day}</DayTitle>
+                  <Rows>
+                    {daySlots.map((slot) => (
+                      <SlotRow
+                        key={slot.id}
+                        slot={slot}
+                        onStatusChanged={setNotice}
+                      />
+                    ))}
+                  </Rows>
+                </DayGroup>
+              );
+            })}
+          </Card>
+        )}
       </Stack>
     </SectionContainer>
   );
@@ -551,6 +612,48 @@ const AdminSchedulePage = () => (
 export default AdminSchedulePage;
 
 /* ---------- styles ---------- */
+
+const Tabs = styled.div<{ theme?: ThemeType }>`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  max-width: 480px;
+  margin-bottom: var(--space-5);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid ${(props) => props.theme.colors.border};
+`;
+
+const Tab = styled.button<{ $active: boolean; theme?: ThemeType }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: ${(props) => (props.$active ? "#fff" : props.theme.colors.text)};
+  background-color: ${(props) =>
+    props.$active ? "var(--color-primary)" : "transparent"};
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+`;
+
+const TabCount = styled.span`
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  display: inline-grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: #e0a100;
+`;
 
 const Stack = styled.div`
   display: flex;

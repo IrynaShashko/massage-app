@@ -13,6 +13,8 @@ export interface Review {
   createdAt: string;
   user: {
     name: string;
+    /** the author's Google photo, when they show it */
+    avatarUrl?: string;
   };
 }
 
@@ -36,12 +38,14 @@ type ReviewRow = {
   user_id: string | null;
   author_name: string | null;
   created_at: string;
-  author: { name: string } | { name: string }[] | null;
+  author: Author | Author[] | null;
 };
+
+type Author = { name: string; avatar_url: string | null };
 
 const REVIEWS_KEY = ["reviews"];
 const COLUMNS =
-  "id, rating, comment, user_id, author_name, created_at, author:profiles(name)";
+  "id, rating, comment, user_id, author_name, created_at, author:profiles(name, avatar_url)";
 
 const toReview = (row: ReviewRow): Review => {
   const profile = Array.isArray(row.author) ? row.author[0] : row.author;
@@ -52,7 +56,10 @@ const toReview = (row: ReviewRow): Review => {
     userId: row.user_id,
     authorName: row.author_name,
     createdAt: row.created_at,
-    user: { name: row.author_name?.trim() || profile?.name || "" },
+    user: {
+      name: row.author_name?.trim() || profile?.name || "",
+      avatarUrl: profile?.avatar_url || undefined,
+    },
   };
 };
 

@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import { ChevronDown, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import lady from "../../images/lady.png";
 
@@ -48,6 +48,14 @@ const ArticlePage = ({ language }: { language: string }) => {
             lead={t("articles_lead")}
             accent={t("articles_accent")}
           />
+          {isAdmin && (
+            <AdminBar>
+              <AdminButton to="/admin/articles">
+                <Settings2 size={18} aria-hidden />
+                {t("admin_articles")}
+              </AdminButton>
+            </AdminBar>
+          )}
           <Layout>
             <Sidebar>
               <Illustration src={lady} alt="" aria-hidden />
@@ -103,16 +111,6 @@ const ArticlePage = ({ language }: { language: string }) => {
                       </li>
                     );
                   })}
-                  {isAdmin && (
-                    <li>
-                      <ArticleLink to="/admin/articles">
-                        <LinkIcon aria-hidden>
-                          <Settings2 size={20} />
-                        </LinkIcon>
-                        <span>{t("admin_articles")}</span>
-                      </ArticleLink>
-                    </li>
-                  )}
                 </ArticleList>
               </ListPanel>
             </Sidebar>
@@ -129,6 +127,30 @@ const ArticlePage = ({ language }: { language: string }) => {
 };
 
 export default ArticlePage;
+
+const AdminBar = styled.div`
+  display: flex;
+  margin-bottom: var(--space-4);
+`;
+
+/* Same look as "Керування відгуками" on the reviews page */
+const AdminButton = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: 700;
+  transition: background-color 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
+  }
+`;
 
 const Layout = styled.div`
   display: grid;

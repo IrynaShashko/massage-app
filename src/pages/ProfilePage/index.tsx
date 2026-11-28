@@ -25,7 +25,12 @@ import {
   SkeletonStack,
 } from "../../components/Skeleton";
 import { UserAvatar } from "../../components/UserAvatar";
-import { useLogout, useProfile, useUpdateProfile } from "../../hooks/useAuth";
+import {
+  useLogout,
+  useProfile,
+  useUpdateProfile,
+  User,
+} from "../../hooks/useAuth";
 import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import { MyBooking, useMyBookings } from "../../hooks/useMyBookings";
 import { kyivToday } from "../../hooks/useSlots";
@@ -84,6 +89,37 @@ const NameEditor: FC<{ name: string; onDone: () => void }> = ({
   );
 };
 
+/** Whether the Google photo is shown next to the user's reviews */
+const AvatarSwitch: FC<{ user: User }> = ({ user }) => {
+  const [t] = useTranslation();
+  const update = useUpdateProfile();
+  const checked =
+    update.isPending && update.variables?.showAvatar !== undefined
+      ? update.variables.showAvatar
+      : user.showAvatar !== false;
+
+  return (
+    <SwitchRow>
+      <SwitchText>
+        <span id="avatar-switch-label">{t("profile_show_avatar")}</span>
+        <small>{t("profile_show_avatar_hint")}</small>
+        {update.isError && <ErrorText>{t("profile_save_error")}</ErrorText>}
+      </SwitchText>
+      <Switch
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-labelledby="avatar-switch-label"
+        $on={checked}
+        disabled={update.isPending}
+        onClick={() => update.mutate({ showAvatar: !checked })}
+      >
+        <span />
+      </Switch>
+    </SwitchRow>
+  );
+};
+
 const ProfilePage: FC = () => {
   const [t, i18n] = useTranslation();
   const { data: user, isLoading } = useProfile();
@@ -109,7 +145,9 @@ const ProfilePage: FC = () => {
     <SectionContainer>
       <Page>
         <Hero>
-          <UserAvatar user={user} size={88} />
+          <AvatarBox>
+            <UserAvatar user={user} size={88} />
+          </AvatarBox>
           <IdentityText>
             {isEditing ? (
               <NameEditor name={user.name} onDone={() => setIsEditing(false)} />
@@ -209,6 +247,7 @@ const ProfilePage: FC = () => {
                   </li>
                 ))}
               </ReviewList>
+              {user.avatarUrl && <AvatarSwitch user={user} />}
             </Card>
           </Column>
 
@@ -222,7 +261,7 @@ const ProfilePage: FC = () => {
             </BookCard>
 
             {isAdmin && (
-              <Card>
+              <AdminCard>
                 <SectionTitle>
                   <ShieldCheck size={20} aria-hidden />
                   {t("profile_admin_section")}
@@ -238,7 +277,7 @@ const ProfilePage: FC = () => {
                     </li>
                   ))}
                 </AdminLinks>
-              </Card>
+              </AdminCard>
             )}
           </Column>
         </Grid>
@@ -319,16 +358,16 @@ const BookingItem: FC<{ booking: MyBooking }> = ({ booking }) => {
 
   return (
     <BookingRow $muted={isPast || booking.status === "declined"}>
-      <BookingWhen>
-        <strong>{formatDay(booking.day, i18n.language)}</strong>
-        <span>{booking.time}</span>
-      </BookingWhen>
-      <BookingInfo>
-        {booking.service && <span>{booking.service}</span>}
+      <BookingHead>
+        <BookingWhen>
+          <strong>{formatDay(booking.day, i18n.language)}</strong>
+          <span>{booking.time}</span>
+        </BookingWhen>
         <StatusBadge $status={status}>
           {t(`profile_booking_${status}`)}
         </StatusBadge>
-      </BookingInfo>
+      </BookingHead>
+      {booking.service && <BookingService>{booking.service}</BookingService>}
     </BookingRow>
   );
 };
@@ -339,23 +378,12 @@ const IdentityText = styled.div`
   gap: var(--space-2);
   min-width: 0;
   flex: 1;
-
-  @media (max-width: 640px) {
-    align-items: center;
-    width: 100%;
-    text-align: center;
-  }
 `;
 
 const NameRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-2);
-
-  @media (max-width: 640px) {
-    /* Offset the pencil so the name itself sits on the centre line */
-    padding-left: calc(36px + var(--space-2));
-  }
 `;
 
 const IconButton = styled.button<{ theme?: ThemeType }>`
@@ -394,10 +422,6 @@ const Badges = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-
-  @media (max-width: 640px) {
-    justify-content: center;
-  }
 `;
 
 const Badge = styled.span<{ $warn?: boolean }>`
@@ -511,9 +535,8 @@ const BookingList = styled.ul<{ theme?: ThemeType }>`
 const BookingRow = styled.li<{ $muted: boolean }>`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-3) 0;
+  gap: var(--space-1, 4px);
+  padding: var(--space-4) 0;
   opacity: ${(p) => (p.$muted ? 0.6 : 1)};
 
   &:first-of-type {
@@ -521,10 +544,26 @@ const BookingRow = styled.li<{ $muted: boolean }>`
   }
 `;
 
+/* Status always on the right of the date, also on phones: the date and
+   time wrap inside their column instead of pushing the status down */
+const BookingHead = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+`;
+
 const BookingWhen = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-3);
+  gap: 0 var(--space-3);
+
+  /* on phones the time always goes under the date, so every row looks alike */
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 2px;
+  }
 
   span {
     font-weight: 700;
@@ -532,12 +571,10 @@ const BookingWhen = styled.div`
   }
 `;
 
-const BookingInfo = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
+const BookingService = styled.p`
   font-size: var(--text-sm);
+  line-height: 1.45;
+  opacity: 0.8;
 `;
 
 const STATUS_TONE: Record<string, string> = {
@@ -573,9 +610,25 @@ const Hero = styled(Card)`
   align-items: center;
   gap: var(--space-5);
 
+  /* photo with the name and email beside it, "Log out" on its own row */
   @media (max-width: 640px) {
-    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: var(--space-4);
+  }
+`;
+
+/** A smaller photo on phones, so the name and email fit beside it */
+const AvatarBox = styled.div`
+  display: flex;
+  flex-shrink: 0;
+
+  @media (max-width: 640px) {
+    & > span {
+      width: 64px;
+      height: 64px;
+      font-size: 26px;
+    }
   }
 `;
 
@@ -585,7 +638,7 @@ const LogoutButton = styled(GhostButton)`
   flex-shrink: 0;
 
   @media (max-width: 640px) {
-    align-self: stretch;
+    flex-basis: 100%;
     justify-content: center;
     margin-left: 0;
   }
@@ -616,7 +669,7 @@ const Grid = styled.div`
   align-items: start;
 
   @media (min-width: 900px) {
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 380px;
   }
 `;
 
@@ -625,6 +678,18 @@ const Column = styled.div`
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
+
+  /* one column on phones: the cards join the grid so they can be reordered */
+  @media (max-width: 899px) {
+    display: contents;
+  }
+`;
+
+/** Right after the profile card on phones, not at the very bottom */
+const AdminCard = styled(Card)`
+  @media (max-width: 899px) {
+    order: -1;
+  }
 `;
 
 const SectionTitle = styled.h2<{ theme?: ThemeType }>`
@@ -638,6 +703,64 @@ const SectionTitle = styled.h2<{ theme?: ThemeType }>`
 
   svg {
     color: var(--color-primary);
+  }
+`;
+
+const SwitchRow = styled.div<{ theme?: ThemeType }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid ${(props) => props.theme.colors.border};
+`;
+
+const SwitchText = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+
+  small {
+    font-weight: 400;
+    opacity: 0.65;
+  }
+`;
+
+const Switch = styled.button<{ $on: boolean; theme?: ThemeType }>`
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background-color: ${(props) =>
+    props.$on
+      ? "var(--color-primary)"
+      : `color-mix(in srgb, ${props.theme.colors.text} 25%, transparent)`};
+  transition: background-color 0.2s ease;
+
+  span {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transform: translateX(${(props) => (props.$on ? "20px" : "0")});
+    transition: transform 0.2s ease;
+  }
+
+  &:disabled {
+    cursor: wait;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 `;
 
@@ -663,28 +786,32 @@ const BookButton = styled(PrimaryButton)`
   width: 100%;
 `;
 
-const AdminLinks = styled.ul<{ theme?: ThemeType }>`
+const AdminLinks = styled.ul`
   display: flex;
   flex-direction: column;
-  margin: 0 calc(-1 * var(--space-3));
-
-  li + li {
-    border-top: 1px solid ${(props) => props.theme.colors.border};
-  }
+  gap: var(--space-2);
 `;
 
 const AdminLink = styled(Link)<{ theme?: ThemeType }>`
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: 48px;
-  padding: 0 var(--space-3);
+  min-height: 54px;
+  padding: 0 var(--space-4);
   border-radius: var(--radius-md);
+  border: 1px solid ${(props) => props.theme.colors.border};
+  background: var(--surface-glass);
   color: ${(props) => props.theme.colors.text};
   font-weight: 600;
   transition:
     background-color 0.2s ease,
-    color 0.2s ease;
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
 
   span {
     flex: 1;
@@ -701,6 +828,7 @@ const AdminLink = styled(Link)<{ theme?: ThemeType }>`
   @media (hover: hover) {
     &:hover {
       color: var(--color-primary);
+      border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
       background-color: color-mix(
         in srgb,
         var(--color-primary) 8%,

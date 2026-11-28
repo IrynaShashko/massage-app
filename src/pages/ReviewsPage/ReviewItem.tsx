@@ -86,13 +86,27 @@ export const ReviewItem = ({
     return () => observer.disconnect();
   }, [isExpanded, review.comment]);
 
+  const [photoFailed, setPhotoFailed] = useState(false);
   const name = review.user?.name?.trim() || "—";
   const date = formatDate(review.createdAt, language);
 
   return (
     <Card>
       <Header>
-        <Avatar aria-hidden>{name.charAt(0)}</Avatar>
+        <Avatar aria-hidden>
+          {review.user?.avatarUrl && !photoFailed ? (
+            <img
+              src={review.user.avatarUrl}
+              alt=""
+              loading="lazy"
+              // Google photos refuse requests that carry a referrer
+              referrerPolicy="no-referrer"
+              onError={() => setPhotoFailed(true)}
+            />
+          ) : (
+            name.charAt(0)
+          )}
+        </Avatar>
         <HeaderText>
           <UserName>{name}</UserName>
           <Meta>
@@ -148,6 +162,13 @@ const Avatar = styled.span`
   font-weight: 800;
   font-size: var(--text-lg);
   text-transform: uppercase;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const UserName = styled.p<{ theme?: ThemeType }>`

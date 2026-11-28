@@ -22,6 +22,8 @@ export interface User {
   role: "user" | "admin";
   /** photo from the Google account; email sign-ups have none */
   avatarUrl?: string;
+  /** the photo is shown next to the user's reviews */
+  showAvatar?: boolean;
   isVerified?: boolean;
   createdAt?: string;
 }
@@ -53,7 +55,7 @@ const fetchProfile = async (): Promise<User | null> => {
   const { data: profile } = check(
     await supabase
       .from("profiles")
-      .select("name, role, created_at")
+      .select("name, role, created_at, show_avatar")
       .eq("id", authUser.id)
       .maybeSingle(),
   );
@@ -67,6 +69,7 @@ const fetchProfile = async (): Promise<User | null> => {
       authUser.user_metadata?.avatar_url ||
       authUser.user_metadata?.picture ||
       undefined,
+    showAvatar: profile?.show_avatar ?? true,
     isVerified: !!authUser.email_confirmed_at,
     createdAt: profile?.created_at,
   };
@@ -179,15 +182,27 @@ export const useGoogleLogin = () =>
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, { name: string }>({
-    mutationFn: async ({ name }) => {
+  return useMutation<void, Error, { name?: string; showAvatar?: boolean }>({
+    mutationFn: async ({ name, showAvatar }) => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not signed in");
-      check(await supabase.from("profiles").update({ name }).eq("id", user.id));
+      check(
+        await supabase
+          .from("profiles")
+          .update({
+            ...(name !== undefined && { name }),
+            ...(showAvatar !== undefined && { show_avatar: showAvatar }),
+          })
+          .eq("id", user.id),
+      );
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: PROFILE_KEY }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PROFILE_KEY });
+      // the photo next to the user's reviews changes with the switch
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+    },
   });
 };
 
