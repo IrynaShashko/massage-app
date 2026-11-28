@@ -897,9 +897,14 @@ const ServiceOption = styled.button<{ $active: boolean; theme?: ThemeType }>`
   background-color: ${(props) =>
     props.$active
       ? "color-mix(in srgb, var(--color-primary) 12%, transparent)"
-      : props.theme.colors.cardBg};
+      : `color-mix(in srgb, ${props.theme.colors.text} 4%, transparent)`};
+  /* a visible edge on every option: in the dark theme the card background
+     alone blends into the form */
   border: 1.5px solid
-    ${(props) => (props.$active ? "var(--color-primary)" : "transparent")};
+    ${(props) =>
+      props.$active
+        ? "var(--color-primary)"
+        : `color-mix(in srgb, ${props.theme.colors.text} 16%, transparent)`};
   transition:
     background-color 0.2s ease,
     border-color 0.2s ease;
