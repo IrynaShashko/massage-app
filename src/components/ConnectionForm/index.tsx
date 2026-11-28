@@ -667,15 +667,20 @@ const ServicePicker: FC<ServicePickerProps> = ({
     const option = selectedRef.current;
     const listElement = listRef.current;
     if (!option || !listElement) return;
-    const optionTop = option.offsetTop - listElement.offsetTop;
-    const optionBottom = optionTop + option.offsetHeight;
-    if (optionTop < listElement.scrollTop) {
-      listElement.scrollTop = optionTop;
-    } else if (
-      optionBottom >
-      listElement.scrollTop + listElement.clientHeight
-    ) {
-      listElement.scrollTop = optionBottom - listElement.clientHeight;
+    // Measured on screen, not with offsetTop: the list is position: relative,
+    // so offsetTop is already relative to it and subtracting the list's own
+    // offset sent the scroll to the top, leaving the service hidden below
+    const listRect = listElement.getBoundingClientRect();
+    const optionRect = option.getBoundingClientRect();
+    const optionTop = optionRect.top - listRect.top + listElement.scrollTop;
+    const optionBottom = optionTop + optionRect.height;
+    const isVisible =
+      optionTop >= listElement.scrollTop &&
+      optionBottom <= listElement.scrollTop + listElement.clientHeight;
+    // put a hidden choice first in view, with a sliver of the one above as a
+    // hint that the list scrolls
+    if (!isVisible) {
+      listElement.scrollTop = Math.max(0, optionTop - 8);
     }
   }, [category, selected]);
 

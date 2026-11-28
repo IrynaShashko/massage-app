@@ -19,9 +19,13 @@ import { priceVariants } from "../../utils/price";
 
 import { Categories, PricePagePropsType } from "./types";
 
-/** Phones get one compact list; wider screens a grid of cards */
+/**
+ * Phones: one compact list. Wider screens: a price-menu list with dotted
+ * leaders, in two columns from TWO_COLUMNS up. "Book" is always shown.
+ */
 const MOBILE = "@media screen and (max-width: 599px)";
 const WIDE = "@media screen and (min-width: 600px)";
+const TWO_COLUMNS = "@media screen and (min-width: 960px)";
 
 const PricePage: FC<PricePagePropsType> = ({ language }) => {
   const [t] = useTranslation();
@@ -99,19 +103,20 @@ const PricePage: FC<PricePagePropsType> = ({ language }) => {
                       {service.description}
                     </ServiceDescription>
                   )}
-                  <Variants>
-                    {priceVariants(service.price, service.time, language).map(
-                      (variant) => (
-                        <li key={`${variant.duration}-${variant.price}`}>
-                          {variant.duration && (
-                            <Duration>{variant.duration}</Duration>
-                          )}
-                          <Price>{variant.price}</Price>
-                        </li>
-                      ),
-                    )}
-                  </Variants>
                 </ServiceInfo>
+                <Leader aria-hidden />
+                <Variants>
+                  {priceVariants(service.price, service.time, language).map(
+                    (variant) => (
+                      <li key={`${variant.duration}-${variant.price}`}>
+                        {variant.duration && (
+                          <Duration>{variant.duration}</Duration>
+                        )}
+                        <Price>{variant.price}</Price>
+                      </li>
+                    ),
+                  )}
+                </Variants>
                 <BookServiceButton
                   type="button"
                   onClick={() =>
@@ -219,30 +224,41 @@ const TabButton = styled.button<{ $active: boolean; theme?: ThemeType }>`
   }
 `;
 
-/* Phones: one card holding rows split by hairlines. Wider: a grid of cards */
+/* One card holding the rows; two newspaper-style columns on wide screens */
 const ServiceList = styled.ul<{ theme?: ThemeType }>`
+  ${(props) => cardSurface(props.theme as ThemeType)}
   list-style: none;
   margin: 0;
-  padding: 0;
-
-  ${MOBILE} {
-    ${(props) => cardSurface(props.theme as ThemeType)}
-    padding: 0 var(--space-4);
-  }
+  padding: 0 var(--space-4);
 
   ${WIDE} {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: var(--space-5);
+    padding: var(--space-4);
+  }
+
+  ${TWO_COLUMNS} {
+    columns: 2;
+    column-gap: var(--space-7);
+    column-rule: 1px solid ${(props) => props.theme.colors.border};
+    padding: var(--space-5);
   }
 `;
 
+/*
+ * Phones:   name / prices on the left, the button on the right.
+ * Wider:    name ······ prices [button].
+ */
 const ServiceItem = styled.li<{ theme?: ThemeType }>`
-  display: flex;
-  gap: var(--space-3);
+  display: grid;
+  align-items: center;
+  column-gap: var(--space-3);
+  break-inside: avoid;
 
   ${MOBILE} {
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "info button"
+      "variants button";
+    row-gap: 6px;
     padding: var(--space-4) 0;
 
     & + & {
@@ -251,45 +267,52 @@ const ServiceItem = styled.li<{ theme?: ThemeType }>`
   }
 
   ${WIDE} {
-    ${(props) => cardSurface(props.theme as ThemeType)}
-    flex-direction: column;
-    justify-content: space-between;
-    padding: var(--space-5);
-    transition:
-      transform 0.25s ease,
-      box-shadow 0.25s ease;
+    grid-template-columns: minmax(0, max-content) minmax(24px, 1fr) auto auto;
+    grid-template-areas: "info leader variants button";
+    align-items: start;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    transition: background-color 0.2s ease;
 
-    /* lift only where there is a pointer to hover with */
-    @media (hover: hover) {
-      &:hover {
-        transform: translateY(-3px);
-        box-shadow:
-          var(--shadow-glass),
-          0 18px 40px -18px var(--color-primary-shadow);
-      }
+    &:hover,
+    &:focus-within {
+      background-color: color-mix(
+        in srgb,
+        var(--color-primary) 8%,
+        transparent
+      );
     }
   }
 `;
 
 const ServiceInfo = styled.div`
+  grid-area: info;
   display: flex;
-  flex: 1;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
+`;
+
+/* Dotted line from the name to the prices, at the first line's baseline */
+const Leader = styled.span<{ theme?: ThemeType }>`
+  grid-area: leader;
+  display: none;
+
+  ${WIDE} {
+    display: block;
+    height: 1.05em;
+    border-bottom: 2px dotted
+      color-mix(in srgb, ${(props) => props.theme.colors.text} 25%, transparent);
+  }
 `;
 
 const ServiceName = styled.h3<{ theme?: ThemeType }>`
   margin: 0;
   color: ${(props) => props.theme.colors.text};
   font-family: var(--font-body);
-  font-size: 1.05rem;
+  font-size: var(--text-base);
   font-weight: 600;
-  line-height: 1.25;
-
-  ${MOBILE} {
-    font-size: var(--text-base);
-  }
+  line-height: 1.35;
 `;
 
 const ServiceDescription = styled.p`
@@ -297,54 +320,70 @@ const ServiceDescription = styled.p`
   opacity: 0.75;
 `;
 
-/* One line per option: "90 хв · 1200 ₴" */
+/* One line per option. Phones: "90 хв · 1200 ₴"; wider: two aligned columns */
 const Variants = styled.ul`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  grid-area: variants;
   margin: 0;
   padding: 0;
   list-style: none;
 
-  li {
+  ${MOBILE} {
     display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0 var(--space-2);
+    flex-direction: column;
+    gap: 2px;
+
+    li {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0 var(--space-2);
+    }
   }
 
   ${WIDE} {
-    margin-top: var(--space-2);
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-items: end;
+    align-items: baseline;
+    column-gap: var(--space-3);
+    row-gap: 2px;
+
+    /* the li boxes step aside so their spans line up in the grid */
+    li {
+      display: contents;
+    }
   }
 `;
 
 const Duration = styled.span<{ theme?: ThemeType }>`
+  grid-column: 1;
   color: ${(props) => props.theme.colors.text};
   font-size: var(--text-sm);
   opacity: 0.65;
+  white-space: nowrap;
 
-  &::after {
-    content: "·";
-    margin-left: var(--space-2);
+  ${MOBILE} {
+    &::after {
+      content: "·";
+      margin-left: var(--space-2);
+    }
   }
 `;
 
 const Price = styled.span<{ theme?: ThemeType }>`
+  grid-column: 2;
   color: ${(props) => props.theme.colors.primary};
   font-family: var(--font-body);
   font-size: 1.05rem;
   font-weight: 700;
+  line-height: 1.35;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-
-  ${WIDE} {
-    font-size: 1.35rem;
-  }
 `;
 
 const BookServiceButton = styled.button`
-  flex-shrink: 0;
-  padding: 8px 16px;
+  grid-area: button;
+  padding: 6px 14px;
   border-radius: var(--radius-full);
   border: 1.5px solid var(--color-primary);
   color: var(--color-primary);
@@ -358,14 +397,5 @@ const BookServiceButton = styled.button`
   &:hover {
     background-color: var(--color-primary);
     color: #fff;
-  }
-
-  ${MOBILE} {
-    padding: 6px 14px;
-  }
-
-  ${WIDE} {
-    align-self: flex-start;
-    margin-top: var(--space-4);
   }
 `;
