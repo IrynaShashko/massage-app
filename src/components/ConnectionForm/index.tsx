@@ -48,6 +48,7 @@ import {
   NoticeTextButton,
 } from "../AuthNotice";
 import { DatePicker } from "../DatePicker";
+import { loadDraft, saveDraft } from "../../utils/draft";
 
 import { ConnectionFormPropsType } from "./types";
 
@@ -84,50 +85,26 @@ const initialValues: FormValues = {
   slotId: "",
 };
 
-/**
- * The unsent form survives a trip to sign in (same tab, the confirmation
- * link's new tab, or the Google redirect). Cleared once the booking is sent.
- */
 const DRAFT_KEY = "booking_draft";
-const DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-const loadDraft = (): FormValues => {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return initialValues;
-    const { values, savedAt } = JSON.parse(raw);
-    if (
-      typeof savedAt !== "number" ||
-      Date.now() - savedAt > DRAFT_MAX_AGE_MS
-    ) {
-      localStorage.removeItem(DRAFT_KEY);
-      return initialValues;
-    }
-    // keep only known string fields, whatever is stored
-    const draft = { ...initialValues };
-    (Object.keys(initialValues) as (keyof FormValues)[]).forEach((key) => {
-      if (typeof values?.[key] === "string") draft[key] = values[key];
-    });
-    return draft;
-  } catch {
-    return initialValues;
-  }
+/** The unsent form, restored after a trip to sign in */
+const loadFormDraft = (): FormValues => {
+  const stored = loadDraft(DRAFT_KEY);
+  if (!stored) return initialValues;
+  // keep only known string fields, whatever is stored
+  const draft = { ...initialValues };
+  (Object.keys(initialValues) as (keyof FormValues)[]).forEach((key) => {
+    const value = stored[key];
+    if (typeof value === "string") draft[key] = value;
+  });
+  return draft;
 };
 
-const saveDraft = (values: FormValues) => {
-  try {
-    const isEmpty = (Object.keys(values) as (keyof FormValues)[]).every(
-      (key) => values[key] === initialValues[key],
-    );
-    if (isEmpty) localStorage.removeItem(DRAFT_KEY);
-    else
-      localStorage.setItem(
-        DRAFT_KEY,
-        JSON.stringify({ values, savedAt: Date.now() }),
-      );
-  } catch {
-    // storage blocked (private mode): the form just is not restored
-  }
+const saveFormDraft = (values: FormValues) => {
+  const isEmpty = (Object.keys(values) as (keyof FormValues)[]).every(
+    (key) => values[key] === initialValues[key],
+  );
+  saveDraft(DRAFT_KEY, isEmpty ? null : values);
 };
 
 /** Labels in the translations end with ":"; drop it so every label in the form looks the same */
@@ -147,7 +124,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   const needsAccount = !isProfileLoading && !user?.isVerified;
   const noticeRef = useRef<HTMLDivElement>(null);
   // read once: Formik only uses initialValues on mount
-  const [draft] = useState(loadDraft);
+  const [draft] = useState(loadFormDraft);
   // a restored draft already holds the visitor's latest choice: the preset
   // they clicked before going to sign in must not overwrite it
   const skipPresetNonce = useRef(
@@ -646,7 +623,7 @@ const ScrollToFirstError: FC = () => {
 /** Keeps the unsent form in storage; an emptied (sent) form removes it */
 const SaveDraft: FC = () => {
   const { values } = useFormikContext<FormValues>();
-  useEffect(() => saveDraft(values), [values]);
+  useEffect(() => saveFormDraft(values), [values]);
   return null;
 };
 

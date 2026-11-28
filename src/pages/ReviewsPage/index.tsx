@@ -12,6 +12,7 @@ import { Glow, GlowSection } from "../../components/SectionHeading/Glow";
 
 import { NoticeBox, NoticeButton } from "../../components/AuthNotice";
 import { useModal } from "../../context/ModalContext";
+import { loadDraft, saveDraft } from "../../utils/draft";
 import { cardSurface, cardTitle, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
@@ -42,6 +43,25 @@ const pluralForm = (n: number, language: string) => {
   return rule === "one" ? "one" : rule === "few" ? "few" : "many";
 };
 
+const DRAFT_KEY = "review_draft";
+
+const loadReviewDraft = () => {
+  const stored = loadDraft(DRAFT_KEY);
+  const rating = Number(stored?.rating);
+  return {
+    name: typeof stored?.name === "string" ? stored.name : "",
+    comment: typeof stored?.comment === "string" ? stored.comment : "",
+    rating: Number.isInteger(rating) && rating >= 1 && rating <= 5 ? rating : 0,
+  };
+};
+
+/** Kept only while there is something to lose: a comment or a rating */
+const saveReviewDraft = ({ name, comment, rating }: Review) =>
+  saveDraft(
+    DRAFT_KEY,
+    comment.trim() || rating ? { name, comment, rating } : null,
+  );
+
 const ReviewsPage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
   const { data: user } = useProfile();
@@ -51,10 +71,12 @@ const ReviewsPage = ({ language }: { language: string }) => {
     kind: "success" | "error";
     text: string;
   } | null>(null);
+  // an unsent review is restored after a trip to sign in
+  const [draft] = useState(loadReviewDraft);
   const [newReview, setNewReview] = useState<Review>({
-    name: user?.name || "",
-    comment: "",
-    rating: 0,
+    name: draft.name || user?.name || "",
+    comment: draft.comment,
+    rating: draft.rating,
     userId: user?.id || "",
   });
   const [isNameInitialized, setIsNameInitialized] = useState(false);
@@ -186,10 +208,15 @@ const ReviewsPage = ({ language }: { language: string }) => {
   };
 
   useEffect(() => {
+    saveReviewDraft(newReview);
+  }, [newReview]);
+
+  useEffect(() => {
     if (user && !isNameInitialized) {
       setNewReview((prev) => ({
         ...prev,
-        name: user.name || "",
+        // a name typed before signing in wins over the profile's
+        name: prev.name || user.name || "",
         userId: user.id || "",
       }));
       setIsNameInitialized(true);
