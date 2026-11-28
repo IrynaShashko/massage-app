@@ -17,6 +17,7 @@ import {
   TopBar,
 } from "../AdminArticlesPage/shared";
 import { formatDate, RatingStars } from "../ReviewsPage/ReviewItem";
+import { SkeletonRows } from "../../components/Skeleton";
 
 const ReviewList = () => {
   const [t, i18n] = useTranslation();
@@ -50,7 +51,7 @@ const ReviewList = () => {
       </TopBar>
 
       <Card>
-        {isLoading && <p>…</p>}
+        {isLoading && <SkeletonRows count={4} body actions={2} />}
         {isError && <ErrorText>{t("reviews_load_error")}</ErrorText>}
         {deleteMutation.isError && (
           <ErrorText>{t("admin_delete_error")}</ErrorText>

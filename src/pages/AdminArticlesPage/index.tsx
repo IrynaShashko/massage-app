@@ -23,6 +23,7 @@ import {
   PrimaryButton,
   TopBar,
 } from "./shared";
+import { SkeletonRows } from "../../components/Skeleton";
 
 const ArticleIcon = ({ icon }: { icon: string }) => {
   const Icon = articleIcon(icon);
@@ -64,7 +65,7 @@ const ArticleList = () => {
       </TopBar>
 
       <Card>
-        {isLoading && <p>…</p>}
+        {isLoading && <SkeletonRows count={4} actions={2} />}
         {isError && <ErrorText>{t("admin_load_error")}</ErrorText>}
         {deleteMutation.isError && (
           <ErrorText>{t("admin_delete_error")}</ErrorText>

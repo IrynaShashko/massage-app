@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { keyframes } from "@emotion/react";
 import styled from "@emotion/styled";
 import { LogIn, MessageSquareHeart, PenLine, Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -26,6 +25,7 @@ import {
 } from "./ReviewItem";
 import { RatingInput } from "./RatingInput";
 import { Review } from "./types";
+import { SkeletonBlock, SkeletonStack } from "../../components/Skeleton";
 
 const REVIEWS_PER_PAGE = 4;
 const FORM_ID = "leave-review";
@@ -544,46 +544,6 @@ const ReviewList = styled.ul`
 `;
 
 /* ---------- loading skeleton ---------- */
-
-const shimmer = keyframes`
-  from {
-    background-position: 100% 0;
-  }
-  to {
-    background-position: -100% 0;
-  }
-`;
-
-const SkeletonStack = styled.div<{ $gap?: string }>`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: ${(props) => props.$gap ?? "8px"};
-`;
-
-const SkeletonBlock = styled.span<{
-  $w: string;
-  $h: string;
-  $round?: boolean;
-  theme?: ThemeType;
-}>`
-  display: block;
-  flex-shrink: 0;
-  width: ${(props) => props.$w};
-  height: ${(props) => props.$h};
-  border-radius: ${(props) => (props.$round ? "var(--radius-full)" : "6px")};
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, ${(props) => props.theme.colors.text} 8%, transparent)
-      25%,
-    color-mix(in srgb, ${(props) => props.theme.colors.text} 16%, transparent)
-      50%,
-    color-mix(in srgb, ${(props) => props.theme.colors.text} 8%, transparent)
-      75%
-  );
-  background-size: 200% 100%;
-  animation: ${shimmer} 1.4s ease-in-out infinite;
-`;
 
 const EmptyCard = styled.div<{ theme?: ThemeType }>`
   ${(props) => cardSurface(props.theme as ThemeType)}

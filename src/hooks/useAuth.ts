@@ -19,6 +19,8 @@ export interface User {
   name: string;
   email: string;
   role: "user" | "admin";
+  /** photo from the Google account; email sign-ups have none */
+  avatarUrl?: string;
   isVerified?: boolean;
   createdAt?: string;
 }
@@ -52,6 +54,10 @@ const fetchProfile = async (): Promise<User | null> => {
     email: authUser.email ?? "",
     name: profile?.name ?? "",
     role: profile?.role === "admin" ? "admin" : "user",
+    avatarUrl:
+      authUser.user_metadata?.avatar_url ||
+      authUser.user_metadata?.picture ||
+      undefined,
     isVerified: !!authUser.email_confirmed_at,
     createdAt: profile?.created_at,
   };

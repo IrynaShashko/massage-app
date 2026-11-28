@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, Navigate } from "react-router-dom";
 
 import { SectionContainer } from "../../App";
-import { Loader } from "../../components/Loader";
+import { PageSkeleton } from "../../components/Skeleton";
 import { useProfile } from "../../hooks/useAuth";
 import { cardSurface } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
@@ -17,7 +17,7 @@ export const AdminOnly: FC<{ children: ReactNode }> = ({ children }) => {
   const [t] = useTranslation();
   const { data: user, isLoading } = useProfile();
 
-  if (isLoading) return <Loader />;
+  if (isLoading) return <PageSkeleton />;
   if (!user) return <Navigate to="/auth" replace />;
   if (user.role !== "admin") {
     return (

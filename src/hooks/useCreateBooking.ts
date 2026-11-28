@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FunctionsHttpError } from "@supabase/supabase-js";
 
 import { supabase } from "../lib/supabase";
+import { MY_BOOKINGS_KEY } from "./useMyBookings";
 
 export interface CreateBookingInput {
   name: string;
@@ -130,6 +131,7 @@ export const useCreateBooking = () => {
     onSettled: (_data, _error, variables) => {
       if (variables.details?.slotId) {
         queryClient.invalidateQueries({ queryKey: ["slots"] });
+        queryClient.invalidateQueries({ queryKey: MY_BOOKINGS_KEY });
       }
     },
     onError: (error) => {

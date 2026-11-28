@@ -13,6 +13,10 @@
 // Its message gets "Confirm / Decline" buttons, handled by telegram-webhook,
 // and the answer carries telegramLink: t.me/<bot>?start=<token>, which the
 // site offers the client to get the confirmation in Telegram.
+//
+// A signed-in client's request carries their session (supabase.functions
+// .invoke adds it); the booking is then linked to their account so it shows
+// in their profile. Guests' requests carry only the publishable key.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -66,17 +70,36 @@ type HeldSlot = {
   time: string;
 };
 
-/** Holds the slot; returns the booking and the slot's date and "HH:MM", or null when it is taken */
-const bookSlot = async (
-  slotId: string,
-  booking: Record<string, string>,
-): Promise<HeldSlot | null> => {
-  const supabase = createClient(
+const serviceClient = () =>
+  createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     { auth: { persistSession: false } },
   );
-  const { data, error } = await supabase
+
+/** The signed-in caller's user id, or null for guests and invalid sessions */
+const callerId = async (req: Request): Promise<string | null> => {
+  const jwt = (req.headers.get("authorization") ?? "")
+    .replace(/^Bearer\s+/i, "")
+    .trim();
+  // the publishable key is not a JWT; skip the round trip for guests
+  if (jwt.split(".").length !== 3) return null;
+  try {
+    const { data, error } = await serviceClient().auth.getUser(jwt);
+    return error ? null : (data.user?.id ?? null);
+  } catch (error) {
+    console.warn("getUser failed", error);
+    return null;
+  }
+};
+
+/** Holds the slot; returns the booking and the slot's date and "HH:MM", or null when it is taken */
+const bookSlot = async (
+  slotId: string,
+  booking: Record<string, string>,
+  userId: string | null,
+): Promise<HeldSlot | null> => {
+  const { data, error } = await serviceClient()
     .rpc("book_slot", {
       p_slot_id: slotId,
       p_name: booking.name,
@@ -85,6 +108,7 @@ const bookSlot = async (
       p_service: booking.service,
       p_note: booking.note,
       p_lang: booking.lang,
+      p_user_id: userId,
     })
     .single<{
       booking_id: string;
@@ -186,14 +210,11 @@ Deno.serve(async (req) => {
   if (slotId) {
     let slot: HeldSlot | null;
     try {
-      slot = await bookSlot(slotId, {
-        name,
-        phone,
-        email,
-        service,
-        note,
-        lang,
-      });
+      slot = await bookSlot(
+        slotId,
+        { name, phone, email, service, note, lang },
+        await callerId(req),
+      );
     } catch (error) {
       console.error("book_slot failed", error);
       return json(500, { error: "Could not save the booking" });

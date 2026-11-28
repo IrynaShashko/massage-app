@@ -30,6 +30,7 @@ import {
 
 import { useBooking } from "../../context/BookingContext";
 import { useLogout } from "../../hooks/useAuth";
+import { UserAvatar } from "../UserAvatar";
 
 import { ThemeType } from "../../theme/theme";
 
@@ -52,6 +53,7 @@ export const Menu: FC<MenuPropsType> = ({
   darkMode,
   themeToggle,
   isAuthenticated,
+  user,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
@@ -182,15 +184,25 @@ export const Menu: FC<MenuPropsType> = ({
               <RoundTile>
                 <ThemeButton darkMode={darkMode} themeToggle={themeToggle} />
               </RoundTile>
-              {isAuthenticated ? (
-                <RoundTileButton
-                  type="button"
-                  onClick={onLogout}
-                  aria-label="Log out"
-                  tabIndex={isMenuOpen ? 0 : -1}
-                >
-                  <LogOut size={22} />
-                </RoundTileButton>
+              {isAuthenticated && user ? (
+                <>
+                  <RoundTileLink
+                    to="/profile"
+                    onClick={closeMenu}
+                    aria-label={t("profile_title")}
+                    tabIndex={isMenuOpen ? 0 : -1}
+                  >
+                    <UserAvatar user={user} size={42} />
+                  </RoundTileLink>
+                  <RoundTileButton
+                    type="button"
+                    onClick={onLogout}
+                    aria-label={t("profile_logout")}
+                    tabIndex={isMenuOpen ? 0 : -1}
+                  >
+                    <LogOut size={22} />
+                  </RoundTileButton>
+                </>
               ) : (
                 <RoundTileLink
                   to="/auth"

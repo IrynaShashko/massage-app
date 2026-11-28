@@ -7,6 +7,7 @@ import { ArticleBody } from "../../components/ArticleBody";
 import { useIsAdmin } from "../../hooks/useAuth";
 import { localized, useArticle, useArticles } from "../../hooks/useArticles";
 import { ArticlePagePropsType } from "./types";
+import { SkeletonArticle } from "../../components/Skeleton";
 
 /**
  * An article from Supabase, by its slug. On /article itself (no slug) it shows
@@ -20,8 +21,7 @@ const DynamicArticle: FC<ArticlePagePropsType> = ({ language }) => {
   const slug = slugParam ?? list.data?.[0]?.slug;
   const { data: article, isLoading, isError } = useArticle(slug);
 
-  if (isLoading || (!slugParam && list.isLoading))
-    return <ArticleText>…</ArticleText>;
+  if (isLoading || (!slugParam && list.isLoading)) return <SkeletonArticle />;
   if (isError || !article) {
     return <ArticleText>{t("article_not_found")}</ArticleText>;
   }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import { Eye, EyeOff } from "lucide-react";
 
@@ -9,7 +9,12 @@ import styled from "@emotion/styled";
 
 import { useModal } from "../../context/ModalContext";
 
-import { useGoogleLogin, useLogin, useRegister } from "../../hooks/useAuth";
+import {
+  useGoogleLogin,
+  useLogin,
+  useProfile,
+  useRegister,
+} from "../../hooks/useAuth";
 import { isGoogleAuthEnabled } from "../../config/google";
 import googleIcon from "../../icons/google.svg";
 import { cardSurface } from "../../theme/surfaces";
@@ -66,10 +71,14 @@ const AuthPage: React.FC = () => {
     }
   };
 
+  const { data: user } = useProfile();
+
   const isLoading = loginMutation.isPending || registerMutation.isPending;
   const error =
     (isLogin ? loginMutation.error : registerMutation.error) ||
     googleMutation.error;
+
+  if (user) return <Navigate to="/profile" replace />;
 
   return (
     <FullPageSection>

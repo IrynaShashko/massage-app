@@ -32,6 +32,7 @@ import {
   slugify,
   TopBar,
 } from "./shared";
+import { SkeletonCard, SkeletonForm } from "../../components/Skeleton";
 
 type Lang = "ua" | "en";
 
@@ -257,7 +258,14 @@ const LoadArticle: FC<{ id: string }> = ({ id }) => {
   const [t] = useTranslation();
   const { data, isLoading, isError } = useArticleById(id);
 
-  if (isLoading) return <SectionContainer>…</SectionContainer>;
+  if (isLoading)
+    return (
+      <SectionContainer>
+        <SkeletonCard>
+          <SkeletonForm fields={4} tall />
+        </SkeletonCard>
+      </SectionContainer>
+    );
   if (isError || !data) {
     return (
       <SectionContainer>

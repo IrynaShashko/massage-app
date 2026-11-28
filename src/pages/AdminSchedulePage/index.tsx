@@ -35,6 +35,7 @@ import {
   PrimaryButton,
   TopBar,
 } from "../AdminArticlesPage/shared";
+import { SkeletonRows } from "../../components/Skeleton";
 
 const STEPS = [30, 60, 90, 120];
 
@@ -357,7 +358,7 @@ const Schedule: FC = () => {
             </Notice>
           )}
 
-          {isLoading && <p>…</p>}
+          {isLoading && <SkeletonRows count={5} actions={1} />}
           {isError && <ErrorText>{t("schedule_load_error")}</ErrorText>}
           {!isLoading && !isError && slots.length === 0 && (
             <p>{t("schedule_empty")}</p>

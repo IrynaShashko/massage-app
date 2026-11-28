@@ -23,6 +23,7 @@ import {
   TopBar,
 } from "../AdminArticlesPage/shared";
 import { RatingInput } from "../ReviewsPage/RatingInput";
+import { SkeletonCard, SkeletonForm } from "../../components/Skeleton";
 
 /** yyyy-mm-dd in local time, the DatePicker's value format */
 const toDateInput = (iso: string) => {
@@ -180,7 +181,14 @@ const LoadReview: FC<{ id: string }> = ({ id }) => {
   const [t] = useTranslation();
   const { data, isLoading, isError } = useReviewById(id);
 
-  if (isLoading) return <SectionContainer>…</SectionContainer>;
+  if (isLoading)
+    return (
+      <SectionContainer>
+        <SkeletonCard>
+          <SkeletonForm fields={4} tall />
+        </SkeletonCard>
+      </SectionContainer>
+    );
   if (isError || !data) {
     return (
       <SectionContainer>

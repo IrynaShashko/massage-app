@@ -16,12 +16,13 @@ import { localized, useArticles } from "../../hooks/useArticles";
 
 import { cardSurface, iconTile } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
+import { SkeletonBlock } from "../../components/Skeleton";
 
 const ArticlePage = ({ language }: { language: string }) => {
   const [t] = useTranslation();
   const isAdmin = useIsAdmin();
   // articles added in the admin panel; visitors only receive published ones
-  const { data: articles = [] } = useArticles();
+  const { data: articles = [], isLoading } = useArticles();
 
   // On phones the list is a collapsed picker showing the open article, so a
   // long list never pushes the article itself off screen
@@ -75,6 +76,17 @@ const ArticlePage = ({ language }: { language: string }) => {
                 $open={isListOpen}
               >
                 <ArticleList>
+                  {isLoading &&
+                    Array.from({ length: 4 }, (_, i) => (
+                      <SkeletonItem key={i} aria-hidden>
+                        <SkeletonBlock
+                          $w="40px"
+                          $h="40px"
+                          style={{ borderRadius: "var(--radius-md)" }}
+                        />
+                        <SkeletonBlock $w={i % 2 ? "55%" : "75%"} $h="14px" />
+                      </SkeletonItem>
+                    ))}
                   {articles.map((article) => {
                     const Icon = articleIcon(article.icon);
                     return (
@@ -228,6 +240,13 @@ const ArticleList = styled.ul`
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+`;
+
+const SkeletonItem = styled.li`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
 `;
 
 const LinkIcon = styled.span`

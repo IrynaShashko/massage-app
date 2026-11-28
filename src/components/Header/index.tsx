@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { Link, NavLink } from "react-router-dom";
 
-import { CalendarCheck, LogOut, UserRound } from "lucide-react";
+import { CalendarCheck, UserRound } from "lucide-react";
 
 import styled from "@emotion/styled";
 
@@ -13,7 +13,8 @@ import logo from "../../images/logo.png";
 import { Menu } from "../Menu";
 import { ThemeButton } from "../ThemeButton";
 
-import { useLogout, useProfile } from "../../hooks/useAuth";
+import { useProfile } from "../../hooks/useAuth";
+import { UserAvatar } from "../UserAvatar";
 import { useBooking } from "../../context/BookingContext";
 
 import { ThemeType } from "../../theme/theme";
@@ -29,8 +30,6 @@ export const Header: React.FC<HeaderPropsType> = ({
   const [t] = useTranslation();
 
   const { data: user } = useProfile();
-
-  const logoutMutation = useLogout();
 
   const isAuthenticated = !!user;
 
@@ -55,10 +54,6 @@ export const Header: React.FC<HeaderPropsType> = ({
     } else {
       window.location.href = "/#contacts";
     }
-  };
-
-  const onLogout = () => {
-    logoutMutation.mutate();
   };
 
   return (
@@ -113,14 +108,14 @@ export const Header: React.FC<HeaderPropsType> = ({
                 size={20}
               />
             </IconTile>
-            {isAuthenticated ? (
-              <IconTileButton
-                type="button"
-                onClick={onLogout}
-                aria-label="Log out"
+            {user ? (
+              <IconTileLink
+                to="/profile"
+                aria-label={t("profile_title")}
+                title={t("profile_title")}
               >
-                <LogOut size={20} />
-              </IconTileButton>
+                <UserAvatar user={user} size={32} />
+              </IconTileLink>
             ) : (
               <IconTileLink to="/auth" aria-label={t("login_button")}>
                 <UserRound size={20} />
@@ -203,6 +198,7 @@ const MenuWrapper = styled.div`
 `;
 
 const Logo = styled(Link)`
+  flex-shrink: 0;
   font-size: 24px;
   font-weight: bold;
   display: flex;
@@ -212,6 +208,12 @@ const Logo = styled(Link)`
     width: 150px;
     height: auto;
     transition: filter 0.3s ease;
+  }
+
+  @media screen and (max-width: 1399px) {
+    img {
+      width: 132px;
+    }
   }
 
   /* The logo is a dark-teal PNG: lift it so it stays readable on the dark header */
@@ -254,6 +256,11 @@ const navLinkStyles = (theme: ThemeType) => `
     color: var(--color-primary);
     font-weight: 700;
     background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+
+  /* Tighter pills where the logo, six links and the CTA barely fit */
+  @media screen and (max-width: 1399px) {
+    padding: 0 10px;
   }
 `;
 
@@ -357,10 +364,6 @@ const iconTileStyles = (theme: ThemeType) => `
 `;
 
 const IconTile = styled.span<{ theme?: ThemeType }>`
-  ${(props) => iconTileStyles(props.theme as ThemeType)}
-`;
-
-const IconTileButton = styled.button<{ theme?: ThemeType }>`
   ${(props) => iconTileStyles(props.theme as ThemeType)}
 `;
 

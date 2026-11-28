@@ -13,7 +13,7 @@ import { darkTheme, lightTheme } from "./theme/theme";
 
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
-import { Loader } from "./components/Loader";
+import { PageSkeleton } from "./components/Skeleton";
 import { PhoneButton } from "./components/PhoneButton/PhoneButton";
 
 import {
@@ -34,6 +34,7 @@ export const App: FC = () => {
   const ReviewsPage = lazy(() => import("./pages/ReviewsPage"));
   const ArticlePage = lazy(() => import("./pages/ArticlePage"));
   const AuthPage = lazy(() => import("./pages/AuthPage"));
+  const ProfilePage = lazy(() => import("./pages/ProfilePage"));
   const DynamicArticle = lazy(
     () => import("./pages/ArticlePage/DynamicArticle"),
   );
@@ -118,13 +119,14 @@ export const App: FC = () => {
                     darkMode={isDarkMode}
                   />
                   <main style={{ flex: 1 }}>
-                    <Suspense fallback={<Loader />}>
+                    <Suspense fallback={<PageSkeleton />}>
                       <Routes>
                         <Route
                           path="/"
                           element={<HomePage language={language} />}
                         />
                         <Route path="/auth" element={<AuthPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
                         <Route
                           path="/about"
                           element={<AboutPage language={language} />}
