@@ -14,6 +14,7 @@ import { Menu } from "../Menu";
 import { ThemeButton } from "../ThemeButton";
 
 import { useProfile } from "../../hooks/useAuth";
+import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import { UserAvatar } from "../UserAvatar";
 import { useBooking } from "../../context/BookingContext";
 
@@ -30,6 +31,7 @@ export const Header: React.FC<HeaderPropsType> = ({
   const [t] = useTranslation();
 
   const { data: user } = useProfile();
+  const authState = useAuthLinkState();
 
   const isAuthenticated = !!user;
 
@@ -117,7 +119,11 @@ export const Header: React.FC<HeaderPropsType> = ({
                 <UserAvatar user={user} size={32} />
               </IconTileLink>
             ) : (
-              <IconTileLink to="/auth" aria-label={t("login_button")}>
+              <IconTileLink
+                to="/auth"
+                state={authState}
+                aria-label={t("login_button")}
+              >
                 <UserRound size={20} />
               </IconTileLink>
             )}

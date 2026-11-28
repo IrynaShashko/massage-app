@@ -306,7 +306,7 @@ const ReviewsPage = ({ language }: { language: string }) => {
               {!isAuthenticated && (
                 <LoginHint>
                   <p>{t("review_login_hint")}</p>
-                  <LoginButton type="button" onClick={openModal}>
+                  <LoginButton type="button" onClick={() => openModal()}>
                     <LogIn size={18} aria-hidden />
                     {t("login_action")}
                   </LoginButton>

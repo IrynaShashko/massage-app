@@ -4,14 +4,16 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
+import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import { ReactComponent as CloseIcon } from "../../icons/close.svg";
 import logo from "../../images/logo.png";
 import { ThemeType } from "../../theme/theme";
 import { IconStyled } from "../ConnectionButton";
 import { ModalPropsType } from "./types";
 
-export const Modal: FC<ModalPropsType> = ({ onClose }) => {
+export const Modal: FC<ModalPropsType> = ({ onClose, authExtra }) => {
   const [t] = useTranslation();
+  const authState = useAuthLinkState(authExtra);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
@@ -54,7 +56,7 @@ export const Modal: FC<ModalPropsType> = ({ onClose }) => {
 
         <ModalBody>
           <WelcomeText>{t("welcome_text")}</WelcomeText>
-          <Link to="/auth" style={{ textDecoration: "none" }}>
+          <Link to="/auth" state={authState} style={{ textDecoration: "none" }}>
             <ModalSubmitBtn type="button" onClick={onClose}>
               {t("auth_action")}
             </ModalSubmitBtn>

@@ -6,6 +6,7 @@ import { Link, Navigate } from "react-router-dom";
 import { SectionContainer } from "../../App";
 import { PageSkeleton } from "../../components/Skeleton";
 import { useProfile } from "../../hooks/useAuth";
+import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import { cardSurface } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
@@ -16,9 +17,10 @@ import { ThemeType } from "../../theme/theme";
 export const AdminOnly: FC<{ children: ReactNode }> = ({ children }) => {
   const [t] = useTranslation();
   const { data: user, isLoading } = useProfile();
+  const authState = useAuthLinkState();
 
   if (isLoading) return <PageSkeleton />;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/auth" state={authState} replace />;
   if (user.role !== "admin") {
     return (
       <SectionContainer>

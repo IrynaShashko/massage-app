@@ -12,12 +12,6 @@ export const BOOKING_SECTION_ID = "booking-section";
 /** Heading above the booking form ("Contacts & booking"), also the #contacts anchor */
 export const BOOKING_HEADING_ID = "contacts";
 
-/** Router state of a link to /auth from the booking form */
-export interface AuthLocationState {
-  /** after signing in, go back to the booking form */
-  booking?: boolean;
-}
-
 export interface BookingPreset {
   /** Category key from price.json: women | men | children | body | else */
   category: string;
@@ -35,7 +29,7 @@ interface BookingContextType {
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
-const scrollToBookingForm = (attemptsLeft = 40) => {
+export const scrollToBookingForm = (attemptsLeft = 40) => {
   const section = document.getElementById(BOOKING_SECTION_ID);
   if (section) {
     // Land on the section heading so the title is visible above the form

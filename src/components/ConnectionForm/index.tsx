@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from "react";
+import { FC, forwardRef, useEffect, useMemo, useRef, useState } from "react";
 
 import styled from "@emotion/styled";
 import { AnimatePresence, motion } from "framer-motion";
@@ -30,7 +30,9 @@ import priceDataEn from "../../json/priceEn.json";
 import { cardTitle } from "../../theme/surfaces";
 import { ThemeType } from "../../theme/theme";
 
-import { AuthLocationState, useBooking } from "../../context/BookingContext";
+import { useBooking } from "../../context/BookingContext";
+import { useModal } from "../../context/ModalContext";
+import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import {
   useProfile,
   useRecheckVerification,
@@ -92,6 +94,11 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
   const { data: user, isLoading: isProfileLoading } = useProfile();
   const { mutate, isPending, isError, error } = useCreateBooking();
   const { preset } = useBooking();
+  const { openModal } = useModal();
+  // Booking needs an account with a confirmed email (booking-telegram checks
+  // the same on the server); until then the form shows a notice above it
+  const needsAccount = !isProfileLoading && !user?.isVerified;
+  const noticeRef = useRef<HTMLDivElement>(null);
   const { data: freeSlots = [] } = useFreeSlots();
   // Without published times (or if they fail to load) the form asks for a
   // preferred date and part of the day, as before
@@ -154,6 +161,18 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
     values: FormValues,
     { resetForm, setFieldValue }: FormikHelpers<FormValues>,
   ) => {
+    if (!user) {
+      openModal({ booking: true });
+      return;
+    }
+    if (!user.isVerified) {
+      noticeRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      return;
+    }
+
     const slot = slotMode
       ? freeSlots.find((item) => item.id === values.slotId)
       : undefined;
@@ -210,12 +229,6 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
     );
   };
 
-  // Booking needs an account with a confirmed email; the booking-telegram
-  // function checks the same on the server
-  if (!isProfileLoading && !user?.isVerified) {
-    return <BookingGate email={user?.email} />;
-  }
-
   return (
     <Formik
       innerRef={formikRef}
@@ -238,6 +251,9 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
             </AdminLink>
           )}
           <FormTitle>{t("formTitle")}</FormTitle>
+          {needsAccount && (
+            <AccountNotice ref={noticeRef} email={user?.email} />
+          )}
 
           <Fieldset data-field="service">
             <Legend>{label(t("for_whom"))}</Legend>
@@ -485,50 +501,19 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
 };
 
 /**
- * Shown instead of the form to guests (sign in first) and to accounts whose
- * email is not confirmed yet (resend the link, or recheck once confirmed)
+ * Above the form for guests (sign in first) and for accounts whose email is
+ * not confirmed yet (resend the link, or recheck once confirmed)
  */
-const BookingGate: FC<{ email?: string }> = ({ email }) => {
-  const [t] = useTranslation();
-  const resend = useResendConfirmation();
-  const recheck = useRecheckVerification();
-  const authState: AuthLocationState = { booking: true };
+const AccountNotice = forwardRef<HTMLDivElement, { email?: string }>(
+  ({ email }, ref) => {
+    const [t] = useTranslation();
+    const resend = useResendConfirmation();
+    const recheck = useRecheckVerification();
+    const authState = useAuthLinkState({ booking: true });
 
-  return (
-    <GateWrapper>
-      <FormTitle>{t("formTitle")}</FormTitle>
-      {email ? (
-        <GateBox role="status">
-          <MailCheck size={28} aria-hidden />
-          <div>
-            <p>{t("booking_verify_hint", { email })}</p>
-            <Hint>{t("check_spam_folder")}</Hint>
-            {resend.isSuccess && <Hint>{t("confirmation_resent")}</Hint>}
-            {(resend.isError || recheck.isError) && (
-              <FieldError role="alert">{t("auth_error")}</FieldError>
-            )}
-            <GateActions>
-              <GateButton
-                type="button"
-                onClick={() => recheck.mutate()}
-                disabled={recheck.isPending}
-              >
-                {t("email_confirmed_recheck")}
-              </GateButton>
-              {!resend.isSuccess && (
-                <GateSecondaryButton
-                  type="button"
-                  onClick={() => resend.mutate({ email })}
-                  disabled={resend.isPending}
-                >
-                  {t("resend_confirmation")}
-                </GateSecondaryButton>
-              )}
-            </GateActions>
-          </div>
-        </GateBox>
-      ) : (
-        <GateBox>
+    if (!email) {
+      return (
+        <GateBox ref={ref}>
           <LogIn size={28} aria-hidden />
           <div>
             <p>{t("booking_login_hint")}</p>
@@ -539,10 +524,43 @@ const BookingGate: FC<{ email?: string }> = ({ email }) => {
             </GateActions>
           </div>
         </GateBox>
-      )}
-    </GateWrapper>
-  );
-};
+      );
+    }
+
+    return (
+      <GateBox ref={ref} role="status">
+        <MailCheck size={28} aria-hidden />
+        <div>
+          <p>{t("booking_verify_hint", { email })}</p>
+          <Hint>{t("check_spam_folder")}</Hint>
+          {resend.isSuccess && <Hint>{t("confirmation_resent")}</Hint>}
+          {(resend.isError || recheck.isError) && (
+            <FieldError role="alert">{t("auth_error")}</FieldError>
+          )}
+          <GateActions>
+            <GateButton
+              type="button"
+              onClick={() => recheck.mutate()}
+              disabled={recheck.isPending}
+            >
+              {t("email_confirmed_recheck")}
+            </GateButton>
+            {!resend.isSuccess && (
+              <GateSecondaryButton
+                type="button"
+                onClick={() => resend.mutate({ email })}
+                disabled={resend.isPending}
+              >
+                {t("resend_confirmation")}
+              </GateSecondaryButton>
+            )}
+          </GateActions>
+        </div>
+      </GateBox>
+    );
+  },
+);
+AccountNotice.displayName = "AccountNotice";
 
 /** On a failed submit, bring the first invalid field into view (it may be above the fold on mobile) */
 const ScrollToFirstError: FC = () => {
@@ -651,17 +669,6 @@ const ServicePicker: FC<ServicePickerProps> = ({
 };
 
 const FormStyled = styled(Form)`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: var(--space-4);
-
-  @media screen and (min-width: 600px) {
-    gap: var(--space-5);
-  }
-`;
-
-const GateWrapper = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;

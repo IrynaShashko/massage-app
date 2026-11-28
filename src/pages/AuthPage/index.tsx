@@ -1,13 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 import { Eye, EyeOff } from "lucide-react";
 
 import styled from "@emotion/styled";
 
-import { AuthLocationState, useBooking } from "../../context/BookingContext";
 import { useModal } from "../../context/ModalContext";
 
 import {
@@ -18,6 +17,11 @@ import {
   useRegister,
   useResendConfirmation,
 } from "../../hooks/useAuth";
+import {
+  AuthReturnState,
+  hasAuthReturn,
+  saveAuthReturn,
+} from "../../hooks/useAuthReturn";
 import { isGoogleAuthEnabled } from "../../config/google";
 import googleIcon from "../../icons/google.svg";
 import { cardSurface } from "../../theme/surfaces";
@@ -28,10 +32,18 @@ const label = (text: string) => text.replace(/:\s*$/, "");
 
 const AuthPage: React.FC = () => {
   const [t] = useTranslation();
-  const navigate = useNavigate();
   const location = useLocation();
-  const fromBooking = !!(location.state as AuthLocationState | null)?.booking;
-  const { startBooking } = useBooking();
+  const { data: user, isLoading: isProfileLoading } = useProfile();
+
+  // Remember where the visitor came from; useAuthReturnRedirect takes them
+  // back there after any sign-in: password, Google, or the confirmation link
+  // (only for guests: a signed-in visitor is sent to the profile instead)
+  const isGuest = !isProfileLoading && !user;
+  useEffect(() => {
+    if (!isGuest) return;
+    const state = location.state as AuthReturnState | null;
+    saveAuthReturn({ from: state?.from ?? "/", booking: !!state?.booking });
+  }, [isGuest, location.state]);
   const [isLogin, setIsLogin] = useState(true);
 
   const [email, setEmail] = useState("");
@@ -57,8 +69,6 @@ const AuthPage: React.FC = () => {
         {
           onSuccess: () => {
             closeModal();
-            if (fromBooking) startBooking();
-            else navigate("/");
           },
         },
       );
@@ -79,8 +89,6 @@ const AuthPage: React.FC = () => {
     }
   };
 
-  const { data: user } = useProfile();
-
   const isLoading = loginMutation.isPending || registerMutation.isPending;
   const error =
     (isLogin ? loginMutation.error : registerMutation.error) ||
@@ -88,6 +96,8 @@ const AuthPage: React.FC = () => {
 
   const emailNotConfirmed = isLogin && isEmailNotConfirmedError(error);
 
+  // just signed in: useAuthReturnRedirect is taking them back
+  if (user && hasAuthReturn()) return null;
   if (user) return <Navigate to="/profile" replace />;
 
   return (

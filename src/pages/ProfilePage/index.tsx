@@ -26,6 +26,7 @@ import {
 } from "../../components/Skeleton";
 import { UserAvatar } from "../../components/UserAvatar";
 import { useLogout, useProfile, useUpdateProfile } from "../../hooks/useAuth";
+import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import { MyBooking, useMyBookings } from "../../hooks/useMyBookings";
 import { kyivToday } from "../../hooks/useSlots";
 import { useReviews } from "../../hooks/useReviews";
@@ -95,9 +96,10 @@ const ProfilePage: FC = () => {
   const logoutMutation = useLogout();
   const { startBooking } = useBooking();
   const [isEditing, setIsEditing] = useState(false);
+  const authState = useAuthLinkState();
 
   if (isLoading) return <ProfileSkeleton />;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/auth" state={authState} replace />;
 
   const myReviews = reviews.filter((review) => review.userId === user.id);
   const isAdmin = user.role === "admin";

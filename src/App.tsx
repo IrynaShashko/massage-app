@@ -23,6 +23,7 @@ import {
 import { BookingProvider } from "./context/BookingContext";
 import { ModalProvider } from "./context/ModalContext";
 import { useAuthListener } from "./hooks/useAuth";
+import { useAuthReturnRedirect } from "./hooks/useAuthReturn";
 import { ScrollToTop } from "./utils/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ export const App: FC = () => {
               <ScrollToTop />
               <ModalProvider>
                 <BookingProvider>
+                  <AuthReturnRedirect />
                   <Header
                     themeToggle={ThemeToggle}
                     languageToggle={LanguageToggle}
@@ -226,3 +228,9 @@ export const SectionContainer = styled.div`
     padding: var(--space-8) 40px;
   }
 `;
+
+/** Brings the visitor back to where they were once they sign in */
+const AuthReturnRedirect: FC = () => {
+  useAuthReturnRedirect();
+  return null;
+};

@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 
+import { useAuthLinkState } from "../../hooks/useAuthReturn";
 import logo from "../../images/logo.png";
 
 import { ThemeButton } from "../ThemeButton";
@@ -57,6 +58,7 @@ export const Menu: FC<MenuPropsType> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
+  const authState = useAuthLinkState();
   const [t] = useTranslation();
   const { startBooking } = useBooking();
   const logoutMutation = useLogout();
@@ -206,6 +208,7 @@ export const Menu: FC<MenuPropsType> = ({
               ) : (
                 <RoundTileLink
                   to="/auth"
+                  state={authState}
                   onClick={closeMenu}
                   aria-label={t("login_button")}
                   tabIndex={isMenuOpen ? 0 : -1}
