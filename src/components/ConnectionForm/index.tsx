@@ -49,6 +49,7 @@ import {
 } from "../AuthNotice";
 import { DatePicker } from "../DatePicker";
 import { BOOKING_DRAFT_KEY, loadDraft, saveDraft } from "../../utils/draft";
+import { priceVariants } from "../../utils/price";
 
 import { ConnectionFormPropsType } from "./types";
 
@@ -313,6 +314,7 @@ export const ConnectionForm: FC<ConnectionFormPropsType> = ({
           </Fieldset>
 
           <ServicePicker
+            language={language ?? "ua"}
             category={values.service}
             items={values.service ? (data[values.service] ?? []) : []}
             selected={values.subService}
@@ -639,6 +641,7 @@ const DropTakenSlot: FC<{ slots: FreeSlot[] }> = ({ slots }) => {
 };
 
 type ServicePickerProps = {
+  language: string;
   category: string;
   items: PriceItem[];
   selected: string;
@@ -647,6 +650,7 @@ type ServicePickerProps = {
 };
 
 const ServicePicker: FC<ServicePickerProps> = ({
+  language,
   category,
   items,
   selected,
@@ -683,6 +687,11 @@ const ServicePicker: FC<ServicePickerProps> = ({
       <ServiceList ref={listRef} role="radiogroup">
         {items.map((item) => {
           const isActive = item.service === selected;
+          const variants = priceVariants(item.price, item.time, language);
+          const duration = variants
+            .map((variant) => variant.duration)
+            .filter(Boolean)
+            .join(" / ");
           return (
             <ServiceOption
               key={item.service}
@@ -695,8 +704,10 @@ const ServicePicker: FC<ServicePickerProps> = ({
             >
               <ServiceName>{item.service}</ServiceName>
               <ServiceMeta>
-                {item.time && <span>{item.time}</span>}
-                <ServicePrice>{item.price}</ServicePrice>
+                {duration && <span>{duration}</span>}
+                <ServicePrice>
+                  {variants.map((variant) => variant.price).join(" / ")}
+                </ServicePrice>
               </ServiceMeta>
             </ServiceOption>
           );
